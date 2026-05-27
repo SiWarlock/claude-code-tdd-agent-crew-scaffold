@@ -1,0 +1,188 @@
+<!--
+  TEMPLATE: docs/scaffolding-reference.md → write to docs/.
+  The in-repo, project-specific map of this scaffolding. It is the companion to
+  the universal SCAFFOLDING-GUIDE.md — the guide explains the pattern in general;
+  this file records how THIS project instantiated it. Keep the workflow-pattern
+  summaries; fill the inventory + command table + EXAMPLE BLOCKs. Delete this comment.
+-->
+
+# {{PROJECT_NAME}} — Scaffolding Reference
+
+> Project-specific map of this repo's Claude Code scaffolding. Documents what each piece is and how this project adapts the universal agent-team pattern.
+>
+> **For the universal pattern documented end-to-end**, see `SCAFFOLDING-GUIDE.md` (the project-agnostic guide this scaffolding was generated from). This file is the project-specific instance.
+
+---
+
+## TL;DR
+
+This project runs the **agent-team orchestrator + implementer pattern** (three roles + human). Same slash commands, same Step-9 routing matrix, same N+2 commit cadence, same cross-doc invariants discipline as the universal pattern. **Adaptations are project-shaped:** this project's stack, code areas, phase plan (`{{PHASE_IDS}}`), forbidden patterns, and architecture are its own.
+
+_(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; the human bridges between orchestrator + implementer sessions.)_
+
+---
+
+## File inventory
+
+```
+{{REPO_DIRNAME}}/
+├── .claude/
+│   ├── commands/                       # Slash commands
+│   └── agents/                         # Subagents (opt-in starter set + reactive additions)
+├── {{CODE_AREA}}
+│   ├── CLAUDE.md                       # Code-area conventions
+│   └── LESSONS.md                      # Lessons logged (§1+)
+├── docs/
+│   ├── team-protocol.md                # Loaded by /team-start (team pattern only)
+│   ├── orchestrator-briefing.md        # Loaded by /orchestrate-start
+│   ├── tdd-brief-template.md           # /tdd brief format
+│   ├── scaffolding-reference.md        # THIS FILE
+│   ├── team-handoffs/                  # /team-end outputs (team pattern only)
+│   ├── briefs/                         # Numbered /tdd briefs (NNN-<task-id>-<topic>.md)
+│   ├── sessions/                       # Numbered chronological session docs
+│   └── runbooks/                       # Operational procedures
+├── CLAUDE.md                           # Root — project conventions + shared comm rules
+├── {{TASK_TRACKER}}                    # Task tracker
+└── {{ARCH_DOC}}                        # Architecture / design contract
+```
+
+<!-- ▼ EXAMPLE BLOCK: extend the inventory with the project's real layout — extra code areas, deliverable docs, eval suites. ▲ -->
+
+---
+
+## Team pattern (three roles + human)
+
+Full topology + escalation rules: `docs/team-protocol.md` (team pattern) + root `CLAUDE.md` "Team coordination — shared rules" (all roles).
+
+| Role | cwd | Loads |
+|---|---|---|
+| Team lead (thin) | repo root | root `CLAUDE.md` + `docs/team-protocol.md` |
+| Orchestrator | repo root | root `CLAUDE.md` + `docs/orchestrator-briefing.md` |
+| Implementer (per area) | `{{CODE_AREA}}` | area `CLAUDE.md` + root `CLAUDE.md` |
+
+*Teammate names: `<track>-<area>-<role>` when parallel teams run in the same repo, else `<area>-<role>`. The track prefix is load-bearing for cross-bleed prevention.*
+
+- **Team lead:** `/team-start` + `/team-end`, the live task board, the **escalation conduit** to the human. **Persists across orchestrator/implementer session cycles; stays lean both ways** — no relaying down, no per-slice narration up; upward output only for the **close-out gate** (user-on-demand — NOT per slice/task/phase/round) + the 4 escalation categories.
+- **Orchestrator:** planning, scope, docs, **Step-2.5 review**, commit messages, push, Step-9 routing, `/orchestrate-end`.
+- **Implementer:** `/tdd` cycles, `/preflight`, `/session-end`, code commits only.
+
+Orchestrator and implementers communicate **directly**. The lead is looped in **only** for the 4 escalation categories.
+
+---
+
+## Slash commands
+
+| Command | Purpose |
+|---|---|
+| `/team-start [track]` | _(lead)_ stand up the team; establish direct comms + escalation |
+| `/team-end` | _(lead)_ close out the team session; write handoff doc (user-on-demand only) |
+| `/orchestrate-start` | Orient an orchestrator session |
+| `/orchestrate-end` | Orchestrator close-out + Carry-forward triage + round commit + push |
+| `/session-start` | Orient an implementer session |
+| `/session-end` | Implementer close-out (incl. wiring/reachability audit) |
+| `/tdd <feature>` | TDD discipline walker — deterministic code (Step 2.5 design review + Step 7.5 reachability) |
+| `/wired <feature>` | Trace a feature's call path from a production entry point |
+| `/preflight` | Quality gate |
+| `/run-tests [class]` | Typed test runner shortcut |
+| `/check-arch <topic>` | Architecture doc lookup |
+| `/eval [category]` | _(optional)_ runs an eval class |
+| `/trace <id>` | _(optional)_ pulls a structured trace |
+
+_( Single-operator fallback: remove the `/team-start` and `/team-end` rows. )_
+
+---
+
+## Workflow patterns
+
+### Per-slice TDD round
+
+1. Orchestrator authors a brief → `docs/briefs/NNN-<task-id>-<topic>.md`
+2. Orchestrator sends brief reference directly to the area implementer
+3. Implementer runs `/tdd <feature>` → Step 0 (self-check in team mode; user-confirm in single-operator) → Step 1 → Step 2 RED → Step 2.5 design write-up
+4. Orchestrator reviews + replies directly (approve/tweak/add); escalates a safety design Q if needed
+5. Implementer Steps 3-7 (confirm RED → GREEN → refactor → suite)
+6. **Step 7.5 reachability check** — confirm wiring from a production entry point
+7. Step 8 lint+typecheck (optional: parallel `code-quality-reviewer` + `security-reviewer` if installed)
+8. Implementer sends categorized Step-9 summary directly to orchestrator
+9. Orchestrator routes hot (commit-message-first reply); escalates deferments / safety findings / load-bearing architectural Option A/B/C calls
+10. Implementer Step 10: commits the slice with the orchestrator-authored message
+11. Implementer sends "done with slice — `<commit hash>`" one-liner
+12. Repeat
+
+### Step-9 routing matrix
+
+Canonical copy in `docs/orchestrator-briefing.md` — **don't re-copy it; point there.** Routed hot: Convention candidate → prose in `LESSONS.md` + one-line index row with anchor link · Architecture doc note → `{{ARCH_DOC}} §` · Future TODO *belongs-to-a-phase* → real task checkbox in that phase · *next-brief* → Carry-forward · *out-of-scope* → deferment escalation · Cross-doc invariant change → orchestrator writes the doc rows · Completed work → tick checkbox.
+
+### Carry-forward triage at `/orchestrate-end`
+
+Five outcomes: DELETE / KEEP / **INLINE-TARGET (→ real task checkbox, not an annotation)** / DEFER (escalate) / SPREAD.
+
+### Reachability (tested ≠ shipped)
+
+`/tdd` Step 7.5 + `/wired` prove each feature is invoked from a real entry point; the `reachability-auditor` subagent (if installed) audits an entire code area at phase boundaries.
+
+### Commit cadence
+
+N slice commits + 1 session-doc commit + 1 round commit = **N + 2** per round. Push once at `/orchestrate-end` — **only when a remote is configured** (to **{{GIT_REMOTE}}**).
+
+---
+
+## Project-specific conventions
+
+<!-- ▼ EXAMPLE BLOCK: the conventions unique to this project — its architecture sentence (if any), its forbidden patterns, its key safety rules, its layer dependency rule, its cross-doc invariant set. These distinguish this project's instance from the universal pattern. ▼ -->
+
+- **Architecture sentence:** *{{ARCHITECTURE_SENTENCE}}*
+- **Forbidden patterns:** see `{{CODE_AREA}}CLAUDE.md`.
+- **Key safety rules:** see root `CLAUDE.md` "Key safety rules."
+- **Cross-doc invariants:** the `{{CODE_AREA}}CLAUDE.md` table tracks typed models mirroring `{{ARCH_DOC}}` sections. Field changes require atomic doc edits.
+
+<!-- ▲ END EXAMPLE BLOCK ▲ -->
+
+---
+
+## State sources of truth
+
+| Concern | Source of truth | Loaded by |
+|---|---|---|
+| Team topology + escalation rules | Root `CLAUDE.md` "Team coordination" + `docs/team-protocol.md` | `/team-start` (lead-specific) |
+| Current state, "what's done, what's next" | `{{TASK_TRACKER}}` | `/orchestrate-start` + `/session-start` |
+| Technical narrative of just-landed work | Most recent `docs/sessions/<NNN>-*.md` | `/orchestrate-start` |
+| Round ledger (thin pointer-lines) | `{{TASK_TRACKER}}` "Log" | `/orchestrate-start` |
+| Per-slice design audit trail | `docs/briefs/<NNN>-<task-id>-<topic>.md` | On-demand; latest at `/orchestrate-start` |
+| Team-pause handoff state | Most recent `docs/team-handoffs/<NNN>-*.md` | `/team-start` (when resuming) |
+| Conventions / patterns | `{{CODE_AREA}}LESSONS.md` (prose) + `{{CODE_AREA}}CLAUDE.md` (index) | On-demand |
+| Architecture / design contract | `{{ARCH_DOC}}` | On-demand via `/check-arch` |
+| Workflow rules | `docs/orchestrator-briefing.md` (Step-9 matrix canonical); this doc | `/orchestrate-start` |
+| `/tdd` brief format | `docs/tdd-brief-template.md` | Via `/orchestrate-start` |
+| Universal scaffolding pattern | `SCAFFOLDING-GUIDE.md` (in the source scaffolding repo) | Reference only; not loaded per session |
+
+The principle: **single source of truth per concern.** Drift between sources is a bug.
+
+---
+
+## How to evolve this scaffolding
+
+- **New slash command** → file in `.claude/commands/` + add to root `CLAUDE.md` "Slash commands" + reference in `docs/orchestrator-briefing.md`.
+- **New subagent** → file in `.claude/agents/` + `.claude/agents/README.md` inventory + area `CLAUDE.md` "Subagents".
+- **New lesson** → next anchor in `{{CODE_AREA}}LESSONS.md` + row in the `{{CODE_AREA}}CLAUDE.md` index. Hot-routed at Step 9.
+- **New convention** → entry in `{{CODE_AREA}}CLAUDE.md` Forbidden patterns or root `CLAUDE.md` Key safety rules + a `LESSONS.md` entry if durable.
+- **New cross-doc invariant** → row in the `{{CODE_AREA}}CLAUDE.md` table + atomic `{{ARCH_DOC}}` edit.
+- **New escalation category** → root `CLAUDE.md` "Escalation taxonomy" + `docs/team-protocol.md` "What the lead does NOT do" cross-reference.
+
+**Don't** add project *state* to scaffolding files — state lives in `{{TASK_TRACKER}}`. **Don't** rename the cross-referenced files (`{{TASK_TRACKER}}`, the `CLAUDE.md` files, `{{CODE_AREA}}LESSONS.md`, `docs/team-protocol.md`, `docs/orchestrator-briefing.md`, `docs/tdd-brief-template.md`) casually — they're named inside slash command bodies; renaming is a multi-file ripple.
+
+---
+
+## Limits / known gaps
+
+1. **Cross-team channel-bleed is a real failure mode** — the track-prefix naming rule + ignore-mismatched-prefix posture mitigate it but don't fully eliminate it.
+2. **Documentation drift between a lesson and the code it governs is only audit-caught** — the cross-doc invariants table catches model↔spec drift mechanically; lesson↔code drift is not.
+3. **Subagents aren't sandboxed** — their forbidden-patterns section is the only guard.
+4. **HITL chokepoints stay HITL** — deploys, scope cuts, load-bearing architectural decisions, push approvals keep the user in the loop.
+5. **The brief-drafter subagent (if installed) requires a quality trial before standard adoption** — briefs are load-bearing.
+
+See `SCAFFOLDING-GUIDE.md §12` for the full list.
+
+---
+
+**End of scaffolding reference.** For the universal pattern, see `SCAFFOLDING-GUIDE.md`.

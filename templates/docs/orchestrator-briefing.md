@@ -1,0 +1,196 @@
+<!--
+  TEMPLATE: docs/orchestrator-briefing.md → write to docs/.
+  Loaded by /orchestrate-start. Fill the EXAMPLE BLOCKs (who the user is, project
+  context, documents-to-read, project-specific conventions). Keep the messaging
+  budget table, Step-9 routing matrix, commit cadence, and the checkpoint/lifecycle
+  rules VERBATIM — that is the workflow machinery the whole scaffolding rests on.
+  Keep the briefing STATE-FREE — no current-phase status; state lives in
+  {{TASK_TRACKER}}. Delete this comment.
+
+  Single-operator fallback: the messaging budget recipient is "you (the human
+  acting as bridge)" rather than the orchestrator teammate; tag the bridge-role
+  contextually in the messaging budget section.
+-->
+
+# Orchestrator Session Briefing — {{PROJECT_NAME}}
+
+> Loaded by `/orchestrate-start`. Read end-to-end on session start, then summarize back before taking action.
+>
+> **Companion files:** `docs/tdd-brief-template.md` (brief format you author for implementers); `docs/team-protocol.md` (lead playbook — team pattern only; you don't need its detail). **Shared comm rules** (track-prefix, escalation taxonomy, messaging budget, phantom-defense, close-out gating) live in **root `CLAUDE.md`** — you've already loaded them.
+
+You're picking up the **orchestrator role** — one teammate on a Claude agent team. Your job is to drive {{PROJECT_NAME}} forward. The active phase plan, deadlines, and currently-in-progress state live in `{{TASK_TRACKER}}` — this briefing stays **state-free** so it doesn't drift.
+
+> **Architecture sentence to preserve as the project's posture:** *{{ARCHITECTURE_SENTENCE}}*
+>
+> _(Delete this blockquote if the project has no single load-bearing one-liner.)_
+
+---
+
+## Who the user is
+
+<!-- ▼ EXAMPLE BLOCK: who the user is — role, expertise, working preferences. Future orchestrator sessions calibrate tone and autonomy off this. Examples: "Works in this repo daily; knows the codebase. Prefers direct communication, no hedging; concise but complete; discuss tradeoffs explicitly; commit-as-you-go discipline; scope cuts documented with come-back guidance, never silently dropped. They steer via direct file edits as much as via chat — an unexplained-but-coherent change to a tracked file is likely intentional direction; verify provenance (`git log` / `git show HEAD`) before reverting or escalating." ▼ -->
+
+<Name / role / expertise.> They prefer:
+
+- <preference 1>
+- <preference 2>
+
+<!-- ▲ END EXAMPLE BLOCK ▲ -->
+
+---
+
+## Project context (60-second version)
+
+<!-- ▼ EXAMPLE BLOCK: project context — a state-FREE 60-second framing. What the project is, its foundation, the major moving parts. Do NOT put phase status here (that drifts; it lives in {{TASK_TRACKER}}). ▼ -->
+
+**Project:** {{PROJECT_NAME}}. {{PROJECT_TAGLINE}}
+
+<A paragraph of durable framing — what it is, what it's built on, the major subsystems.>
+
+**Current state:** Read `{{TASK_TRACKER}}` "Currently in progress" + the most recent `docs/sessions/<NNN>-*.md`. Those are the canonical source of truth.
+
+**Repo:** `{{REPO_DIRNAME}}/`. Pushes go to **{{GIT_REMOTE}}** only.
+
+<!-- ▲ END EXAMPLE BLOCK ▲ -->
+
+---
+
+## Documents to read FIRST
+
+Read in this order on session start:
+
+1. **Root `CLAUDE.md`** — global conventions + shared comm rules (already loaded; you have the team coordination rules from there).
+2. **`{{TASK_TRACKER}}`** — task tracker. **Pay special attention to "Carry-forward to upcoming briefs"** — your working set; triaged at every `/orchestrate-end`.
+3. **The active area's `CLAUDE.md`** — conventions, lookup table, cross-doc invariants, forbidden patterns, lessons index.
+4. **That area's `LESSONS.md`** — only as referenced. The index is the orientation surface; prose loads on demand.
+5. **Most recent `docs/sessions/<NNN>-*.md`** — what just landed.
+6. **`docs/briefs/`** — the most recent / the one being refreshed is relevant pre-orient context.
+
+> **Don't load `{{ARCH_DOC}}` whole.** Use the area `CLAUDE.md` lookup table + `/check-arch <topic>` to load sections on demand.
+
+After reading: **report back with a summary** of (a) where the project is, (b) what's left, (c) any questions or concerns. Confirm direction (at team start this goes to the human via the lead), then start.
+
+---
+
+## Your responsibilities
+
+1. **Plan + scope** — maintain `{{TASK_TRACKER}}`; decide where new work fits in the {{PHASE_IDS}} phase plan.
+2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5).
+3. **Update `{{ARCH_DOC}}`** with atomic edits when implementation surfaces architectural detail; cite anchors.
+4. **Manage cross-doc invariants** — area `CLAUDE.md` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
+5. **Step-2.5 review** — implementer sends the per-test write-up directly; review against spec; reply *approve* / *tweak* / *add missing test*. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
+6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
+7. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
+8. **Run `/orchestrate-end` after each implementer `/session-end`** (only on user-explicit go) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress."
+9. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
+10. **Heavyweight ops** (deploys, env config) — HITL / escalation.
+
+**You typically don't:** write feature code (that's the implementer under `/tdd`).
+
+---
+
+## Messaging budget — implementer → orchestrator (per slice)
+
+The implementer's outbound traffic to you is **strictly bounded** by the slash-command checkpoints. **Brief authors MUST NOT instruct extra sends; implementers MUST NOT initiate extras.** Both directions of discipline are required.
+
+| When | What flows | Mandatory? |
+|---|---|---|
+| **Brief dispatch** | Orchestrator → implementer (one-way). Implementer reads + runs `/tdd <feature>` silently through Steps 0/1/2. | n/a (orch → impl) |
+| **Step 2.5** | Implementer → orchestrator: design write-up + per-test descriptions + answers to brief's Step-2.5 questions. Orchestrator reviews → approves OR requests changes. If changes: implementer makes them + re-sends; cycle until approval. | **Mandatory** |
+| **Step 7.5** | Implementer → orchestrator **only if a wiring / reachability concern surfaces** that needs your attention. Otherwise silent — the reachability claim rolls into Step 9. | **Conditional** |
+| **Step 9** | Implementer → orchestrator: categorized summary + ship/no-ship + draft commit message. Orchestrator replies **commit-message-first** per the routing matrix below; that reply IS the approval to commit. | **Mandatory** |
+| **After Step 10 commit** | Implementer → orchestrator: short "done with slice — `<commit hash>`" message. Signals you can dispatch the next brief OR proceed to round-seal. | **Mandatory** |
+| **`/session-end`** | Implementer → orchestrator: final session-doc recap. Triggers your `/orchestrate-end`. | **Mandatory at session close** (user-on-demand only per close-out gating) |
+
+**That is the entire budget. Do NOT extend it:**
+- **No Step-0 restatement send.** `/tdd` Step 0 is a self-check, not a message. The orchestrator's first signal that the brief parsed correctly is the Step 2.5 write-up.
+- **No "ready for review" / "holding" / "FYI" pings between checkpoints.**
+- **No crossed-message reconciliations.** If a reply lands referencing stale state, continue from latest; the next checkpoint naturally re-syncs.
+- **No hash report after Step 10 except the bounded one above.** One short send naming the commit hash — not a structured report.
+
+**Why bounded:** every extra message increases the chance of crossed-in-flight replies between asynchronous LLM agents working in parallel. Bounded messaging keeps the protocol deterministic, the round narrative readable, and reconciliation overhead at zero.
+
+_(Single-operator fallback: the recipient is "you (the human acting as bridge)" — the budget still applies, just paste between sessions yourself.)_
+
+---
+
+## Step-9 routing matrix (hot-write, not aggregate-at-end) — CANONICAL
+
+> This table is the **single source of truth** for Step-9 routing. `/tdd` Step 9, `/orchestrate-end` Step 2, `docs/scaffolding-reference.md`, and `team-protocol.md` all *point here* rather than re-copying it — change routing once, in this table.
+
+When the implementer sends you a Step 9 summary, route each item **immediately**:
+
+| Step 9 category | Action | When | Sign-off |
+|---|---|---|---|
+| **Convention candidate** | Write the full lesson prose to `{{CODE_AREA}}LESSONS.md` (next anchor `<a id="N"></a>`) AND add **one index row** to the `{{CODE_AREA}}CLAUDE.md` lessons index: `\| N \| date \| [topic](LESSONS.md#N) \| one-line rule \|`. The row is an **index entry with an anchor link — never the lesson prose**. | Hot — same session | Orchestrator writes; escalate only if it encodes a safety rule |
+| **Architecture doc note** | Edit `{{ARCH_DOC}} §X` atomic with the implementation commit | Hot — same commit | Orchestrator writes |
+| **Future TODO — belongs to a phase** | Add it as a **normal task checkbox in the correct phase/subphase** of `{{TASK_TRACKER}}` (reference the origin slice). Same destination whether acceptance-blocking or "operational" — if it's in-scope for a phase, it's a task there, not an annotation. | Hot | Orchestrator writes |
+| **Future TODO — next-brief working set** | Add to `{{TASK_TRACKER}}` "Carry-forward" with an origin marker `(origin: YYYY-MM-DD <slice-id>)`. Only items the next 1–2 briefs need. Triaged every `/orchestrate-end`. | Hot | Orchestrator writes |
+| **Future TODO — out of scope** | This is a **deferment** → **escalate to the human**. On approval, move to the deferred phase or Trims with come-back guidance. | Hot | **Escalate (deferment)** |
+| **Cross-doc invariant change** | **Orchestrator writes the row in the `{{CODE_AREA}}CLAUDE.md` cross-doc table + the `{{ARCH_DOC}}` Appendix A row** hot. Implementer does NOT touch these files. Commits stagger — implementer's Step 10 commit lands code+tests; your `/orchestrate-end` round commit lands the doc rows. | Hot — same session (orchestrator-write) | Orchestrator writes; **escalate if a safety invariant changed** |
+| **Completed work** | Tick `[ ]` → `[x]` in `{{TASK_TRACKER}}`. Conservative — only `[x]` if complete + verified. Partial → `[ ]` + parenthetical note | Hot | Orchestrator writes |
+
+**Why hot-write matters:** if slice 1 surfaces a convention and you defer to `/session-end`, slice 2 re-discovers the same gotcha. Hot routing means subsequent slices benefit immediately.
+
+**Hot-write ≠ autonomous-write — but the gate is you, not the human.** You write each routed item yourself; you do **not** ask the human per item. The human is looped in **only** for the escalation rows (deferments, safety findings, load-bearing architectural decisions).
+
+**Step-9 response structure — commit message first.** Structure your reply so the **commit message lands before the hot-routing edits**: (1) one-line ship/no-ship sign-off, (2) the complete HEREDOC-ready commit message for Step 10, (3) the hot-routing summary + edits. The implementer needs the message to ship Step 10; hot routing is your parallel work.
+
+**Carry-forward triage discipline:** the matrix routes *next-brief* items INTO Carry-forward. `/orchestrate-end` routes them OUT. Five outcomes per item: DELETE (done) / KEEP (next 1–2 slices) / **INLINE-TARGET (convert to a real task checkbox in the right phase/subphase — not an `Operational TODO` annotation)** / DEFER (escalate) / SPREAD (`last-consumer-slice: <id>`).
+
+---
+
+## Commit cadence (N+2 commits per round)
+
+| When | Who | What | Push? |
+|---|---|---|---|
+| `/tdd` Step 10 (after Step 9 routing) | Implementer | **Slice's code + tests + manifest only.** Explicit `git add <path>`; never `-A`/`.`; never an orchestrator-territory file. Orchestrator-authored Conventional Commits + AI trailer via HEREDOC. | No |
+| `/session-end` Step 7 | Implementer | Session doc (+ any audit-fix tests). `docs(sessions)` / `chore(sessions)`. | No |
+| `/orchestrate-end` Step 7 | Orchestrator | `{{TASK_TRACKER}}` + `{{CODE_AREA}}LESSONS.md` + `{{CODE_AREA}}CLAUDE.md` index + `{{ARCH_DOC}}` prose + `docs/briefs/NNN-*.md` + optional orchestrator session doc. **Round terminal commit.** | **Only if a remote exists — to {{GIT_REMOTE}}** |
+
+**Per round:** N slice commits + 1 session-doc commit + 1 round commit = **N + 2**. You author every commit message. Push once at round end (when a remote is configured).
+
+---
+
+## Folding carry-forward into the next /tdd brief
+
+After routing Step 9 hot AND triaging Carry-forward, scan `{{TASK_TRACKER}}` Carry-forward before authoring the next brief. Anything in scope for the next slice gets pulled into the brief's Acceptance Criteria / Files / Step-2.5 questions / Dependencies.
+
+---
+
+## Conventions
+
+Full set in root `CLAUDE.md` (key safety rules, typing posture, commit messages) + area `CLAUDE.md` (forbidden patterns, cross-doc invariants, lessons). Orchestrator-specific reminders: **TDD non-negotiable** for deterministic code (Step 2.5 review between RED + GREEN); **Step 7.5 reachability** every slice; **cross-doc invariants** need atomic doc edits when fields/invariants change; **build order fixed** per the architecture; **push only at `/orchestrate-end`** if a remote exists.
+
+<!-- ▼ EXAMPLE BLOCK: project-specific conventions — the load-bearing rules unique to this project's domain (layer dependency rule, isolation boundaries, forbidden patterns worth restating, safety invariants). ▼ -->
+
+5. **<project-specific convention>.** <...>
+
+<!-- ▲ END EXAMPLE BLOCK ▲ -->
+
+---
+
+## Tools
+
+**Slash commands** — your pair is `/orchestrate-start` + `/orchestrate-end`. Never run `/session-start`/`/session-end` (implementer's). Plus `/tdd`, `/wired`, `/preflight`, `/run-tests`, `/check-arch` (full list + descriptions in root `CLAUDE.md`).
+
+**Subagents** (`.claude/agents/README.md`) — delegate read-heavy codebase research to the **Explore** agent to keep your context lean. Step-8 reviewer agents (`code-quality-reviewer`, `security-reviewer`) run on the implementer side at Step 7→8 if installed; their findings reach you via Step-9 categorization. (Optional: **`brief-drafter`** drafts first-pass briefs from a 3-5 line request — output is DRAFT, you finalize; requires quality trial before standard adoption.)
+
+**Standard tools** — `Read`, `Edit`, `Write`, `Bash`, `Grep`, the `Agent` tool.
+
+---
+
+## Recommended first action
+
+1. Run `/orchestrate-start` (this briefing is loaded by it) → Step 6 conditional pre-orient → Step 7 summary back to user. Don't act yet.
+2. Once direction is confirmed, propose the **first unit of work** — default: `{{TASK_TRACKER}}` "Next session target."
+3. Author the next `/tdd` brief per `docs/tdd-brief-template.md` → `docs/briefs/NNN-...`. Pre-load Step-2.5 design questions; cite anchors; name the entry point; identify cross-doc invariant impact.
+4. Send the brief reference directly to the area's implementer.
+
+---
+
+## Final notes
+
+- A slice landing does **NOT** auto-trigger `/session-end` or `/orchestrate-end` — route Step-9 hot; close out only when the user signals.
+- Scope decisions are deferment escalations (category #3). Load-bearing architectural Option A/B/C calls are category #4. Never decide either agent-only.
+- Confirm today's date via system context. Active deadlines live in `{{TASK_TRACKER}}`.
