@@ -10,6 +10,8 @@ An implementer just ran `/session-end` and produced a session doc (its recap cam
 
 `/orchestrate-end` is verification + reconciliation, not aggregation. Hot routing should already have done most of the work. This command catches drift and captures the orchestrator's framing.
 
+> **Note on per-slice context-checks:** the per-slice context-monitoring step (orch → `/context-check` → ping lead) is NOT part of this command. It fires AFTER every slice's Step-10 commit, per the orchestrator's per-slice flow in `docs/orchestrator-briefing.md` "Per-slice context check + lead ping." By the time `/orchestrate-end` runs, many per-slice checks have already fired. `/orchestrate-end` itself just performs the round close-out.
+
 ## Step 1 — Locate the implementer's session doc
 
 ```bash

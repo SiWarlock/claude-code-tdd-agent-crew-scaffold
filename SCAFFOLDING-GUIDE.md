@@ -222,16 +222,17 @@ Each `.claude/commands/<name>.md` is a prompt invoked as `/<name>` (with optiona
 | Command | Role | What it does |
 |---|---|---|
 | **`/team-start [track]`** | Team lead | Stand up the team. Read the lead playbook + shallow current-state pointers. Spawn orchestrator + first area implementer with bounded prompts. Announce track prefix. Verify each teammate's first read-back confirms it ran the correct start command. Build the live task board. |
-| **`/team-end`** | Team lead | Close out the team session (user-on-demand only). Gate on all teammates being `/session-end`-closed. Write `docs/team-handoffs/<NNN>-<date>-<topic>.md` with team composition at close, active arc, in-flight state, spawn prompts ready for the successor, open decisions. |
+| **`/team-end`** | Team lead | Close out the team session (user-on-demand OR auto-cycle trigger). Gate on all teammates being `/session-end`-closed. Write `docs/team-handoffs/<NNN>-<date>-<topic>.md` with team composition at close, active arc, in-flight state, spawn prompts ready for the successor, open decisions. Clean up team-registry entries. |
 | **`/orchestrate-start`** | Orchestrator | Read the briefing + brief template + focused `{{TASK_TRACKER}}` sections + the latest session doc + the area `CLAUDE.md` lookup table. Pre-load `{{ARCH_DOC}}` anchors cited by Currently-in-progress. Optional pre-orient code review when refreshing a stale brief. Summarize back; wait for direction. |
-| **`/orchestrate-end`** | Orchestrator | Round close-out (user-on-demand only): verify Step-9 hot routing landed, reconcile `{{TASK_TRACKER}}` checkboxes, append a Log entry, update planning state, **triage Carry-forward**, optionally write an orchestrator-side session doc, then stage + commit + push the round terminal commit. |
+| **`/orchestrate-end`** | Orchestrator | Round close-out (user-on-demand OR auto-cycle trigger): verify Step-9 hot routing landed, reconcile `{{TASK_TRACKER}}` checkboxes, append a Log entry, update planning state, **triage Carry-forward**, optionally write an orchestrator-side session doc, then stage + commit + push the round terminal commit. |
 | **`/session-start`** | Implementer | Read focused `{{TASK_TRACKER}}` sections + area `CLAUDE.md` lookup table. Summarize the active phase. Confirm the session target. *(Skipped on continuation — implementer sessions are reused across slices.)* |
-| **`/session-end`** | Implementer | Technical close-out (user-on-demand only): recap, TDD self-audit, cross-doc invariant audit, **Step-7.5 wiring/reachability audit**, Step-9 routing surface, always create a numbered session doc, run `/preflight`, commit the session doc. Does NOT touch `{{TASK_TRACKER}}`. |
+| **`/session-end`** | Implementer | Technical close-out (user-on-demand OR auto-cycle trigger): recap, TDD self-audit, cross-doc invariant audit, **Step-7.5 wiring/reachability audit**, Step-9 routing surface, always create a numbered session doc, run `/preflight`, commit the session doc. Does NOT touch `{{TASK_TRACKER}}`. |
 | **`/tdd <feature>`** | Implementer | The 10-step discipline walker (§5). Scoped to **deterministic code**; LLM-driven / purely visual behavior is exempt — use the project's non-deterministic-coverage path. |
 | **`/preflight`** | Either | Full quality gate. **cwd-aware** if the project has multiple code areas. Stops on first failure; never auto-fixes. |
 | **`/run-tests [class]`** | Either | Typed test-runner shortcut. cwd-aware; maps an argument to the project's test markers/groups. |
 | **`/check-arch <topic>`** | Either | **Context-efficiency primitive.** Looks the topic up in the area `CLAUDE.md` lookup table and reads *only* that section of `{{ARCH_DOC}}`. Falls back to grep; recommends adding a lookup row if the topic recurs. Never loads a whole architecture doc. |
 | **`/wired <feature>`** | Either | Reachability tracer. Trace a feature's call chain from a production entry point; report REACHABLE / UNREACHABLE with the gap. The standalone form of `/tdd` Step 7.5. |
+| **`/context-check [team]`** *(team mode)* | Any role | Reports per-teammate context usage by joining `~/.claude/team-registry/` + `~/.claude/heartbeats/`. Used by orch's per-slice auto-flow + manual invocation. See §8 "Context monitoring + auto-cycle." |
 | **`/eval [category]`** *(optional)* | Either | Runs a named eval class (eval-driven projects). |
 | **`/trace <id>`** *(optional)* | Either | Pulls a structured trace by id (observability-heavy projects). |
 
@@ -327,7 +328,7 @@ The implementer's outbound traffic to the orchestrator is **strictly bounded** b
 2. **Step 7.5** — *only if* a wiring concern surfaces; otherwise silent.
 3. **Step 9** — categorized summary + ship/no-ship + draft commit message.
 4. **Done-with-slice** — one-liner naming the commit hash.
-5. **`/session-end`** — final recap (user-on-demand only).
+5. **`/session-end`** — final recap (user-on-demand OR auto-cycle trigger).
 
 **No awareness pings.** No "brief dispatched," no "ready for review," no "Step 2.5 approved," no "ack queued." These burn context and are not escalations. The lead stays silent on routine harness `idle_notification` events.
 
@@ -373,9 +374,14 @@ Covered in §7 under `{{ARCH_DOC}}` — the single highest-leverage drift-catche
 
 **Per round:** N slice commits + 1 session-doc commit + 1 round commit = **N + 2**. The orchestrator authors every message.
 
-### Close-out gating — user-on-demand only
+### Close-out gating
 
-`/session-end` (implementer) + `/orchestrate-end` (orchestrator) + `/team-end` (lead) run **only on the user's explicit on-demand go relayed by the lead** — *not* at slice / task / phase / round / any natural boundary. The lead does NOT surface a close-out gate at natural work boundaries; the orchestrator does NOT request one. Hot-routing accumulates in the working tree across many slices until the user signals a close-out.
+`/session-end` (implementer) + `/orchestrate-end` (orchestrator) + `/team-end` (lead) run on **either** trigger:
+
+1. **User-on-demand** — user explicitly signals close-out (relayed by the lead in team mode).
+2. **Context-monitoring auto-cycle** (team mode only) — lead detects a teammate's `ctx_pct` ≥ ACTION threshold on a per-slice context-report; auto-triggers the close-out cycle. Never mid-slice — the trigger lands after Step-10 commit. Full mechanics in "Context monitoring + auto-cycle" below.
+
+Outside those two triggers, hot-routing accumulates in the working tree across many slices. The lead does NOT surface a close-out gate at routine work boundaries (slice / task / phase / round); the orchestrator does NOT request one at boundaries either.
 
 ### The checkpoints are mandatory — and not overridable
 
@@ -385,6 +391,44 @@ Two `/tdd` pauses are **designed safeguards**, not optional friction:
 - **Step 9 (categorization + commit-message handoff)** — the point where the orchestrator routes flags before the slice commit lands.
 
 A standing "work without stopping" instruction does **not** override these. Such instructions scope to *clarifying questions*, not protocol checkpoints. If conflict arises, the session **surfaces the conflict** and lets the user decide; it does not silently skip.
+
+### Context monitoring + auto-cycle (team mode only)
+
+Teammates have finite context windows. Without a reliable monitor, sessions either burn out (run past usable capacity, output degrades) or get cycled manually too early (wasted work-in-progress). The scaffolding bakes in **per-slice context monitoring + auto-cycle at threshold**:
+
+**How it works:**
+
+1. **Status line writes heartbeats** — the user's `~/.claude/statusline-command.sh` script (template provided in `templates/scripts/`) reads the harness's per-turn JSON, which includes `context_window.used_percentage`. On every refresh, the status line writes a heartbeat to `~/.claude/heartbeats/<session_id>.json` — but ONLY if a `~/.claude/team-registry/<session_id>.json` entry exists for that session. Solo (non-team) sessions never write registry entries, so the heartbeat system is silent for them.
+
+2. **Each teammate writes a registry entry at startup** — the `/team-start` spawn prompt templates include a first-action `jq` command that writes `~/.claude/team-registry/<session_id>.json` with `{session_id, name, team, role, cwd, ts}`. This is what "opts in" the teammate to monitoring.
+
+3. **Orchestrator runs `/context-check <team>` per slice** — after every Step-10 commit + hot-routing, the orchestrator invokes the helper script (`~/.claude/scripts/check-team-context.sh`), which joins registry + heartbeats by session_id and outputs a per-team context snapshot. The orch sends this as a structured ping to the lead.
+
+4. **Lead evaluates thresholds** (configurable via env vars):
+   - **OK** (< 70%) — silent log, no surface.
+   - **WARN** (70-74%) — one-line surface to user with trajectory estimate (~N slices to ACTION based on 3-slice rolling growth).
+   - **ACTION** (75-79%) — auto-trigger close-out cycle at this clean slice break. Lead → orch → impl runs `/session-end` → orch runs `/orchestrate-end` → lead spawns successor.
+   - **HARD-STOP** (≥ 80%) — halt new brief dispatch + cycle immediately.
+
+5. **Cycle preserves the never-mid-slice invariant** — the per-slice ping fires AFTER Step-10 commit. By definition, no slice is in flight at the trigger point. The current slice is always landed before close-out starts.
+
+**Why this preserves the user-on-demand close-out spirit:** the original rule was *"close-out only on explicit user go — never at natural boundaries."* Auto-cycle is not "close-out at a natural boundary" — it's "close-out when context capacity demands it." Capacity is a hard mechanical constraint (the harness limits tokens), not a workflow preference. The trigger is purely the status-line ctx_pct, not a heuristic. User control is preserved by configurable thresholds, the always-available `/context-check` for ad-hoc visibility, the WARN tier surfacing well before action, and the only "no discretion" tier being HARD-STOP.
+
+**Parallel teams isolation:** when multiple team-lead sessions run in parallel (e.g., a frontend track + a backend track on the same monorepo), each team's registry entries carry a distinct `team` field. `/context-check <team>` filters by team, so team-A's lead only sees team-A's members. Heartbeats use session_id as key, fully isolated. No cross-team bleed.
+
+**Files involved:**
+
+```
+~/.claude/statusline-command.sh           # Status bar render + heartbeat writer (one install per user)
+~/.claude/scripts/check-team-context.sh   # The join + threshold-tier helper (one install per user)
+~/.claude/team-registry/<sid>.json        # Per-teammate identity, written at startup via spawn prompt
+~/.claude/heartbeats/<sid>.json           # Per-teammate ctx_pct, written every status line refresh
+~/.claude/team-history/<team>/<name>.jsonl # Per-slice ctx snapshots for trajectory tracking
+```
+
+The template scaffolding ships reference implementations of `statusline-command.sh` and `check-team-context.sh` in `templates/scripts/`. `GENERATE-WITH-CLAUDE.md` includes install instructions (the user installs both scripts once; the registry + heartbeat files are populated automatically by team sessions).
+
+**ntfy alert (future hook):** if the lead's own context hits ACTION threshold, the lead initiates `/team-end` (which gates on all teammates being closed). A future enhancement: optional phone push notification via [ntfy.sh](https://ntfy.sh) when the lead cycles — set `CLAUDE_TEAM_NTFY_TOPIC=<your-topic>` and the lead `curl`s the webhook on `/team-end`. Hook point designed; integration deferred until needed.
 
 ---
 
@@ -400,7 +444,7 @@ Conventions live in the area `CLAUDE.md`, `LESSONS.md`, and architecture-invaria
 - **Commit-message discipline** — Conventional Commits, AI-assist trailer, HEREDOC for multi-line, orchestrator authors all, no "wip"/one-word messages.
 - **Carry-forward triage** — every `/orchestrate-end`.
 - **Reachability check** — every feature is wired to a real entry point; `/tdd` Step 7.5 + `/wired` enforce.
-- **Close-out gating** — user-on-demand only.
+- **Close-out gating** — user-on-demand OR auto-cycle (when context monitoring detects ACTION threshold).
 
 ### Project-specific (you identify yours)
 

@@ -14,10 +14,11 @@ If your project is more than one session of work, you've probably hit these:
 - **TDD-by-vibes** — "I'll write the tests after" is the default failure mode.
 - **Cross-doc drift** — typed models drift from spec; spec drifts from code; test pins drift from spec.
 - **Lost session output** — "this should be a lesson" / "this needs a doc note" piles up in scratch files and never gets acted on.
-- **Context-budget pressure** — one session doing planning + coding + commits + scope decisions burns context fast.
+- **Context-budget pressure** — one session doing planning + coding + commits + scope decisions burns context fast; agents that can't self-report context reliably burn through their windows mid-task.
 - **Channel-bleed in multi-team work** — parallel sessions cross-message; debugging takes longer than the work.
+- **Manually cycling agents at the right moment** — too early wastes work; too late degrades output.
 
-This scaffolding addresses each via concrete machinery: a 10-step `/tdd` walker with a mandatory test-design review checkpoint, hot-routed Step-9 categorization, an enforced cross-doc invariants table, a 4-category escalation taxonomy, track-prefix naming for multi-team work, and bounded messaging budgets.
+This scaffolding addresses each via concrete machinery: a 10-step `/tdd` walker with a mandatory test-design review checkpoint, hot-routed Step-9 categorization, an enforced cross-doc invariants table, a 4-category escalation taxonomy, track-prefix naming for multi-team work, bounded messaging budgets, and **per-slice context monitoring with auto-cycle at threshold** (the lead detects when teammates hit the ACTION threshold and auto-triggers close-out + spawns successors at the next clean slice break).
 
 ---
 
@@ -60,8 +61,9 @@ scaffolding/
     │   ├── orchestrator-briefing.md ← workflow rulebook
     │   ├── tdd-brief-template.md  ← /tdd brief format
     │   └── scaffolding-reference.md ← project-specific scaffolding map
+    ├── scripts/              ← user-global helpers (statusline + context-check; install to ~/.claude/ once per machine)
     └── .claude/
-        ├── commands/          ← slash commands (12 team / 10 single-operator + 2 optional)
+        ├── commands/          ← slash commands (13 team / 11 single-operator + 2 optional)
         └── agents/            ← README + 4 optional starter subagents
 ```
 
@@ -84,7 +86,9 @@ The full placeholder manifest is in `GENERATE-WITH-CLAUDE.md §10`.
 
 **Four escalation categories** reach the human via the lead: critical/safety design questions, findings, deferment approvals, load-bearing architectural decisions. Everything else, the orchestrator and implementer settle directly.
 
-**Close-out is user-on-demand** — `/session-end` and `/orchestrate-end` run only when the user signals, never at slice/phase/round/any natural boundary. Hot-routing accumulates in the working tree across many slices.
+**Per-slice context monitoring + auto-cycle** — the status line writes a heartbeat per session (team-mode only; solo sessions are unaffected); the orchestrator runs `/context-check <team>` after every Step-10 commit and pings the lead with each teammate's `ctx_pct`. Lead evaluates against tiers (WARN 70% / ACTION 75% / HARD-STOP 80%): silent below 70%; one-line surface at WARN with trajectory estimate; **auto-trigger close-out cycle at ACTION** (never mid-slice — the trigger fires after Step-10). The lead then spawns the successor via the standard cycle protocol. Thresholds env-configurable.
+
+**Close-out is user-on-demand OR auto-cycle** — `/session-end` / `/orchestrate-end` / `/team-end` run on explicit user go OR when context-monitoring detects ACTION threshold at a clean slice break. Never at routine work boundaries (slice/task/phase/round). Hot-routing accumulates in the working tree until the trigger fires.
 
 **Commit cadence** is N+2 per round: N slice commits (Step 10) + 1 session-doc commit (`/session-end`) + 1 round commit (`/orchestrate-end`). The orchestrator authors every message. Push only at round end.
 

@@ -39,12 +39,15 @@ Leanness runs in **two directions**:
 
 **The human's one-time "go" authorizes the whole queued sequence.** Once the human approves the plan + the spawn, the lead lets the queue run — it does **not** re-confirm per slice, per brief dispatch, or at Step-2.5 sign-off (that sign-off is the orchestrator's, never the human's).
 
-**Only two things produce upward output from the lead:**
+**Three things produce upward output from the lead:**
 
-1. **The close-out gate** — `/session-end` + `/orchestrate-end` + `/team-end` run only on the user's explicit go (see root `CLAUDE.md` "Close-out gating"). The lead does NOT surface the gate at natural boundaries.
+1. **The close-out gate** — `/session-end` + `/orchestrate-end` + `/team-end` run on user's explicit go OR when context-monitoring auto-triggers (see "Context monitoring + auto-cycle" below + root `CLAUDE.md` "Close-out gating"). Lead does NOT surface the gate at routine work boundaries.
 2. **The four escalation categories** (see root `CLAUDE.md` "Escalation taxonomy").
+3. **Context tier surfaces** — when a teammate crosses the WARN/ACTION/HARD-STOP thresholds (see "Context monitoring + auto-cycle"). One-line surface at WARN; auto-action at ACTION; immediate halt + cycle at HARD-STOP.
 
-Outside those two — and a genuine new direction from the human — the lead is **silent**. Silence is the lead working correctly, not the lead idle.
+Outside those three — and a genuine new direction from the human — the lead is **silent**. Silence is the lead working correctly, not the lead idle.
+
+**Per-slice context-report pings** (orch → lead) are processed silently by the lead — they're routine data, not awareness pings. The lead only emits text when a tier threshold is crossed (or escalation category arrives, or user direction arrives).
 
 ---
 
@@ -113,17 +116,75 @@ The lead spawns each teammate with a **brief, focused spawn prompt** carrying th
 
 ---
 
+## Context monitoring + auto-cycle
+
+The lead receives a per-slice context-report ping from the orchestrator after every Step-10 slice commit. The report carries each teammate's current `ctx_pct` (from the status line's heartbeat write, joined against the team-registry via session_id). The lead evaluates against three thresholds:
+
+| Tier | Default % | What the lead does |
+|---|---|---|
+| **OK** | < 70% | **Silent.** Log the data; emit no text. |
+| **WARN** | 70-74% | **One-line surface** to user: `<teammate> at X%. Trajectory: ~N slices to ACTION threshold. Will auto-cycle at action threshold.` No action yet — work continues. |
+| **ACTION** | 75-79% | **Auto-trigger close-out cycle** (no asking). The lead never interrupts mid-slice; the trigger arrives AFTER Step-10, so the current slice is already landed. |
+| **HARD-STOP** | ≥ 80% | **Halt dispatch of new briefs immediately + cycle**. Same as ACTION but the orch must NOT dispatch the next brief until the successor is alive. |
+
+Thresholds configurable via env vars: `CLAUDE_TEAM_CTX_WARN`, `CLAUDE_TEAM_CTX_ACTION`, `CLAUDE_TEAM_CTX_HARD`.
+
+### How the lead reads the ping
+
+The orch's ping carries the `/context-check <team>` output (human-readable + the aggregate-recommendation line). The lead processes it silently unless a tier line appears. Lead can also invoke `/context-check <team>` directly any time for an ad-hoc snapshot (uses the same helper script as the auto-flow).
+
+### The auto-cycle flow at ACTION threshold
+
+When the lead detects a teammate at ≥ 75% on a per-slice ping:
+
+1. **Lead → orch:** structured message — *"Context cycle triggered: `<teammate>` at <X>%. Run `/session-end` on `<teammate>`, then `/orchestrate-end` (round commit), then ack me when complete."*
+2. **Orch coordinates close-out:** sends `/session-end` directive to the impacted teammate. Teammate (implementer) runs `/session-end` (gates on the user's go relaxed by the auto-cycle authorization).
+3. **Implementer:** `/session-end` → session doc → recap → orch.
+4. **Orchestrator:** `/orchestrate-end` → round terminal commit.
+5. **Lead spins down** the outgoing teammate via `SendMessage({type: "shutdown_request"})`.
+6. **Lead reads state pointers** (per Cycle protocol below) + **spawns the successor** using the standard `/team-start` spawn templates (with the registry-write first action).
+7. **Verify successor's read-back** (correct start command + registry entry written).
+8. **Lead reports** to user: cycle complete; `<successor>` at <0-2>% and ready.
+
+If multiple teammates cross ACTION simultaneously (rare), cycle them serially — close one out fully (steps 1-7) before starting the next, to preserve the "never two teammates closing at once" invariant.
+
+### Lead's own context monitoring
+
+The lead also writes its own registry entry at `/team-start` Step 1, and the status line writes a heartbeat for the lead's session. `/context-check` includes the lead in the report.
+
+If the lead's own context hits ≥ 75%:
+- **Auto-trigger `/team-end`** — gates on all teammates being closed (per the standard `/team-end` flow); if any teammate is mid-slice, surface to user that lead is approaching limit + pause is imminent.
+- **Once teammates closed:** run `/team-end` to write the handoff doc. The next `/team-start` spawns a fresh lead from the handoff doc.
+- **Future hook: `ntfy` alert.** If `CLAUDE_TEAM_NTFY_TOPIC` env var is set, the lead `curl -X POST ntfy.sh/$TOPIC` with the cycle event. Defer integration to v2; design the hook point in `/team-end` now.
+
+### Why this preserves the original "user-on-demand" close-out spirit
+
+The original rule was *"close-out only on explicit user go — never at natural boundaries."* The auto-cycle path is **not** "close-out at a natural boundary" — it's "close-out when context capacity demands it." Capacity is a hard constraint, not a workflow preference. The trigger is mechanical (status-line ctx_pct), not heuristic (slice-count, time elapsed, etc.). User control is preserved by:
+- The ACTION threshold being configurable
+- `/context-check` always available for visibility
+- WARN tier surfacing well before action (user can intervene if they want a different cycle moment)
+- HARD-STOP being the only "no-discretion" tier
+
+---
+
 ## Cycle protocol (when a teammate hits context)
 
-Teammates cycle on a context budget (typically ~70-75%); the lead does not. To swap an outgoing teammate for a fresh one:
+Teammates cycle on a context budget. Trigger sources:
 
-1. **Confirm the outgoing teammate is at `/session-end`-closed state** (implementer) or `/orchestrate-end`-closed state (orchestrator). Per close-out gating, this requires explicit user go — do not auto-cycle.
+- **Auto-trigger** (recommended default) — per-slice context-check + threshold-tier logic above. Fires automatically at ACTION threshold.
+- **User-on-demand** — user invokes `/team-end`, or instructs the lead to cycle a specific teammate.
+
+In either case, the swap procedure is the same:
+
+1. **Confirm the outgoing teammate is at `/session-end`-closed state** (implementer) or `/orchestrate-end`-closed state (orchestrator). The auto-trigger arrives post-Step-10 so the current slice is landed; ensure close-out commits land before spawning the successor.
 2. **Lead re-reads the current state pointers:** `{{TASK_TRACKER}}` "Currently in progress" + the most recent `docs/sessions/<NNN>-*.md` + the last commit hash (`git log -1 --oneline`).
 3. **Spawn the successor** with the appropriate template (in `/team-start.md`), carrying:
    - Track prefix matching the lead's own
+   - Team name (matches `TeamCreate` invocation)
    - One-line WHY (what arc, what state, what user-direction was chosen)
    - The correct start command (`/orchestrate-start` for orch successor, `/session-start` for impl successor)
-4. **Verify the successor's read-back** confirms it ran the right command.
+   - **Registry-write as first action** (in the spawn prompt template) — load-bearing for monitoring continuity.
+4. **Verify the successor's read-back** confirms it ran the right command + registry entry was written.
 5. The successor re-derives deep state from files via its start command; the lead's spawn prompt only carries the **thin pointers** (preferences, active arc, recent direction).
 
 **Close-out ≠ teardown.** `/session-end` + `/orchestrate-end` are round-sealing commits — session doc + round commit — **not** shutdowns. After them the orchestrator + implementer persist (idle); the team + lead persist across rounds. To start the next unit of work the lead simply spawns the next per-area implementer — it does NOT re-stand-up the team. Use `/team-end` only when fully pausing the team (end of day, arc-complete, lead-cycle).
@@ -137,7 +198,8 @@ These flow **directly between teammates**. The lead is **not** in the loop unles
 - **Brief dispatch:** orchestrator → implementer (file in `docs/briefs/NNN-*.md` + a reference send).
 - **Step-2.5 test-design review:** implementer → orchestrator (per-test write-up); orch reviews against spec, replies approve/tweak/add. The orch is the reviewer, not the human (unless a critical/safety design Q surfaces).
 - **Step-9 routing:** implementer → orchestrator (categorized summary + ship/no-ship). Orch routes hot per the **canonical Step-9 matrix in `docs/orchestrator-briefing.md`**. Lead receives only escalated items.
-- **Commit + close-out:** implementer commits the slice (Step 10) with orchestrator-authored message. `/session-end` + `/orchestrate-end` run only on user-explicit go.
+- **Per-slice context-check:** orchestrator runs `/context-check <team>` after Step-10 + hot-routing complete; sends the report as a structured ping to lead. Lead processes silently unless threshold tier crossed (per "Context monitoring + auto-cycle" above).
+- **Commit + close-out:** implementer commits the slice (Step 10) with orchestrator-authored message. `/session-end` + `/orchestrate-end` run on user-explicit go OR auto-cycle trigger.
 
 ---
 

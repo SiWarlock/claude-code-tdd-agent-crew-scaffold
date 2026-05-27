@@ -80,18 +80,21 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 4. **Manage cross-doc invariants** — area `CLAUDE.md` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
 5. **Step-2.5 review** — implementer sends the per-test write-up directly; review against spec; reply *approve* / *tweak* / *add missing test*. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
 6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
-7. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
-8. **Run `/orchestrate-end` after each implementer `/session-end`** (only on user-explicit go) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress."
-9. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
-10. **Heavyweight ops** (deploys, env config) — HITL / escalation.
+7. **Per-slice context check + lead ping** (team mode only) — after Step-10 commit + hot-routing complete, **run `/context-check <team>`** + send the report to lead as a structured ping. Lead processes silently unless threshold tier crossed. See "Per-slice context check + lead ping" section below.
+8. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
+9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress."
+10. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
+11. **Heavyweight ops** (deploys, env config) — HITL / escalation.
 
 **You typically don't:** write feature code (that's the implementer under `/tdd`).
 
 ---
 
-## Messaging budget — implementer → orchestrator (per slice)
+## Messaging budget
 
-The implementer's outbound traffic to you is **strictly bounded** by the slash-command checkpoints. **Brief authors MUST NOT instruct extra sends; implementers MUST NOT initiate extras.** Both directions of discipline are required.
+The traffic between teammates is **strictly bounded** by the slash-command checkpoints. **Brief authors MUST NOT instruct extra sends; implementers MUST NOT initiate extras.** Both directions of discipline are required.
+
+### Implementer → Orchestrator (per slice)
 
 | When | What flows | Mandatory? |
 |---|---|---|
@@ -100,7 +103,13 @@ The implementer's outbound traffic to you is **strictly bounded** by the slash-c
 | **Step 7.5** | Implementer → orchestrator **only if a wiring / reachability concern surfaces** that needs your attention. Otherwise silent — the reachability claim rolls into Step 9. | **Conditional** |
 | **Step 9** | Implementer → orchestrator: categorized summary + ship/no-ship + draft commit message. Orchestrator replies **commit-message-first** per the routing matrix below; that reply IS the approval to commit. | **Mandatory** |
 | **After Step 10 commit** | Implementer → orchestrator: short "done with slice — `<commit hash>`" message. Signals you can dispatch the next brief OR proceed to round-seal. | **Mandatory** |
-| **`/session-end`** | Implementer → orchestrator: final session-doc recap. Triggers your `/orchestrate-end`. | **Mandatory at session close** (user-on-demand only per close-out gating) |
+| **`/session-end`** | Implementer → orchestrator: final session-doc recap. Triggers your `/orchestrate-end`. | **Mandatory at session close** (user-on-demand OR auto-cycle trigger per close-out gating) |
+
+### Orchestrator → Lead (per slice, team mode only)
+
+| When | What flows | Mandatory? |
+|---|---|---|
+| **Per-slice context-check ping** | Orchestrator → lead: after Step-10 + hot-routing complete, run `/context-check <team>`; send the report as a structured one-line summary to lead. Lead processes silently unless threshold tier crossed. | **Mandatory in team mode**; skip in single-operator mode (no lead) |
 
 **That is the entire budget. Do NOT extend it:**
 - **No Step-0 restatement send.** `/tdd` Step 0 is a self-check, not a message. The orchestrator's first signal that the brief parsed correctly is the Step 2.5 write-up.
@@ -111,6 +120,46 @@ The implementer's outbound traffic to you is **strictly bounded** by the slash-c
 **Why bounded:** every extra message increases the chance of crossed-in-flight replies between asynchronous LLM agents working in parallel. Bounded messaging keeps the protocol deterministic, the round narrative readable, and reconciliation overhead at zero.
 
 _(Single-operator fallback: the recipient is "you (the human acting as bridge)" — the budget still applies, just paste between sessions yourself.)_
+
+---
+
+## Per-slice context check + lead ping (team mode only)
+
+**When:** after Step-10 commit + hot-routing complete AND you've received the implementer's "done with slice — `<hash>`" message. This is the slice-boundary trigger.
+
+**What to do:**
+
+1. **Invoke `/context-check <team-name>`** (your team name is in your own `~/.claude/team-registry/<session_id>.json` entry; the slash command auto-detects if `$TEAM_NAME` env var is set, or pass it explicitly).
+2. **Append to history file** for trajectory tracking:
+   ```bash
+   # The /context-check helper reads from team-history/<team>/<name>.jsonl for
+   # the 3-slice rolling growth calc. Append your team's snapshot per slice:
+   mkdir -p ~/.claude/team-history/<team>
+   for f in ~/.claude/team-registry/*.json; do
+     [ "$(jq -r '.team' "$f")" = "<team>" ] || continue
+     name=$(jq -r '.name' "$f")
+     sid=$(jq -r '.session_id' "$f")
+     hb=~/.claude/heartbeats/${sid}.json
+     [ -f "$hb" ] || continue
+     ctx=$(jq -r '.ctx_pct' "$hb")
+     ts=$(date -u +%s)
+     echo "{\"ts\":$ts,\"ctx_pct\":$ctx,\"slice_hash\":\"<commit-hash>\"}" >> ~/.claude/team-history/<team>/${name}.jsonl
+   done
+   ```
+3. **Send a structured ping to lead:**
+   ```
+   SendMessage to: team-lead
+   summary: "slice <hash> context check"
+   message: "Slice <hash> landed. <output of /context-check, aggregate line + per-teammate ctx_pct snapshot>"
+   ```
+4. **Continue.** Dispatch the next brief OR wait for the lead to respond (if a threshold tier was crossed, the lead will respond with cycle instructions).
+
+**Why this matters:**
+- Lead can't see ctx_pct without your ping (it has no other reliable trigger for slice boundaries).
+- The ping is **structured data, not an awareness ping** — it carries the per-slice context snapshot, which the lead uses to decide whether to surface, auto-cycle, or stay silent.
+- Per-slice cadence keeps the read/eval cost low (1 ping per slice, vs continuous polling).
+
+**When NOT to ping:** during the auto-cycle flow itself (when the lead has just instructed close-out, your next "slice" is the close-out, not a real slice). Resume per-slice pings after a successor implementer is alive and the next real slice lands.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Team lead — close-out the team session; write handoff doc; surface what's next (user-on-demand only).
+description: Team lead — close-out the team session; write handoff doc; surface what's next (user-on-demand OR auto-cycle when lead's own context hits threshold).
 allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
 argument-hint: "<short topic>"
 ---
@@ -137,6 +137,33 @@ EOF
 If a predecessor handoff exists, also update its "Successor handoff" link to point at this one — same commit.
 
 **Do NOT push** unless a remote is configured + the user explicitly approves.
+
+## Step 6.5 — Clean up team-registry entries
+
+Remove this team's registry entries so `/context-check` no longer reports them as live (heartbeats would also age out via the 10-minute staleness filter, but explicit cleanup is cleaner):
+
+```bash
+# Read the team's session IDs from the team config (if still present), then
+# remove each one's registry + heartbeat file.
+TEAM="<your team name>"
+TEAM_CONFIG="$HOME/.claude/teams/$TEAM/config.json"
+if [ -f "$TEAM_CONFIG" ]; then
+  # Lead's session_id (in team config)
+  lead_sid=$(jq -r '.leadSessionId // empty' "$TEAM_CONFIG")
+  [ -n "$lead_sid" ] && rm -f "$HOME/.claude/team-registry/${lead_sid}.json" "$HOME/.claude/heartbeats/${lead_sid}.json"
+fi
+# Other members' session_ids — read each registry file, match by team, remove.
+for f in "$HOME/.claude/team-registry"/*.json; do
+  [ -f "$f" ] || continue
+  if [ "$(jq -r '.team // empty' "$f" 2>/dev/null)" = "$TEAM" ]; then
+    sid=$(jq -r '.session_id // empty' "$f" 2>/dev/null)
+    [ -n "$sid" ] && rm -f "$HOME/.claude/heartbeats/${sid}.json"
+    rm -f "$f"
+  fi
+done
+```
+
+If a predecessor handoff is being resumed later, the next `/team-start` re-spawns teammates → fresh registry entries land via spawn prompts.
 
 ## Step 7 — Tell the user
 

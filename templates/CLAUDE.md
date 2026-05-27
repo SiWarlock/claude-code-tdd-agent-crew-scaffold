@@ -102,9 +102,13 @@ Four categories only. Everything else, orchestrator + implementer settle directl
 3. **Deferment approvals** — any scope cut. Never silently drop work.
 4. **Load-bearing architectural decisions** — Option A/B/C calls shaping UX, dev-facing API surface, or load-bearing contract surface. Lead maps options + tradeoffs via `AskUserQuestion`; does NOT pick on the user's behalf.
 
-### Messaging budget — implementer → orchestrator (per slice)
+### Messaging budget
 
-Five bounded sends: **Step-2.5** (test designs), **Step-7.5** (only if a wiring concern surfaces), **Step-9** (categorized summary + ship/no-ship + draft commit message), **done-with-slice** (`<commit hash>`), **`/session-end`** (final recap). **No awareness pings:** no Step-0 restate-send, no "ready for review," no "FYI," no commit-hash announcements outside the bounded done-with-slice send. The lead stays silent on routine harness `idle_notification` events + peer-DM summaries (read-only context).
+**Implementer → orchestrator (per slice):** Five bounded sends — **Step-2.5** (test designs), **Step-7.5** (only if a wiring concern surfaces), **Step-9** (categorized summary + ship/no-ship + draft commit message), **done-with-slice** (`<commit hash>`), **`/session-end`** (final recap).
+
+**Orchestrator → lead (per slice):** One bounded send — **per-slice context-report ping** after Step-10 hot-routing completes (runs `/context-check <team>`, sends the report). Lead processes silently unless threshold tier crossed.
+
+**No awareness pings:** no Step-0 restate-send, no "ready for review," no "FYI," no commit-hash announcements outside the bounded done-with-slice send. The lead stays silent on routine harness `idle_notification` events + peer-DM summaries (read-only context).
 
 ### Phantom-message defense
 
@@ -112,7 +116,16 @@ If a message's content + tone doesn't match the named sender (e.g. plain-text us
 
 ### Close-out gating
 
-`/session-end` (implementer) + `/orchestrate-end` (orchestrator) + `/team-end` (lead) run **only on the user's explicit, on-demand go relayed by the lead** — *not* at slice / task / phase / round / any natural boundary. The lead does not surface a close-out gate at natural work boundaries; the orchestrator does not request one. Hot-routing accumulates in the working tree across many slices until the user calls one.
+`/session-end` (implementer) + `/orchestrate-end` (orchestrator) + `/team-end` (lead) run on **either** of these triggers:
+
+1. **User-on-demand** — user explicitly signals close-out (relayed by the lead in team mode).
+2. **Context-monitoring auto-cycle** — lead detects a teammate's `ctx_pct` ≥ ACTION threshold (default 75%) on a per-slice context-report; auto-triggers the close-out + cycle flow. Never mid-slice — the trigger always lands after Step-10 commit. See `docs/team-protocol.md` "Context monitoring + auto-cycle" for the full flow.
+
+In either case, hot-routing accumulates in the working tree across many slices until the trigger fires. The lead does not surface a close-out gate at routine work boundaries (slice / task / phase / round); only the two triggers above produce close-out.
+
+### Context monitoring (team-mode only)
+
+Each team-mode teammate's status line writes a per-session heartbeat to `~/.claude/heartbeats/<session_id>.json` (ctx_pct + tokens + cost). The orchestrator runs `/context-check <team>` after every Step-10 commit + hot-routing, and pings the lead with the report. Lead evaluates against thresholds (WARN 70% / ACTION 75% / HARD-STOP 80%). **Heartbeats are written ONLY when a `~/.claude/team-registry/<session_id>.json` entry exists for that session** — written by team-mode teammates at startup via the `/team-start` spawn prompt. Solo (non-team) sessions never write registry entries, so the heartbeat system is silent for them.
 
 ### Single-operator fallback
 
@@ -140,13 +153,14 @@ When in doubt, ask: "Can I write a failing test that pins this behavior determin
 ## Slash commands available (`.claude/commands/`)
 
 - `/team-start [track]` — _(team lead)_ stand up the team; establish direct comms + escalation
-- `/team-end` — _(team lead)_ close out the team session; write handoff doc (user-on-demand only)
+- `/team-end` — _(team lead)_ close out the team session; write handoff doc (user-on-demand or auto-cycle)
 - `/orchestrate-start` — orient an orchestrator session
 - `/orchestrate-end` — orchestrator-side round close-out (incl. Carry-forward triage)
 - `/session-start` — orient an implementer session
 - `/session-end` — implementer-side close-out (incl. wiring/reachability audit)
 - `/tdd <feature>` — TDD discipline walker (10 steps; Step 2.5 design review + Step 7.5 reachability)
 - `/wired <feature>` — trace a feature's call path from a production entry point
+- `/context-check [team]` — _(team mode)_ report per-teammate context usage; used by orch's per-slice auto-flow + manual invocation
 - `/preflight` — full quality gate
 - `/run-tests [class]` — typed test runner shortcut
 - `/check-arch <topic>` — architecture doc lookup

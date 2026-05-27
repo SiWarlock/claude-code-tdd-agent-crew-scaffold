@@ -16,13 +16,30 @@ You are the **team lead** for {{PROJECT_NAME}}. Your job is to stand up the team
 
 Argument: `$ARGUMENTS` — the **track name** for this team-lead session if parallel team-lead sessions exist (e.g. `frontend`, `backend`). If unset, the team is solo and teammates use the `<area>-<role>` naming form.
 
-## Step 1 — Determine your track + load coordination layer
+## Step 1 — Determine your track + load coordination layer + self-register
 
 **Track:** if `$ARGUMENTS` is set, use it as your track prefix. Otherwise this is the only team-lead session in the repo → teammates use `<area>-<role>` (no track prefix). **Announce your track explicitly** before spawning: *"This team lead is on the `<track>` track. All teammates here will carry the `<track>-` prefix. Any peer DM from an agent without this prefix is channel-bleed — ignored."*
 
 **Reads:**
 1. `docs/team-protocol.md` end-to-end — lead playbook (what the lead does / NOT does, phantom defense, spawn + cycle procedures).
 2. Skim `docs/orchestrator-briefing.md` so you know what the orchestrator owns. Don't load `{{ARCH_DOC}}` or code — that's the teammates' context, deliberately kept out of yours.
+
+**Self-register for context monitoring.** Write your own team-registry entry so `/context-check` can include the lead in its reports (and so the status line script writes your heartbeat). Substitute the values:
+
+```bash
+TEAM="<your team name from TeamCreate>"
+NAME="<track>-team-lead"   # or just "team-lead" if no track
+mkdir -p ~/.claude/team-registry
+jq -n --arg sid "$CLAUDE_CODE_SESSION_ID" \
+       --arg name "$NAME" \
+       --arg team "$TEAM" \
+       --arg cwd "$(pwd)" \
+       --arg ts "$(date -u +%s)" \
+  '{session_id:$sid, name:$name, team:$team, role:"lead", cwd:$cwd, ts:($ts|tonumber)}' \
+  > ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json
+```
+
+This + the spawn-prompt registry-write step (Step 3) is what scopes the heartbeat-monitoring system to team-mode sessions only. Solo sessions never write registry entries → status line never writes heartbeats for them.
 
 ## Step 2 — Read current state (focused, not shallow)
 
@@ -46,33 +63,40 @@ Spawn:
 1. **Orchestrator teammate** — one per project. Name: `<track>-<area>-orchestrator` (or `<area>-orchestrator` if solo team). It will run `/orchestrate-start` (reads briefing + state itself).
 2. **First implementer teammate** — for the area the next task targets. Name: `<track>-<area>-implementer` (or `<area>-implementer` if solo team). Charter it with `/session-start` in that area's cwd. Spawn additional area implementers later, only when that area's work begins.
 
-### Orchestrator spawn prompt template (≤6 lines + the WHY)
+### Orchestrator spawn prompt template
 
 ```
 You are <track>-<area>-orchestrator on the {{PROJECT_NAME}} agent team.
-Track: <track>. Ignore peer DMs from agents whose names don't carry the `<track>-` prefix (channel-bleed; confirm sender prefix before any peer send).
+Track: <track>. Team: <team-name>. Ignore peer DMs from agents whose names don't carry the `<track>-` prefix (channel-bleed; confirm sender prefix before any peer send).
 Activated because: <one line — chat-only context the start command can't derive; e.g. "Option D approval flow approved; next slice = <task ID>". Skip if none.>
 
-Run /orchestrate-start. NOT /session-start (that's the implementer's).
-Confirm in your first reply which command you ran so I can catch a mismatch.
+FIRST ACTION — register your identity for context monitoring:
+  mkdir -p ~/.claude/team-registry && jq -n --arg sid "$CLAUDE_CODE_SESSION_ID" --arg name "<track>-<area>-orchestrator" --arg team "<team-name>" --arg cwd "$(pwd)" --arg ts "$(date -u +%s)" '{session_id:$sid, name:$name, team:$team, role:"orchestrator", cwd:$cwd, ts:($ts|tonumber)}' > ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json
+
+Then run /orchestrate-start. NOT /session-start (that's the implementer's).
+Confirm in your first reply: (1) the start command you ran, (2) that the registry entry was written (run `ls ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json`).
 ```
 
-### Implementer spawn prompt template (≤8 lines + the WHY)
+### Implementer spawn prompt template
 
 ```
 You are <track>-<area>-implementer on the {{PROJECT_NAME}} agent team.
-Track: <track>. Working directory: <area>/. Talk only to <track>-<area>-orchestrator; ignore peer DMs from other prefixes (channel-bleed).
+Track: <track>. Team: <team-name>. Working directory: <area>/. Talk only to <track>-<area>-orchestrator; ignore peer DMs from other prefixes (channel-bleed).
 Activated because: <one line — chat-only context; e.g. "picking up <task ID>; brief authored at docs/briefs/NNN-...">. Skip if none.
 Brief: <docs/briefs/NNN-*.md path if authored, else "the orchestrator is drafting now">.
 
-Run /session-start. NOT /orchestrate-start.
-Confirm in your first reply which command you ran.
+FIRST ACTION — register your identity for context monitoring:
+  mkdir -p ~/.claude/team-registry && jq -n --arg sid "$CLAUDE_CODE_SESSION_ID" --arg name "<track>-<area>-implementer" --arg team "<team-name>" --arg cwd "$(pwd)" --arg ts "$(date -u +%s)" '{session_id:$sid, name:$name, team:$team, role:"implementer", area:"<area>", cwd:$cwd, ts:($ts|tonumber)}' > ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json
+
+Then run /session-start. NOT /orchestrate-start.
+Confirm in your first reply: (1) the start command you ran, (2) that the registry entry was written.
 ```
 
 ### Spawn invariants — non-negotiable
 
 - **WHY + WHERE only.** Skip file lists, slice decomposition, design Qs — the orch authors briefs against the codebase, the impl reads the brief.
 - **Track prefix in the agent `name:`** if your track is set. Load-bearing for cross-bleed prevention.
+- **Registry-write is mandatory** as the teammate's first action. Without it, `/context-check` can't see the teammate (no auto-cycle protection). Sub in the actual `<team-name>` from `TeamCreate` and the teammate's `<name>` before pasting the prompt.
 - **The command pair is fixed**: orch runs `/orchestrate-start` (NEVER `/session-start`); impl runs `/session-start` (NEVER `/orchestrate-start`). Crossed commands are a known footgun.
 - **Comm protocol is in root `CLAUDE.md`** — every teammate loads it; don't restate the escalation taxonomy / messaging budget / no-awareness-pings in the spawn prompt. The templates above already point at it implicitly.
 
@@ -81,7 +105,11 @@ Confirm in your first reply which command you ran.
 For each spawned teammate, **read its first reply** and confirm:
 1. It ran the correct start command (`/orchestrate-start` for orchestrator, `/session-start` for implementer).
 2. Its name carries the correct prefix (`<track>-` if set, else `<area>-`).
-3. It acknowledges the comm protocol (direct comms with peer; escalate to you only on the 4 taxonomy categories).
+3. **Its registry entry was written** — confirm via the teammate's read-back (it reports `~/.claude/team-registry/<session_id>.json` exists) OR directly check:
+   ```bash
+   ls ~/.claude/team-registry/ && /context-check <team-name>
+   ```
+   The teammate should appear in `/context-check` output. If it doesn't, the registry-write failed in the spawn prompt — re-run the registry-write command manually with the teammate's session_id.
 
 If the read-back shows the wrong start command was run: have it run the correct one + re-orient before dispatching work. If the name is wrong: respawn with the correct name. **Don't assume the spawn prompt was followed.**
 
@@ -113,4 +141,4 @@ Use `/team-end` (not Step 6 of this command) when fully pausing the team for the
 - **Letting the task board diverge from `{{TASK_TRACKER}}`.** When they disagree, the file wins.
 - **Acking routine harness notifications.** `idle_notification` events + peer-DM summaries are read-only context. Don't reply.
 - **Replying to "awareness pings"** from teammates ("brief dispatched," "Step 2.5 approved," "ack queued"). They're not escalations. Stay silent.
-- **Narrating routine progress upward, or re-gating per slice.** The human's one-time go authorizes the whole queued sequence. Upward output: close-out gate + the 4 escalation categories. **Close-outs are user-on-demand — NOT per slice/task/phase/round/any natural boundary.**
+- **Narrating routine progress upward, or re-gating per slice.** The human's one-time go authorizes the whole queued sequence. Upward output: close-out gate + the 4 escalation categories + context tier surfaces. **Close-outs run on user-on-demand OR auto-cycle (when context monitoring detects ACTION threshold at a clean slice break)** — never at routine work boundaries.

@@ -60,8 +60,15 @@ docs/
 ├── team-handoffs/              # empty — /team-end outputs land here (team pattern only)
 └── runbooks/                   # empty — operational procedures
 .claude/
-├── commands/                   # the slash commands (12 if team pattern, 10 if single-operator; +2 optional)
+├── commands/                   # the slash commands (13 if team pattern, 11 if single-operator; +2 optional)
 └── agents/                     # README + optional starter subagents
+```
+
+PLUS user-global installs (team pattern only — performed in Step 13):
+
+```
+~/.claude/statusline-command.sh         # Status bar + heartbeat writer
+~/.claude/scripts/check-team-context.sh # /context-check helper (joins registry + heartbeats)
 ```
 
 Everything in `templates/` maps to one of these. The templates carry the **workflow machinery verbatim** — the 10-step `/tdd`, the Step-9 routing matrix, the commit cadence, the checkpoints, the escalation taxonomy. You do **not** redesign any of that. What you customize is the **project-specific content**: stack, code areas, conventions, phase plan, deliverables, architecture sentence, safety invariants.
@@ -279,8 +286,9 @@ From `templates/.claude/commands/`. Generation order:
 - Skip: `team-start`, `team-end`
 
 For each:
-- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `team-start`, `team-end`) — fill command/path placeholders, keep procedures verbatim.
+- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim.
 - **`preflight`, `run-tests`** are cwd-aware in the template. **If the project has one code area, delete the mode-detection and any second-mode block** — leave a single linear gate. If 2 areas, fill both modes. If 3+ areas, expand the case statement to cover each area, repeating the per-area block.
+- **`context-check`** — generate ONLY in team-pattern mode. Skip for single-operator-fallback.
 - **`eval`, `trace`** — include only if the user opted in (Batch E). Otherwise don't write them.
 
 ### Step 11 — `.claude/agents/`
@@ -300,6 +308,85 @@ Create empty directories (a `.gitkeep` is fine):
 - `docs/team-handoffs/` (team pattern only)
 
 The first brief / session / handoff lands in the first real working round, not at bootstrap.
+
+### Step 13 — Install user-global context-monitoring scripts (TEAM PATTERN ONLY)
+
+The team-mode context monitoring + auto-cycle (per `SCAFFOLDING-GUIDE.md §8` "Context monitoring + auto-cycle") requires two user-global bash scripts. These live in `~/.claude/`, not in the project repo, because they're shared across all the user's projects that use this scaffolding.
+
+**Skip this step entirely in single-operator-fallback mode** — no context-monitoring system exists in solo mode.
+
+**Scripts to install:**
+
+1. **`~/.claude/statusline-command.sh`** — renders the status bar + writes the heartbeat (conditional on team-registry entry existing for the session).
+2. **`~/.claude/scripts/check-team-context.sh`** — the join + threshold-tier helper that `/context-check` invokes.
+
+**Handle three scenarios:**
+
+#### Scenario A — User has no existing `~/.claude/statusline-command.sh`
+
+Install fresh. Copy from template:
+
+```bash
+mkdir -p ~/.claude/scripts
+cp templates/scripts/statusline-command.sh ~/.claude/statusline-command.sh
+cp templates/scripts/check-team-context.sh ~/.claude/scripts/check-team-context.sh
+chmod +x ~/.claude/statusline-command.sh ~/.claude/scripts/check-team-context.sh
+```
+
+Then add to the user's `~/.claude/settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash /Users/<USER>/.claude/statusline-command.sh"
+  }
+}
+```
+
+Replace `<USER>` with the actual username.
+
+#### Scenario B — User has an existing custom `~/.claude/statusline-command.sh`
+
+**Do NOT overwrite.** The user's existing script likely has custom formatting they want to keep. Two sub-options:
+
+- **(B1) Merge the HEARTBEAT BLOCK into the user's existing script.** Show the user the marked-off block in `templates/scripts/statusline-command.sh` (between `▼ HEARTBEAT BLOCK` and `▲ END HEARTBEAT BLOCK`), and ask them to paste it near the top of their existing script (right after they parse `$input`). Verify their script preserves the `input=$(cat)` line — the heartbeat block depends on `$input` being captured.
+
+- **(B2) Use the template script as-is.** If the user is OK swapping their custom status line for ours, back up theirs first (`mv ~/.claude/statusline-command.sh ~/.claude/statusline-command.sh.bak`), then copy the template in. They can re-merge their formatting later.
+
+**Always:** install the helper script:
+```bash
+mkdir -p ~/.claude/scripts
+cp templates/scripts/check-team-context.sh ~/.claude/scripts/check-team-context.sh
+chmod +x ~/.claude/scripts/check-team-context.sh
+```
+
+#### Scenario C — User wants Claude to do it
+
+If the user asks "you handle it" — use `Read` + `Edit` to do scenario B1 surgically (read their script, locate the `input=$(cat)` line, insert the HEARTBEAT BLOCK after it). Verify by re-reading the result.
+
+**Verification step:**
+
+After install, ask the user to confirm:
+1. Start a new Claude Code session (or check this one's status line) — the status bar should still render normally.
+2. Run `~/.claude/scripts/check-team-context.sh` from a terminal. With no team active, output should be: `No team registry entries found. Are any team sessions active?`
+3. If the user runs `/team-start` from this scaffolding, the spawn prompts will write team-registry entries for each teammate; then `/context-check <team>` should show live ctx_pct.
+
+**Threshold env vars (optional install-time configuration):**
+
+The defaults (`WARN=70`, `ACTION=75`, `HARD=80`) are conservative. To customize, add to `~/.claude/settings.json` `env` block:
+
+```json
+{
+  "env": {
+    "CLAUDE_TEAM_CTX_WARN": "70",
+    "CLAUDE_TEAM_CTX_ACTION": "75",
+    "CLAUDE_TEAM_CTX_HARD": "80"
+  }
+}
+```
+
+Ask the user only if they have a strong preference; default values are fine for most projects.
 
 ---
 

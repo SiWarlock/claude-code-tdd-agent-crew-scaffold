@@ -44,6 +44,18 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
 ├── CLAUDE.md                           # Root — project conventions + shared comm rules
 ├── {{TASK_TRACKER}}                    # Task tracker
 └── {{ARCH_DOC}}                        # Architecture / design contract
+
+# User-global (~/.claude/) — populated at /team-start by spawn prompts (team mode only):
+~/.claude/
+├── statusline-command.sh               # Status line + heartbeat writer (install once)
+├── scripts/
+│   └── check-team-context.sh           # /context-check helper (install once)
+├── team-registry/                      # Per-session: {session_id, name, team, role, cwd, ts}
+│   └── <session_id>.json               # Written by teammate at startup via spawn prompt
+├── heartbeats/                         # Per-session ctx_pct heartbeats (status line writes IFF registry exists)
+│   └── <session_id>.json               # Updated every status line refresh
+└── team-history/                       # Per-slice trajectory data
+    └── <team>/<name>.jsonl             # Appended by orch each slice for 3-slice rolling growth
 ```
 
 <!-- ▼ EXAMPLE BLOCK: extend the inventory with the project's real layout — extra code areas, deliverable docs, eval suites. ▲ -->
@@ -62,7 +74,7 @@ Full topology + escalation rules: `docs/team-protocol.md` (team pattern) + root 
 
 *Teammate names: `<track>-<area>-<role>` when parallel teams run in the same repo, else `<area>-<role>`. The track prefix is load-bearing for cross-bleed prevention.*
 
-- **Team lead:** `/team-start` + `/team-end`, the live task board, the **escalation conduit** to the human. **Persists across orchestrator/implementer session cycles; stays lean both ways** — no relaying down, no per-slice narration up; upward output only for the **close-out gate** (user-on-demand — NOT per slice/task/phase/round) + the 4 escalation categories.
+- **Team lead:** `/team-start` + `/team-end`, the live task board, the **escalation conduit** to the human. **Persists across orchestrator/implementer session cycles; stays lean both ways** — no relaying down, no per-slice narration up; upward output only for the **close-out gate** (user-on-demand OR auto-cycle when context monitoring detects ACTION threshold) + the 4 escalation categories + context tier surfaces.
 - **Orchestrator:** planning, scope, docs, **Step-2.5 review**, commit messages, push, Step-9 routing, `/orchestrate-end`.
 - **Implementer:** `/tdd` cycles, `/preflight`, `/session-end`, code commits only.
 
@@ -75,13 +87,14 @@ Orchestrator and implementers communicate **directly**. The lead is looped in **
 | Command | Purpose |
 |---|---|
 | `/team-start [track]` | _(lead)_ stand up the team; establish direct comms + escalation |
-| `/team-end` | _(lead)_ close out the team session; write handoff doc (user-on-demand only) |
+| `/team-end` | _(lead)_ close out the team session; write handoff doc (user-on-demand or auto-cycle) |
 | `/orchestrate-start` | Orient an orchestrator session |
 | `/orchestrate-end` | Orchestrator close-out + Carry-forward triage + round commit + push |
 | `/session-start` | Orient an implementer session |
 | `/session-end` | Implementer close-out (incl. wiring/reachability audit) |
 | `/tdd <feature>` | TDD discipline walker — deterministic code (Step 2.5 design review + Step 7.5 reachability) |
 | `/wired <feature>` | Trace a feature's call path from a production entry point |
+| `/context-check [team]` | _(team mode)_ report per-teammate context usage; auto-flow + manual |
 | `/preflight` | Quality gate |
 | `/run-tests [class]` | Typed test runner shortcut |
 | `/check-arch <topic>` | Architecture doc lookup |
@@ -107,7 +120,21 @@ _( Single-operator fallback: remove the `/team-start` and `/team-end` rows. )_
 9. Orchestrator routes hot (commit-message-first reply); escalates deferments / safety findings / load-bearing architectural Option A/B/C calls
 10. Implementer Step 10: commits the slice with the orchestrator-authored message
 11. Implementer sends "done with slice — `<commit hash>`" one-liner
-12. Repeat
+12. **(Team mode)** Orchestrator runs `/context-check <team>` + appends per-slice snapshot to history file + sends structured ping to lead with the report. Lead processes silently unless threshold tier crossed.
+13. Repeat
+
+### Context monitoring + auto-cycle (team mode only)
+
+Each team-mode teammate's status line writes a heartbeat to `~/.claude/heartbeats/<session_id>.json` (ctx_pct, tokens, cost, rate limits). The heartbeat write is gated on `~/.claude/team-registry/<session_id>.json` existing for that session — written by the teammate at startup via the `/team-start` spawn prompt. **Solo (non-team) sessions never write registry entries → no heartbeats → no monitoring for them.**
+
+Per-slice flow (Step 12 above): the orchestrator runs `/context-check <team>` after every Step-10 commit, pings the lead with the report. Lead evaluates against thresholds:
+
+- **OK** (< 70%) — silent log
+- **WARN** (70-74%) — one-line surface + trajectory
+- **ACTION** (75-79%) — auto-trigger close-out cycle at this clean break
+- **HARD-STOP** (≥ 80%) — halt dispatch + immediate cycle
+
+Full flow + auto-cycle mechanics in `docs/team-protocol.md` "Context monitoring + auto-cycle." Thresholds configurable via `CLAUDE_TEAM_CTX_WARN` / `CLAUDE_TEAM_CTX_ACTION` / `CLAUDE_TEAM_CTX_HARD` env vars.
 
 ### Step-9 routing matrix
 
