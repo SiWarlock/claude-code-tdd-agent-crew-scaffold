@@ -372,9 +372,26 @@ After install, ask the user to confirm:
 2. Run `~/.claude/scripts/check-team-context.sh` from a terminal. With no team active, output should be: `No team registry entries found. Are any team sessions active?`
 3. If the user runs `/team-start` from this scaffolding, the spawn prompts will write team-registry entries for each teammate; then `/context-check <team>` should show live ctx_pct.
 
+**Settings.json — what to change and what NOT to change:**
+
+The settings file is `~/.claude/settings.json` (USER-GLOBAL, NOT the project's `.claude/settings.json`). The context-monitoring system is implemented via the status line script + the spawn-prompt registry-write — **not via Claude Code hooks**. Do NOT add any hook config (no `Stop`, `SessionStart`, `UserPromptSubmit`, etc. hooks are required or used by this system).
+
+What you DO change in `~/.claude/settings.json`:
+
+1. **`statusLine.command`** — point at the installed script. If the user already has a `statusLine` set (scenario B), it's already pointing at their script; just leave it. If you installed fresh (scenario A), set it now.
+2. **Optional: `env.CLAUDE_TEAM_CTX_*`** — only if customizing thresholds. Defaults (70/75/80) are baked into the helper script and work without env-var setup.
+
+What you do NOT change:
+
+- **Hooks** — none needed. The system runs entirely through status-line + slash-commands + spawn-prompt-driven Bash.
+- **Permissions, env, plugins, theme, etc.** — leave untouched unless the user asks.
+- **The project's `.claude/settings.json`** — this is a USER-GLOBAL feature; don't touch project-local settings.
+
+**Merge, don't replace.** If `~/.claude/settings.json` already exists (it almost always does), READ it first, then add only the missing keys. Use `Read` + `Edit`, never `Write` — overwriting destroys the user's existing config (plugins, themes, hooks, MCP servers, etc.).
+
 **Threshold env vars (optional install-time configuration):**
 
-The defaults (`WARN=70`, `ACTION=75`, `HARD=80`) are conservative. To customize, add to `~/.claude/settings.json` `env` block:
+The defaults (`WARN=70`, `ACTION=75`, `HARD=80`) are conservative. To customize, add to `~/.claude/settings.json` `env` block (MERGE into existing `env`, don't replace):
 
 ```json
 {
