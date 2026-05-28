@@ -114,6 +114,29 @@ Four categories only. Everything else, orchestrator + implementer settle directl
 
 If a message's content + tone doesn't match the named sender (e.g. plain-text user-frame messages with uncertain/exploratory tone vs the user's direct/tactical voice), confirm before acting on high-stakes directives. When an agent pushes back on a correction with verifiable evidence, defer to the evidence — the original input may have been the phantom. Track-prefix mismatch on any peer DM → treat as channel-bleed; ignore.
 
+### Inter-teammate messaging — `SendMessage` tool only, NEVER plain output
+
+**Every send to another teammate uses the `SendMessage` tool.** Plain assistant output is for the USER only — it does NOT reach teammates, even if it looks like a message in your own transcript.
+
+This applies to:
+- **Brief dispatch** (orch → impl)
+- **Step-2.5 reply** (orch → impl: approve / tweak / add)
+- **Step-9 routing reply** (orch → impl: commit-message-first)
+- **Per-slice context-check ping** (orch → lead)
+- **Cycle instructions** (lead → orch; orch → impl)
+- **Any other inter-teammate message**
+
+**Magic-words header for parseable replies.** When the orchestrator replies to an implementer's Step-2.5 write-up, start the message with one of these unambiguous headers so the implementer's wake-up logic lands deterministically:
+- **`APPROVED.`** — tests are correct as-is; impl proceeds to Step 3.
+- **`TWEAK:`** — tests need revision; impl revises and re-sends Step-2.5.
+- **`ADD:`** — a missing test needs to be added; impl writes it and re-sends Step-2.5.
+
+Address any open questions the implementer raised directly in the message body. No ambiguous "looks good, just check the X" — the impl needs a clear go signal.
+
+**The classic delivery failure:** an agent composes a reply as plain output (visible to the user), thinks it sent it, but the teammate never received it. The teammate idles waiting; eventually re-prompts. The sender thinks "I sent it last turn!" and re-sends as plain output AGAIN. Infinite loop. Always use `SendMessage`.
+
+**Verification habit:** after writing a teammate reply, glance at your own session for the `SendMessage` tool-call indicator. If you only produced text, the message never left your session — call `SendMessage` now.
+
 ### Canonical context source — NO self-reporting
 
 **The ONLY canonical source of any teammate's context usage is `/context-check`** (which reads heartbeats written by the status line script). **No agent self-reports context %.** Self-reporting is unreliable, creates dual sources of truth, and wastes context narrating internal state.

@@ -78,7 +78,12 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5). **Prefer bundled slices** — when 2-4 related tasks share context and none touches a safety invariant, author one bundled brief instead of multiple atomic briefs. Default posture: bundle when safe; atomize only when required. See `docs/tdd-brief-template.md` "Estimated commit count" for the bundle/atomize criteria.
 3. **Update `{{ARCH_DOC}}`** with atomic edits when implementation surfaces architectural detail; cite anchors.
 4. **Manage cross-doc invariants** — area `CLAUDE.md` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
-5. **Step-2.5 review** — implementer sends the per-test write-up directly; review against spec; reply *approve* / *tweak* / *add missing test*. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
+5. **Step-2.5 review** — implementer sends the per-test write-up via `SendMessage`; review against spec; reply via `SendMessage` with a **parseable magic-words header** (load-bearing for the impl's wake-up logic — see root `CLAUDE.md` "Inter-teammate messaging"):
+   - **`APPROVED.`** — tests are correct as-is; impl proceeds to Step 3.
+   - **`TWEAK: <what to change>`** — tests need revision.
+   - **`ADD: <test to add>`** — a missing test needs to be added.
+
+   Address any open Step-2.5 questions in the message body, but the header must come first. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
 6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
 7. **Per-slice context check + lead ping** (team mode only) — after Step-10 commit + hot-routing complete, **run `/context-check <team>`** + send the report to lead as a structured ping. Lead processes silently unless threshold tier crossed. See "Per-slice context check + lead ping" section below.
 8. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
@@ -120,6 +125,20 @@ The traffic between teammates is **strictly bounded** by the slash-command check
 **Why bounded:** every extra message increases the chance of crossed-in-flight replies between asynchronous LLM agents working in parallel. Bounded messaging keeps the protocol deterministic, the round narrative readable, and reconciliation overhead at zero.
 
 _(Single-operator fallback: the recipient is "you (the human acting as bridge)" — the budget still applies, just paste between sessions yourself.)_
+
+---
+
+## Handling an implementer "where is my approval?" nag
+
+If an implementer's Step-2.5 nag arrives ("still waiting", "did you get my Step-2.5?", "re-stating my pause"), **DO NOT re-send your previous approval verbatim** as your reflex. That's the loop. Instead, diagnose:
+
+1. **Verify your previous reply used `SendMessage`** (not plain text). Check your transcript for the `SendMessage` tool call to the implementer. Plain assistant output never reaches teammates.
+
+2. **If you did NOT use `SendMessage` last time:** send the approval NOW via `SendMessage`, with the parseable `APPROVED.` / `TWEAK:` / `ADD:` header. This is the bug — your reply never left your session. Note the protocol gap in your own session (one line, no need to surface to the impl); going forward, always use `SendMessage`.
+
+3. **If you DID use `SendMessage` last time AND the impl still claims missing:** there's a real delivery issue. This is unusual — surface as a finding to the user (via the lead). The implementer should also self-check its transcript for messages it might have missed scanning for `APPROVED.` headers; if the message IS in the impl's transcript and it failed to parse it, that's an impl-side bug.
+
+**Verbatim re-send-as-plain-text** is the failure mode this protocol exists to prevent. Don't perpetuate it.
 
 ---
 

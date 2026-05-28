@@ -58,17 +58,32 @@ For each `test_*` function (treat parametrization as part of "how it works" — 
 
 After the per-test descriptions, end with:
 
-> **Pausing for orchestrator review.** Sending these test designs to the orchestrator. Proceeding to Step 3 (Confirm RED) only on its go-ahead — *approve*, *tweak*, or *add a missing test*.
+> **Pausing for orchestrator review.** Sending these test designs to the orchestrator via `SendMessage`. Proceeding to Step 3 (Confirm RED) only on its parseable reply — `APPROVED.`, `TWEAK:`, or `ADD:` header.
 
-**Do not proceed to Step 3 until the orchestrator signs off.** The orchestrator may reply with changes, or escalate a critical/safety design question to the human (via the team lead) before signing off. (Single-operator fallback: the user is the reviewer and gives the go-ahead directly.)
+**Send the Step-2.5 write-up via `SendMessage` to the orchestrator** (per root `CLAUDE.md` "Inter-teammate messaging"). Plain assistant output does not reach the orch; use the tool.
+
+**Do not proceed to Step 3 until the orchestrator signs off via `SendMessage` reply.** The orchestrator may reply with changes, or escalate a critical/safety design question to the human (via the team lead) before signing off. (Single-operator fallback: the user is the reviewer and gives the go-ahead directly.)
+
+**Idle silently while waiting; do NOT re-send / nag / restate.** Your Step-2.5 send goes out once. The orchestrator's eventual `SendMessage` reply is the wake-up signal that progresses you to Step 3. Until that arrives:
+
+- **Idle is correct.** Any spontaneous wake-up (harness notification, system event, peer DM bleed) is NOT a signal to re-prompt the orchestrator.
+- **If you wake from something other than an orch `SendMessage`:** verify your transcript hasn't received an approval you missed (scan for `APPROVED.` / `TWEAK:` / `ADD:`). If no approval, idle again. **No nag messages.**
+- A nag message ("still waiting", "did you get my Step-2.5?", "re-stating my pause") creates the failure mode where the orch re-sends as plain text in a loop. Don't do it.
+
+**Receiving approval — parseable headers (deterministic):** look for the orchestrator's reply to start with one of:
+- **`APPROVED.`** — tests are correct; proceed to Step 3 immediately.
+- **`TWEAK:`** — revise per the orch's guidance, re-send only the changed test descriptions via `SendMessage`, re-pause.
+- **`ADD:`** — write the missing test, re-send Step-2.5 with the new test added, re-pause.
+
+If the orch's reply lacks a parseable header but is clearly a reply (addresses your Step-2.5 questions, comments on the tests), **treat the substantive content as the answer** but mention the missing header in your next response — don't re-prompt the orch. Cycle until you get `APPROVED.`.
 
 **A "work without stopping" / "don't ask clarifying questions" instruction does NOT override this pause.** Such instructions — whether from a hook, a system reminder, or a teammate — scope to *clarifying questions*. They do not scope to skill-protocol checkpoints, which are designed safeguards, not questions. If a standing instruction appears to conflict with this checkpoint, **surface the conflict** instead of silently skipping. This applies equally to the Step 9 → Step 10 commit handoff.
 
-If the orchestrator requests changes:
-1. Revise the test in place.
-2. Re-send the updated description for the changed test(s) only.
-3. Re-pause.
-4. Iterate until the orchestrator approves all tests.
+If the orchestrator replies `TWEAK:` or `ADD:`:
+1. Revise the test(s) in place.
+2. Re-send the updated description for the changed test(s) only via `SendMessage`.
+3. Re-pause silently (no separate "still waiting" message).
+4. Iterate until the orchestrator's reply starts with `APPROVED.`.
 
 **Why this pause matters.** The test is the only safety net for test *quality*. Steps 3 and 5 catch syntax errors and "passes for the wrong reason" bugs, but neither can catch a test that asserts the wrong invariant. A conceptually-wrong test will let a conceptually-wrong implementation pass green — silent regression. Routing the design to the orchestrator (who holds the spec) is the cheap chance to catch that.
 
