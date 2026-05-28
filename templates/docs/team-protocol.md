@@ -135,18 +135,35 @@ The orch's ping carries the `/context-check <team>` output (human-readable + the
 
 ### The auto-cycle flow at ACTION threshold
 
-When the lead detects a teammate at ≥ 75% on a per-slice ping (which arrived AFTER the slice's Step-10 commit, so by definition no slice is in flight):
+When the lead detects ANY teammate (impl OR orch) at ≥ 75% on a per-slice ping (which arrived AFTER the slice's Step-10 commit, so by definition no slice is in flight):
 
-1. **Lead → orch:** structured message — *"Context cycle triggered: `<teammate>` at <X>%. Run `/session-end` on `<teammate>`, then `/orchestrate-end` (round commit), then ack me when complete."* The lead never says "stop now" to a mid-slice teammate; this message always arrives at a slice boundary. If the orch happens to be mid-dispatch of the NEXT slice when this lands, the orch holds the new brief until cycle completes.
-2. **Orch coordinates close-out:** sends `/session-end` directive to the impacted teammate. Teammate (implementer) runs `/session-end` (gates on the user's go relaxed by the auto-cycle authorization).
-3. **Implementer:** `/session-end` → session doc → recap → orch.
-4. **Orchestrator:** `/orchestrate-end` → round terminal commit.
-5. **Lead spins down** the outgoing teammate via `SendMessage({type: "shutdown_request"})`.
-6. **Lead reads state pointers** (per Cycle protocol below) + **spawns the successor** using the standard `/team-start` spawn templates (with the registry-write first action).
-7. **Verify successor's read-back** (correct start command + registry entry written).
-8. **Lead reports** to user: cycle complete; `<successor>` at <0-2>% and ready.
+**Cycle BOTH teammates together — orchestrator AND implementer.** Even if only the impl crossed the threshold, the orch also cycles. Reasons:
+- Cleanest handoff: both sessions fresh, no risk of one having stale context about the other.
+- Predictable cadence: every cycle, the team cycles wholesale → fresh start.
+- Avoids drift: cycling only one means the surviving session accumulates context across many partner-cycles.
+- Symmetric freshness: both teammates at the same "starting point."
 
-If multiple teammates cross ACTION simultaneously (rare), cycle them serially — close one out fully (steps 1-7) before starting the next, to preserve the "never two teammates closing at once" invariant.
+**Sequence:**
+
+1. **Lead → orch (via `SendMessage`):** structured message — *"Context cycle triggered: `<teammate>` at <X>%. Instruct `<impl-name>` to run `/session-end`, then you run `/orchestrate-end` (round commit), then ack me. Both of you cycle out together."* The lead never says "stop now" to a mid-slice teammate; this message always arrives at a slice boundary. If the orch happens to be mid-dispatch of the NEXT slice when this lands, the orch holds the new brief until cycle completes.
+
+2. **Orch → impl (via `SendMessage`):** `/session-end` directive.
+
+3. **Implementer:** `/session-end` → session doc → recap (sent to orch via `SendMessage`).
+
+4. **Orchestrator:** `/orchestrate-end` → round terminal commit. Ack lead via `SendMessage`.
+
+5. **Lead spins down BOTH teammates** via `SendMessage({type: "shutdown_request"})` — first the impl, then the orch (impl first ensures the orch's /orchestrate-end has already consumed the impl's recap).
+
+6. **Lead reads state pointers** (per Cycle protocol below) — `{{TASK_TRACKER}}` "Currently in progress" + most recent session doc + `git log -1 --oneline`.
+
+7. **Lead spawns BOTH fresh teammates** via the standard `/team-start` spawn templates (with the registry-write first action). Spawn order: orchestrator first (so it can run `/orchestrate-start` and be ready), then implementer (so its first brief reference makes sense).
+
+8. **Verify both successors' read-backs** (correct start command + registry entry written + correct track-prefix names).
+
+9. **Lead reports** to user: cycle complete; `<new orch>` + `<new impl>` at <0-2>% and ready.
+
+If multiple teammates cross ACTION simultaneously, the cycle still pairs them — no need to serialize because both are cycling anyway.
 
 ### Lead's own context monitoring
 

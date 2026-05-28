@@ -74,7 +74,7 @@ Full topology + escalation rules: `docs/team-protocol.md` (team pattern) + root 
 
 *Teammate names: `<track>-<area>-<role>` when parallel teams run in the same repo, else `<area>-<role>`. The track prefix is load-bearing for cross-bleed prevention.*
 
-- **Team lead:** `/team-start` + `/team-end`, **escalation conduit** to the human. **Stateless between events; persists across orchestrator/implementer session cycles; stays lean both ways** — no relaying down, no per-slice narration up, no task tracker (re-reads `{{TASK_TRACKER}}` on demand for cycles/escalations); upward output only for the **close-out gate** (user-on-demand OR auto-cycle when context monitoring detects ACTION threshold) + the 4 escalation categories + context tier surfaces.
+- **Team lead:** `/team-start` + `/team-end`, **escalation conduit** to the human. **Stateless between events; persists across orchestrator/implementer session cycles; stays lean both ways** — no relaying down, no per-slice narration up, no task tracker (re-reads `{{TASK_TRACKER}}` on demand for cycles/escalations); upward output only for the **close-out gate** (user-on-demand OR auto-cycle when context monitoring detects ACTION threshold) + the 4 escalation categories + context tier surfaces. **At auto-cycle: BOTH orch + impl cycle together** for clean handoff.
 - **Orchestrator:** planning, scope, docs, **Step-2.5 review**, commit messages, push, Step-9 routing, `/orchestrate-end`.
 - **Implementer:** `/tdd` cycles, `/preflight`, `/session-end`, code commits only.
 

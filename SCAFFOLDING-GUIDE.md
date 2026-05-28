@@ -407,7 +407,7 @@ Teammates have finite context windows. Without a reliable monitor, sessions eith
 4. **Lead evaluates thresholds** (configurable via env vars):
    - **OK** (< 70%) — silent log, no surface.
    - **WARN** (70-74%) — one-line surface to user with trajectory estimate (~N slices to ACTION based on 3-slice rolling growth).
-   - **ACTION** (75-79%) — auto-trigger close-out cycle at this clean slice break. Lead → orch → impl runs `/session-end` → orch runs `/orchestrate-end` → lead spawns successor.
+   - **ACTION** (75-79%) — auto-trigger close-out cycle at this clean slice break. **Both orch + impl cycle together** (clean handoff, symmetric freshness): Lead → orch → impl runs `/session-end` → orch runs `/orchestrate-end` → lead spins down both → lead spawns fresh orch + fresh impl.
    - **HARD-STOP** (≥ 80%) — halt new brief dispatch + cycle immediately.
 
 5. **Cycle preserves the never-mid-slice invariant** — the per-slice ping fires AFTER Step-10 commit. By definition, no slice is in flight at the trigger point. The current slice is always landed before close-out starts.
