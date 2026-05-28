@@ -75,7 +75,7 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 ## Your responsibilities
 
 1. **Plan + scope** — maintain `{{TASK_TRACKER}}`; decide where new work fits in the {{PHASE_IDS}} phase plan.
-2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5).
+2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5). **Prefer bundled slices** — when 2-4 related tasks share context and none touches a safety invariant, author one bundled brief instead of multiple atomic briefs. Default posture: bundle when safe; atomize only when required. See `docs/tdd-brief-template.md` "Estimated commit count" for the bundle/atomize criteria.
 3. **Update `{{ARCH_DOC}}`** with atomic edits when implementation surfaces architectural detail; cite anchors.
 4. **Manage cross-doc invariants** — area `CLAUDE.md` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
 5. **Step-2.5 review** — implementer sends the per-test write-up directly; review against spec; reply *approve* / *tweak* / *add missing test*. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.

@@ -187,7 +187,7 @@ CLAUDE.md                      # Root — global / cross-area conventions + shar
 
 ## §5 — The slice lifecycle (the core loop)
 
-A "slice" is one unit of TDD work: one feature, normally one commit. The loop:
+A "slice" is one unit of TDD work + one commit. It can be a single focused feature OR a small bundle of related features (2-4) — the orchestrator decides per the bundle/atomize criteria in `docs/tdd-brief-template.md` "Estimated commit count." A bundled brief lists each feature in its own RED-test section; the implementer runs RED → Step-2.5 → GREEN for each feature in sequence, then one Step-10 commit at the end. The loop:
 
 1. **Orchestrator authors a `/tdd` brief** per `docs/tdd-brief-template.md` — feature, traceability (architecture refs), acceptance criteria as concrete behaviors, files expected to touch, a RED-test outline, cross-doc invariant impact, pre-loaded "things to flag at Step 2.5," dependencies, estimated commit count. The brief is a **numbered file in `docs/briefs/`** (§7) — a permanent artifact, not ephemeral pasted text.
 2. **Orchestrator sends the brief reference directly** to the area's implementer.
@@ -438,7 +438,7 @@ Conventions live in the area `CLAUDE.md`, `LESSONS.md`, and architecture-invaria
 
 ### Universal (apply to most projects)
 
-- **TDD discipline** — failing test first, every time; Step-2.5 review is load-bearing; commit per slice; never bundle a safety-critical slice with anything else.
+- **TDD discipline** — failing test first, every time; Step-2.5 review is load-bearing; commit per slice (a "slice" is one focused feature OR a small bundle of related features — bundle when safe per the brief template criteria); never bundle a safety-critical slice with anything else.
 - **Cross-doc invariants** — typed models that mirror architecture sections; field changes paired with doc edits in the same round.
 - **Lesson numbering** — sequential, stable, never reused or reordered.
 - **Commit-message discipline** — Conventional Commits, AI-assist trailer, HEREDOC for multi-line, orchestrator authors all, no "wip"/one-word messages.

@@ -17,6 +17,8 @@ Argument: `$ARGUMENTS` — the feature description.
 
 **Scope note:** `/tdd` applies to deterministic code (state-machine logic, parsers, harness logic, instrumentation, deterministic transforms). **Non-deterministic behavior is not unit-tested** — LLM-driven generation, pure visual changes are exempt; use the project's non-deterministic-coverage brief format instead.
 
+**Bundled-brief note:** if the orchestrator's brief lists multiple related features in one slice (a "bundle" — see `docs/tdd-brief-template.md` "Estimated commit count" for criteria), run the RED→2.5→GREEN cycle (Steps 2–5) for **each feature in sequence**, then proceed to Step 6 onward with the whole slice. The Step-2.5 review can either be one combined send (all tests for all features) OR per-feature, whichever the orchestrator prefers — but Step 10 is **one commit** covering the full bundle.
+
 ## Mandatory order — do not deviate
 
 ### Step 0 — Restate

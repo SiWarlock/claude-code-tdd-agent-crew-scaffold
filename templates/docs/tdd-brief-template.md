@@ -94,7 +94,28 @@ Open design questions the implementer should surface before going GREEN. Pre-loa
 - **Blocks:** <future slices that need this>
 
 ## Estimated commit count
-<1 if focused slice, 2-3 if intentional bundle. Never bundle a safety-critical slice with anything else.>
+
+**Prefer bundling when safe** — default to 2-4 related tasks per slice when bundling makes sense. A "slice" is one focused feature OR a small bundle of related features that share a commit. Bundling saves time + reduces Step-2.5 review overhead + commit verbosity without losing rigor.
+
+**Bundle when ALL apply:**
+- All features touch the same code area
+- Total size is manageable (rough heuristic: < 100 lines added, < 30 min of TDD work)
+- Features share context (similar setup, related concepts, overlapping test files)
+- None of the features touch a safety invariant (per root `CLAUDE.md` "Key safety rules")
+- Bisectability stays meaningful (the bundle is one logical unit)
+- A reviewer can grok the whole thing in one sitting
+
+**Do NOT bundle when ANY apply:**
+- A safety-critical pin is in the slice (gets its OWN commit, always)
+- Cross-area work
+- Features have conflicting Step-2.5 design questions
+- Each feature is large on its own (≥ 30 lines added each)
+- Features have independent caller bases and might be cherry-picked separately
+- A cross-doc invariant change is involved (atomic doc-edit pairing wants traceability)
+
+Examples:
+- ❌ DON'T: "add staleness check to oracle + add operator role to factory" (mixes safety invariants)
+- ✅ DO: "add idempotency key + add retry helper + wire into payment handler" (3 related features, same module)>
 
 ## Lessons-logged candidates anticipated
 Pre-bets the orchestrator is making about what Step 9 will surface.
@@ -201,9 +222,17 @@ The format scales down for trivial slices by dropping sections that don't apply 
 
 ### Pitfall — Bundling a safety-critical slice with anything else
 
-Symptom: a brief estimates "2 commits" and bundles a safety-critical pin (an authorization gate, an isolation boundary, a data-handling invariant) with unrelated work. The safety pin ends up in a commit that also carries other changes, making it harder to bisect a regression and harder to review the safety pin on its own.
+Symptom: a brief bundles a safety-critical pin (an authorization gate, an isolation boundary, a data-handling invariant) with unrelated work. The safety pin ends up in a commit that also carries other changes, making it harder to bisect a regression and harder to review the safety pin on its own.
 
 **Rule** — every safety-critical slice gets its own commit. The brief's "Estimated commit count" should call it out explicitly when one of the acceptance criteria is a safety pin.
+
+### Pitfall — Over-atomizing trivial slices
+
+Symptom: a brief authored for one 8-line helper. Then another for the next 12-line helper. Then another for wiring them together. Three separate `/tdd` cycles, three Step-2.5 reviews, three commits — when the whole thing could have shipped as one slice with three features.
+
+**Rule** — when 2-4 small related features could ship as one brief without violating any "Do NOT bundle" criterion (see "Estimated commit count"), bundle them. The bundled brief lists each feature in its own RED-test section; the implementer goes RED → 2.5 → GREEN for each feature in sequence, then one Step-10 commit at the end. Saves time + review overhead without losing rigor.
+
+The default posture is **"bundle when safe, atomize only when required"** — not the other way around.
 
 ### Pitfall — Skipping Step 2.5 design questions because the brief "felt small"
 
