@@ -44,9 +44,7 @@ Read for the handoff doc:
 1. `git log --oneline -5` — last 5 commits, includes the round-seal hash.
 2. `{{TASK_TRACKER}}` "Currently in progress" + "Next session target" + "Carry-forward to upcoming briefs" + last Log entry.
 3. The most recent `docs/sessions/<NNN>-*.md` — what just landed.
-4. Your task board state (active phase + tasks).
-
-You already hold the rest of the coordination state in memory (team composition, active arc, open decisions, who's been working on what).
+You already hold the rest of the coordination state in memory (team composition, active arc, open decisions, who's been working on what — derived from per-slice context-check pings + escalations during the team's life).
 
 ## Step 3 — Compute the handoff doc number
 
@@ -102,7 +100,7 @@ Take the highest numeric prefix + 1, zero-pad to 3 digits. If the `docs/team-han
 ```
 
 ## How to resume
-Next team session: lead runs `/team-start <track>`, reads this handoff doc, spawns teammates using the prompts above, verifies read-backs, builds task board from {{TASK_TRACKER}} "Currently in progress." No re-orient overhead — this doc IS the orient.
+Next team session: lead runs `/team-start <track>`, reads this handoff doc + `{{TASK_TRACKER}}` "Currently in progress" on demand, spawns teammates using the prompts above, verifies read-backs. No re-orient overhead — this doc IS the orient.
 ```
 
 ## Step 5 — Update {{TASK_TRACKER}}

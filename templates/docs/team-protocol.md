@@ -59,7 +59,7 @@ Explicit prohibitions. **Each violation costs context and risks correctness.**
 
 2. **Never write briefs.** Spawn prompts cite the **WHY** (what arc, what goal, what was decided) + **WHERE** (which area, which workspace), **not the WHAT** (specific files, touches, slice decomposition, design Qs). The orch reads the codebase + area `CLAUDE.md`/`LESSONS.md` + relevant session docs and figures out the slice shape themselves. When the lead pre-specifies file lists + decomposition + design Qs in the spawn prompt, it (a) skips the orch's value-add (they know the area; lead doesn't), (b) burns lead context on details that should live in the brief on disk, (c) traps the orch in lead-specified shape they may have improved on. **Spawn prompts to orchs are 5-10 lines max** — see `/team-start` for the template.
 
-3. **Never ack routine harness notifications.** The harness auto-emits `idle_notification` events when a teammate's turn ends + surfaces peer-DM summaries in those notifications. **DO NOT generate response text for these.** They are not escalations, not slice completions, not user direction — just system telemetry. Emitting "Noted — routine; no action" per-notification is itself an awareness-ping anti-pattern from the lead side. Stay silent unless (1) a slice completes (update task board), (2) an escalation arrives, (3) the user gives direction. Idle notifications + peer-DM summaries are read-only context for the lead.
+3. **Never ack routine harness notifications.** The harness auto-emits `idle_notification` events when a teammate's turn ends + surfaces peer-DM summaries in those notifications. **DO NOT generate response text for these.** They are not escalations, not slice completions, not user direction — just system telemetry. Emitting "Noted — routine; no action" per-notification is itself an awareness-ping anti-pattern from the lead side. Stay silent unless (1) a per-slice context-check ping arrives that crosses a tier threshold (per "Context monitoring + auto-cycle"), (2) an escalation arrives, (3) the user gives direction. Idle notifications + peer-DM summaries are read-only context for the lead.
 
 4. **Never reply to "awareness pings" from teammates.** The orch and impl will, by default, CC team-lead on routine routing summaries: "dispatched brief X," "Step 2.5 approved," "Step 9 received," "shipped commit hash," "ack task assignment," "task moved in_progress," etc. **These burn context and are NOT escalations.** Bake the no-awareness-pings rule into the initial spawn prompts (per template in `/team-start`) — and don't reply to one if it slips through.
 
@@ -74,7 +74,7 @@ Explicit prohibitions. **Each violation costs context and risks correctness.**
 | Role | Who | Owns | Talks to |
 |---|---|---|---|
 | **Human** | The user | Direction, hard calls. Receives **only** escalations (the 4 categories in root `CLAUDE.md`). | The team lead |
-| **Team lead** | One agent (this doc) | Team setup (`/team-start`/`/team-end`), human interface, escalation conduit, the live task board. Holds **no** deep code/plan context; persists across orchestrator/implementer cycles. | The human ↕ teammates (escalations only) |
+| **Team lead** | One agent (this doc) | Team setup (`/team-start`/`/team-end`), human interface, escalation conduit. Holds **no** deep code/plan context AND no per-slice planning state — stateless between events; re-reads `{{TASK_TRACKER}}` on demand when cycling or handling escalations. Persists across orchestrator/implementer cycles. | The human ↕ teammates (escalations only) |
 | **Orchestrator** | One teammate | Plan, scope, `{{ARCH_DOC}}`/`{{TASK_TRACKER}}`, brief authoring, Step-2.5 test-design review, Step-9 hot routing, commit messages, push. | The implementer(s) **directly**; the lead for escalation |
 | **Implementer** | One per code area, spawned as needed | `/tdd` cycles in its area; `/preflight`; surfaces Step-9 flags. | The orchestrator **directly**; the lead for escalation |
 
@@ -207,7 +207,9 @@ These flow **directly between teammates**. The lead is **not** in the loop unles
 
 **Git + the project docs are the source of truth.** Teammate messages are pointers; the durable content is always in `docs/briefs/`, `docs/sessions/`, `docs/team-handoffs/`, `{{TASK_TRACKER}}`, `<area>/LESSONS.md`, and `{{ARCH_DOC}}`. A fresh orchestrator runs `/orchestrate-start` and re-derives state from files; a fresh implementer runs `/session-start`; a fresh lead runs `/team-start` and (if continuing from a paused team) reads the most recent `docs/team-handoffs/` doc.
 
-The lead's **live task board** (`TaskCreate`/`TaskUpdate`) is an **ephemeral view** of `{{TASK_TRACKER}}` "Currently in progress" + the active phase — convenient for tracking, never canonical. When they disagree, `{{TASK_TRACKER}}` wins. Updated at round boundaries and on escalation, not every message.
+**The lead is stateless between events.** It does NOT maintain a task board, mirror, or planning view between events. When a cycle, escalation, or close-out arrives, the lead re-reads `{{TASK_TRACKER}}` "Currently in progress" + the most recent session doc on demand (≤2 file reads, ~50 lines total). This is cheaper than continuous state maintenance + survives many orchestrator/implementer cycles without context bloat.
+
+Between events: the lead processes per-slice context-check pings silently (1-line aggregate, ~50 tokens each), takes no action unless a tier is crossed. No task tracker. No internal state. Files are the source of truth; re-read them when needed.
 
 ---
 

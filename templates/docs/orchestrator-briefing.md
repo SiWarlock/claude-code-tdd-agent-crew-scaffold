@@ -127,13 +127,12 @@ _(Single-operator fallback: the recipient is "you (the human acting as bridge)" 
 
 **When:** after Step-10 commit + hot-routing complete AND you've received the implementer's "done with slice — `<hash>`" message. This is the slice-boundary trigger.
 
-**What to do:**
+**What to do (4 steps; should take ≤5 seconds):**
 
-1. **Invoke `/context-check <team-name>`** (your team name is in your own `~/.claude/team-registry/<session_id>.json` entry; the slash command auto-detects if `$TEAM_NAME` env var is set, or pass it explicitly).
-2. **Append to history file** for trajectory tracking:
+1. **Append per-slice history** for trajectory tracking:
    ```bash
    # The /context-check helper reads from team-history/<team>/<name>.jsonl for
-   # the 3-slice rolling growth calc. Append your team's snapshot per slice:
+   # the 3-slice rolling growth calc. Snapshot all team members for this slice:
    mkdir -p ~/.claude/team-history/<team>
    for f in ~/.claude/team-registry/*.json; do
      [ "$(jq -r '.team' "$f")" = "<team>" ] || continue
@@ -146,18 +145,29 @@ _(Single-operator fallback: the recipient is "you (the human acting as bridge)" 
      echo "{\"ts\":$ts,\"ctx_pct\":$ctx,\"slice_hash\":\"<commit-hash>\"}" >> ~/.claude/team-history/<team>/${name}.jsonl
    done
    ```
-3. **Send a structured ping to lead:**
+
+2. **Invoke `/context-check <team> --brief`** to get the one-line aggregate. (Use `--brief` for the per-slice ping; reserve full output for manual debugging.)
+
+3. **Send the one-line aggregate to lead via SendMessage** (short summary, structured data):
    ```
    SendMessage to: team-lead
-   summary: "slice <hash> context check"
-   message: "Slice <hash> landed. <output of /context-check, aggregate line + per-teammate ctx_pct snapshot>"
+   summary: "slice <hash> ctx-check"
+   message: "Slice <hash>: <one-line aggregate from /context-check --brief>"
    ```
-4. **Continue.** Dispatch the next brief OR wait for the lead to respond (if a threshold tier was crossed, the lead will respond with cycle instructions).
+   Example messages:
+   - `Slice abc123: Team mvp: OK — max ctx 42% (impl)` (silent for lead)
+   - `Slice abc123: Team mvp: WARN (impl=71%). Cycle approaching.` (lead surfaces one-liner)
+   - `Slice abc123: Team mvp: ACTION (impl=76%). Initiate close-out cycle now.` (lead auto-cycles)
+
+4. **IMMEDIATELY dispatch the next brief — DO NOT wait for the lead's response.** The team-start approval authorized the whole queue; you don't need per-slice authorization. The lead is silent when all-OK and responds only when a tier is crossed; if its cycle instructions arrive asynchronously, treat them as an interrupt: pause whatever you started, follow the cycle instructions, then resume.
+
+**Idle only when:** (a) the active phase has no more queued slices and the user hasn't said what's next, (b) a blocking dependency surfaced and you need user direction, OR (c) the lead instructed `/orchestrate-end` (cycle or end-of-round). After the per-slice ping, your default action is "next slice now" — not "wait for lead."
 
 **Why this matters:**
-- Lead can't see ctx_pct without your ping (it has no other reliable trigger for slice boundaries).
-- The ping is **structured data, not an awareness ping** — it carries the per-slice context snapshot, which the lead uses to decide whether to surface, auto-cycle, or stay silent.
-- Per-slice cadence keeps the read/eval cost low (1 ping per slice, vs continuous polling).
+- Lead can't see ctx_pct without your ping (no other reliable slice-boundary trigger).
+- The ping is **structured data, not an awareness ping** — one short line, machine-readable, keeps lead context lean across many slices.
+- Per-slice cadence + `--brief` keeps the read/eval cost minimal (≤100 tokens per ping vs full multi-line report).
+- Non-blocking dispatch is critical — waiting for the lead causes both orch + impl to idle indefinitely when there's nothing for the lead to say.
 
 **When NOT to ping:** during the auto-cycle flow itself (when the lead has just instructed close-out, your next "slice" is the close-out, not a real slice). Resume per-slice pings after a successor implementer is alive and the next real slice lands.
 

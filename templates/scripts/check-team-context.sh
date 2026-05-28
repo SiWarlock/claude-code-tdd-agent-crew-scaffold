@@ -51,6 +51,7 @@ INCLUDE_HISTORY="false"
 for arg in "$@"; do
   case "$arg" in
     --json)    OUTPUT="json" ;;
+    --brief)   OUTPUT="brief" ;;
     --history) INCLUDE_HISTORY="true" ;;
     --*)       echo "Unknown flag: $arg" >&2; exit 2 ;;
     *)         TEAM_FILTER="$arg" ;;
@@ -79,10 +80,11 @@ joined=$(
   for reg_file in "$REGISTRY_DIR"/*.json; do
     [ -f "$reg_file" ] || continue
 
-    # Skip stale registry entries (session ended ages ago).
-    reg_ts=$(jq -r '.ts // 0' "$reg_file" 2>/dev/null)
-    reg_age=$((NOW - reg_ts))
-    if [ "$reg_age" -gt "$STALE_SECONDS" ]; then continue; fi
+    # NOTE: registry entries are written ONCE at session start and never updated;
+    # their `ts` is session-start time, not last-activity time. Don't filter by
+    # registry age. Staleness applies to HEARTBEATS only (status line updates
+    # those continuously; a stale heartbeat = session ended). Registry entries
+    # get explicit cleanup at /team-end (per template).
 
     sid=$(jq -r '.session_id // empty' "$reg_file" 2>/dev/null)
     team=$(jq -r '.team // empty' "$reg_file" 2>/dev/null)
@@ -185,15 +187,37 @@ if [ "$OUTPUT" = "json" ]; then
   exit 0
 fi
 
+if [ "$OUTPUT" = "brief" ]; then
+  # Single-line aggregate per team — for orchestrator's per-slice ping to lead.
+  # Surfaces: max ctx%, tier classification, and any tier-crossed teammates.
+  echo "$enriched" | jq -r '
+    group_by(.team)[]
+    | {
+        team: .[0].team,
+        max_ctx: ([.[] | select(.status == "live") | .ctx_pct] | max // 0),
+        max_name: ([.[] | select(.status == "live")] | sort_by(.ctx_pct) | last.name // "?"),
+        hard:   ([.[] | select(.tier == "hard")] | length),
+        action: ([.[] | select(.tier == "action")] | length),
+        warn:   ([.[] | select(.tier == "warn")] | length),
+        crossed_names: ([.[] | select(.tier == "hard" or .tier == "action" or .tier == "warn") | "\(.name)=\(.ctx_pct)%"] | join(", "))
+      }
+    | if .hard > 0 then
+        "Team \(.team): HARD-STOP (\(.crossed_names)). Halt dispatch + cycle immediately."
+      elif .action > 0 then
+        "Team \(.team): ACTION (\(.crossed_names)). Initiate close-out cycle now."
+      elif .warn > 0 then
+        "Team \(.team): WARN (\(.crossed_names)). Cycle approaching."
+      else
+        "Team \(.team): OK — max ctx \(.max_ctx)% (\(.max_name))"
+      end
+  '
+  exit 0
+fi
+
 # Human-readable output.
+echo
+echo "Team context state — $(date -u +'%Y-%m-%d %H:%M:%S UTC'):"
 echo "$enriched" | jq -r '
-  def color(c; s): "[" + c + "m" + s + "[0m";
-  def tier_color(t):
-    if t == "hard" then "31"        # red
-    elif t == "action" then "31"    # red
-    elif t == "warn" then "33"      # yellow
-    elif t == "ok" then "32"        # green
-    else "37" end;                   # gray
   def tier_label(t):
     if t == "hard" then "HARD-STOP"
     elif t == "action" then "ACTION"
@@ -201,30 +225,19 @@ echo "$enriched" | jq -r '
     elif t == "ok" then "OK"
     else "—" end;
 
-  group_by(.team)
-  | sort_by(.[0].team)
-  | (
-      "",
-      "Team context state — \(now | strftime("%Y-%m-%d %H:%M:%S UTC")):"
-    ),
-  .[]
-  | "",
-    "  Team: \(.[0].team)",
-    (
-      sort_by(.name)
-      | .[]
-      | if .status != "live" then
-          "    " + .name + " (\(.status))"
-        else
-          "    " + .name + ": " +
-          color(tier_color(.tier); (.ctx_pct | tostring) + "%") +
-          " [\(tier_label(.tier))]" +
-          (if .trajectory and .trajectory.slices_until_action != null then
-             " · trajectory: ~\(.trajectory.slices_until_action) slices to ACTION"
-           else "" end) +
-          " · last update " + (.heartbeat_age_sec | tostring) + "s ago"
-        end
-    )
+  (group_by(.team) | sort_by(.[0].team))[] as $g |
+  "\n  Team: \($g[0].team)",
+  ( $g | sort_by(.name)[] |
+      if .status != "live" then
+        "    \(.name) (\(.status))"
+      else
+        "    \(.name): \(.ctx_pct)% [\(tier_label(.tier))]" +
+        (if .trajectory and .trajectory.slices_until_action then
+           " · ~\(.trajectory.slices_until_action) slices to ACTION"
+         else "" end) +
+        " · last update \(.heartbeat_age_sec)s ago"
+      end
+  )
 '
 
 # ─── Surface aggregate recommendation (one-line) ────────────────────────────

@@ -78,7 +78,7 @@ Three distinct Claude Code sessions plus the human, communicating through files 
 - **Team close-out** (`/team-end`) — write a handoff doc at end-of-day / arc-complete / lead-cycle, so the next team session resumes cleanly.
 - **Human interface** — the human talks only to the lead.
 - **Escalation conduit** — the orchestrator and implementer escalate the 4 taxonomy categories (below) to the human via the lead.
-- **The live task board** — `TaskCreate`/`TaskUpdate` mirror of `{{TASK_TRACKER}}` "Currently in progress."
+- **Stateless between events** — re-reads `{{TASK_TRACKER}}` "Currently in progress" on demand (cycles, escalations); does NOT maintain a task board or planning mirror. This is what lets the lead survive many orchestrator/implementer cycles without context bloat.
 
 **Does NOT:** relay routine traffic between teammates, DM implementers directly (always via the orchestrator), write `/tdd` briefs, ack routine harness notifications, reply to awareness pings from teammates, pick architectural Option A/B/C calls on the human's behalf.
 
@@ -221,7 +221,7 @@ Each `.claude/commands/<name>.md` is a prompt invoked as `/<name>` (with optiona
 
 | Command | Role | What it does |
 |---|---|---|
-| **`/team-start [track]`** | Team lead | Stand up the team. Read the lead playbook + shallow current-state pointers. Spawn orchestrator + first area implementer with bounded prompts. Announce track prefix. Verify each teammate's first read-back confirms it ran the correct start command. Build the live task board. |
+| **`/team-start [track]`** | Team lead | Stand up the team. Read the lead playbook + shallow current-state pointers. Spawn orchestrator + first area implementer with bounded prompts. Announce track prefix. Verify each teammate's first read-back confirms it ran the correct start command. (Lead does NOT maintain a task board — stateless between events, re-reads `{{TASK_TRACKER}}` on demand.) |
 | **`/team-end`** | Team lead | Close out the team session (user-on-demand OR auto-cycle trigger). Gate on all teammates being `/session-end`-closed. Write `docs/team-handoffs/<NNN>-<date>-<topic>.md` with team composition at close, active arc, in-flight state, spawn prompts ready for the successor, open decisions. Clean up team-registry entries. |
 | **`/orchestrate-start`** | Orchestrator | Read the briefing + brief template + focused `{{TASK_TRACKER}}` sections + the latest session doc + the area `CLAUDE.md` lookup table. Pre-load `{{ARCH_DOC}}` anchors cited by Currently-in-progress. Optional pre-orient code review when refreshing a stale brief. Summarize back; wait for direction. |
 | **`/orchestrate-end`** | Orchestrator | Round close-out (user-on-demand OR auto-cycle trigger): verify Step-9 hot routing landed, reconcile `{{TASK_TRACKER}}` checkboxes, append a Log entry, update planning state, **triage Carry-forward**, optionally write an orchestrator-side session doc, then stage + commit + push the round terminal commit. |

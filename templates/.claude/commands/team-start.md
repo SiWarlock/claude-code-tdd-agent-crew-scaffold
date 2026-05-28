@@ -1,6 +1,6 @@
 ---
 description: Team lead — stand up the agent team (orchestrator + implementer-per-area), establish direct comms + escalation rules.
-allowed-tools: Read, Grep, Bash, Agent, TeamCreate, TaskCreate, TaskUpdate, SendMessage
+allowed-tools: Read, Grep, Bash, Agent, TeamCreate, SendMessage
 argument-hint: "[track]"
 ---
 
@@ -113,11 +113,7 @@ For each spawned teammate, **read its first reply** and confirm:
 
 If the read-back shows the wrong start command was run: have it run the correct one + re-orient before dispatching work. If the name is wrong: respawn with the correct name. **Don't assume the spawn prompt was followed.**
 
-## Step 5 — Build the live task board
-
-Mirror `{{TASK_TRACKER}}` "Currently in progress" + the active phase into the team task board (`TaskCreate`). This is an **ephemeral view** — `{{TASK_TRACKER}}` stays the source of truth. Update at round boundaries and on escalation, not every message.
-
-## Step 6 — Confirm with the human, then get out of the way
+## Step 5 — Confirm with the human, then get out of the way
 
 Report to the human: team composed (orchestrator + which implementer(s) + their names with prefixes), the first slice target, escalation rules in force, and confirm direction. Once confirmed, let the teammates run. **You persist across many orchestrator/implementer session cycles** (they cycle on context; you don't) — re-engage only for the close-out gate, an escalation (4 categories), or new direction from the human. Routine progress is **not** a reason to speak up; treat silence as the steady state.
 
@@ -138,7 +134,7 @@ Use `/team-end` (not Step 6 of this command) when fully pausing the team for the
 - **Writing briefs in the spawn prompt.** Spawn prompts are 5-10 lines of WHY + WHERE. File lists, decomposition, design Qs are the orch's job.
 - **Holding deep plan/code context.** Stay thin. Pull detail on demand when something escalates.
 - **Deciding scope or design yourself.** Scope cuts (category #3) and load-bearing architectural Option A/B/C calls (category #4) go to the human via `AskUserQuestion`; routine design is the orchestrator's.
-- **Letting the task board diverge from `{{TASK_TRACKER}}`.** When they disagree, the file wins.
+- **Holding planning state in memory between events.** Lead is stateless between events — when you need to know "what's active" for a cycle or escalation, re-read `{{TASK_TRACKER}}` "Currently in progress" on demand. Do NOT maintain a mirror or task board; the file is the source of truth and re-reading is cheap.
 - **Acking routine harness notifications.** `idle_notification` events + peer-DM summaries are read-only context. Don't reply.
 - **Replying to "awareness pings"** from teammates ("brief dispatched," "Step 2.5 approved," "ack queued"). They're not escalations. Stay silent.
 - **Narrating routine progress upward, or re-gating per slice.** The human's one-time go authorizes the whole queued sequence. Upward output: close-out gate + the 4 escalation categories + context tier surfaces. **Close-outs run on user-on-demand OR auto-cycle (when context monitoring detects ACTION threshold at a clean slice break)** — never at routine work boundaries.
