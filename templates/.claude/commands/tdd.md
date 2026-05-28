@@ -200,6 +200,8 @@ EOF
 - **Modifying the test to make a stuck implementation pass.** If the test fails, the implementation is wrong, not the test.
 - **Using `git add -A` at Step 10.**
 - **Pushing.**
+- **Self-reporting context %** in ANY send (Step-9, done-with-slice, anywhere). Context monitoring is external (status line + `/context-check`); see root `CLAUDE.md` "Canonical context source — NO self-reporting." If you notice your status bar showing high context mid-cycle, **ignore it** and finish the slice.
+- **Abandoning the slice mid-cycle.** Step 10 always lands. If a "stop now" / "halt" / "cycle" message arrives from the orchestrator or lead while you're mid-slice, ack receipt silently if needed but **finish the cycle through Step 10 commit** — then become interruptible. See root `CLAUDE.md` "Slice atomicity — current slice ALWAYS finishes."
 
 ## When TDD doesn't fit
 

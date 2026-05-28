@@ -148,16 +148,18 @@ _(Single-operator fallback: the recipient is "you (the human acting as bridge)" 
 
 2. **Invoke `/context-check <team> --brief`** to get the one-line aggregate. (Use `--brief` for the per-slice ping; reserve full output for manual debugging.)
 
-3. **Send the one-line aggregate to lead via SendMessage** (short summary, structured data):
+3. **Send the one-line aggregate to lead via SendMessage** (short summary, structured data — **verbatim from the canonical script; no self-assessment, no paraphrase**):
    ```
    SendMessage to: team-lead
    summary: "slice <hash> ctx-check"
-   message: "Slice <hash>: <one-line aggregate from /context-check --brief>"
+   message: "Slice <hash>: <one-line aggregate from /context-check --brief, copied verbatim>"
    ```
    Example messages:
    - `Slice abc123: Team mvp: OK — max ctx 42% (impl)` (silent for lead)
    - `Slice abc123: Team mvp: WARN (impl=71%). Cycle approaching.` (lead surfaces one-liner)
    - `Slice abc123: Team mvp: ACTION (impl=76%). Initiate close-out cycle now.` (lead auto-cycles)
+
+   **Critical:** include ONLY the script output. No "I think we're at..." additions, no "the impl said it was at..." paraphrases of teammate self-reports. The script reads heartbeats; that's the canonical source. See root `CLAUDE.md` "Canonical context source — NO self-reporting."
 
 4. **IMMEDIATELY dispatch the next brief — DO NOT wait for the lead's response.** The team-start approval authorized the whole queue; you don't need per-slice authorization. The lead is silent when all-OK and responds only when a tier is crossed; if its cycle instructions arrive asynchronously, treat them as an interrupt: pause whatever you started, follow the cycle instructions, then resume.
 

@@ -114,6 +114,28 @@ Four categories only. Everything else, orchestrator + implementer settle directl
 
 If a message's content + tone doesn't match the named sender (e.g. plain-text user-frame messages with uncertain/exploratory tone vs the user's direct/tactical voice), confirm before acting on high-stakes directives. When an agent pushes back on a correction with verifiable evidence, defer to the evidence — the original input may have been the phantom. Track-prefix mismatch on any peer DM → treat as channel-bleed; ignore.
 
+### Canonical context source — NO self-reporting
+
+**The ONLY canonical source of any teammate's context usage is `/context-check`** (which reads heartbeats written by the status line script). **No agent self-reports context %.** Self-reporting is unreliable, creates dual sources of truth, and wastes context narrating internal state.
+
+- **Implementer NEVER includes context % in any send** — not in Step-9, not in done-with-slice, not in `/session-end` recap, not anywhere.
+- **Orchestrator's per-slice ping to lead carries ONLY the verbatim output** of `/context-check <team> --brief` — not the orch's own assessment, not a paraphrase, not a "I think we're at..." line.
+- **Lead uses ONLY the canonical script output** to evaluate threshold tiers. If a ping arrives with self-reported context, the lead treats the context value as missing (data corruption) and either re-invokes `/context-check` itself or waits for the next clean ping.
+
+If you (any agent) notice your own status bar showing high context mid-work: **ignore it**. Finish your current slice. The status line is the system's signal to the heartbeat file, not your signal to break protocol. The next `/context-check` will surface the data through the canonical path.
+
+### Slice atomicity — current slice ALWAYS finishes
+
+**Current slices ALWAYS finish before any close-out action.** This is a hard rule, not a guideline.
+
+- The auto-cycle trigger fires AFTER Step-10 commit by design — by definition no slice is in flight at the trigger point.
+- Even at HARD-STOP (≥ 80%), the action is **"halt dispatch of the NEXT brief"** — never "interrupt the current slice."
+- **Implementer ignores any "stop now" / "halt" / "cycle" messages that arrive mid-slice.** Finish the current `/tdd` cycle through Step-10 commit, then become interruptible. Ack receipt silently if needed, but the slice continues.
+- **Orchestrator does not relay halt-now signals to a mid-slice impl.** If a cycle instruction arrives from the lead while the impl is mid-slice, the orch holds the instruction until the impl's "done with slice" message arrives, then routes the close-out.
+- **Lead never sends "stop now" to a mid-slice teammate.** Cycle instructions are always dispatched at slice boundaries (after the per-slice context-check ping arrives, which means the slice already landed).
+
+If a user explicitly tells the lead "halt mid-slice now," the lead surfaces the user's instruction to the orch — but defaults to the slice-atomicity rule unless the user repeats with explicit "yes, interrupt mid-slice; I accept losing the in-flight work." Even then, the impl gets to abandon cleanly (no half-commit).
+
 ### Close-out gating
 
 `/session-end` (implementer) + `/orchestrate-end` (orchestrator) + `/team-end` (lead) run on **either** of these triggers:

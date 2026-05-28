@@ -125,7 +125,7 @@ The lead receives a per-slice context-report ping from the orchestrator after ev
 | **OK** | < 70% | **Silent.** Log the data; emit no text. |
 | **WARN** | 70-74% | **One-line surface** to user: `<teammate> at X%. Trajectory: ~N slices to ACTION threshold. Will auto-cycle at action threshold.` No action yet — work continues. |
 | **ACTION** | 75-79% | **Auto-trigger close-out cycle** (no asking). The lead never interrupts mid-slice; the trigger arrives AFTER Step-10, so the current slice is already landed. |
-| **HARD-STOP** | ≥ 80% | **Halt dispatch of new briefs immediately + cycle**. Same as ACTION but the orch must NOT dispatch the next brief until the successor is alive. |
+| **HARD-STOP** | ≥ 80% | **Halt dispatch of the NEXT brief + cycle.** Same as ACTION but the orch must NOT dispatch the next brief until the successor is alive. **Never interrupts the current slice** — the trigger arrived post-Step-10, so the current slice is already landed. See root `CLAUDE.md` "Slice atomicity." |
 
 Thresholds configurable via env vars: `CLAUDE_TEAM_CTX_WARN`, `CLAUDE_TEAM_CTX_ACTION`, `CLAUDE_TEAM_CTX_HARD`.
 
@@ -135,9 +135,9 @@ The orch's ping carries the `/context-check <team>` output (human-readable + the
 
 ### The auto-cycle flow at ACTION threshold
 
-When the lead detects a teammate at ≥ 75% on a per-slice ping:
+When the lead detects a teammate at ≥ 75% on a per-slice ping (which arrived AFTER the slice's Step-10 commit, so by definition no slice is in flight):
 
-1. **Lead → orch:** structured message — *"Context cycle triggered: `<teammate>` at <X>%. Run `/session-end` on `<teammate>`, then `/orchestrate-end` (round commit), then ack me when complete."*
+1. **Lead → orch:** structured message — *"Context cycle triggered: `<teammate>` at <X>%. Run `/session-end` on `<teammate>`, then `/orchestrate-end` (round commit), then ack me when complete."* The lead never says "stop now" to a mid-slice teammate; this message always arrives at a slice boundary. If the orch happens to be mid-dispatch of the NEXT slice when this lands, the orch holds the new brief until cycle completes.
 2. **Orch coordinates close-out:** sends `/session-end` directive to the impacted teammate. Teammate (implementer) runs `/session-end` (gates on the user's go relaxed by the auto-cycle authorization).
 3. **Implementer:** `/session-end` → session doc → recap → orch.
 4. **Orchestrator:** `/orchestrate-end` → round terminal commit.

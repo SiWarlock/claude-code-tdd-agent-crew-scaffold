@@ -12,7 +12,7 @@ The user has indicated the implementer session is wrapping. Capture state.
 
 Procedure:
 
-1. **Recap to the user** what landed this session in 3–5 bullets. The user pastes this to the orchestrator session as input for `/orchestrate-end`.
+1. **Recap to the user** what landed this session in 3–5 bullets. The user pastes this to the orchestrator session as input for `/orchestrate-end`. **Do NOT include any context-usage estimate or self-reported ctx %** — context is monitored externally via the canonical `/context-check` heartbeat path; self-reporting is forbidden per root `CLAUDE.md` "Canonical context source — NO self-reporting." Recap is work-completed only: features built, tests added, decisions made, follow-ups surfaced.
 
 2. **Self-audit TDD compliance** for code changes this session:
    - For each non-trivial code change, did a corresponding test land *first*?
