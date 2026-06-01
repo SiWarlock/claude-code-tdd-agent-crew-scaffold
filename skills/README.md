@@ -31,10 +31,11 @@ these skills is **`ROUTING.md`**.
 | Skill | Runs on | What it does | Status |
 |---|---|---|---|
 | **`bug-hunt`** | **Codex or Claude** (host-neutral) | on-demand **root-cause debugging** — reproduce-with-a-failing-test (strong default) → localize → root cause → fix via the TDD loop → verify → opt-in compound into a lesson + forbidden-pattern. Two modes (in-build / incident). | ✅ built |
+| **`eval-triage`** | **Codex or Claude** (host-neutral) | guided, **participatory** diagnosis of a failing **agentic/LLM eval** — reproduce → contract → compare vs a passing eval → bisect the pipeline → categorize (eval/judge · prompt · retrieval · tool-use · state · nondeterminism/drift · parsing) → minimal-fix proposal → verify. Coaches + pauses each phase; diagnostic-first (never auto-fixes or silently edits an eval). | ✅ built |
 
-`bug-hunt` is **not a lifecycle stage** — invoke it whenever a bug surfaces, in any session or repo. It uses
-the project's `/tdd`, `/wired`, and `LESSONS.md` / forbidden-patterns when present, and degrades gracefully
-elsewhere.
+Both are **standalone — not lifecycle stages.** `bug-hunt` is general root-cause debugging; `eval-triage` is
+the specialized agentic-eval flavor (a participatory walkthrough you can narrate). They use the project's
+`/tdd` / `/wired` / `LESSONS.md` when present and degrade gracefully elsewhere.
 
 ## Why the cross-model split
 `arch-draft` runs on **GPT-5.5 via Codex** and `arch-finalize` runs on **Claude** on purpose: two
@@ -64,10 +65,12 @@ ln -snf "$PWD/skills/scaffold-generate" ~/.claude/skills/scaffold-generate
 ln -snf "$PWD/skills/scaffold-upgrade"  ~/.claude/skills/scaffold-upgrade
 ```
 
-**`bug-hunt` → both Codex and Claude** (host-neutral, standalone — usable in any session, any repo):
+**`bug-hunt` + `eval-triage` → both Codex and Claude** (host-neutral, standalone — usable in any session, any repo):
 ```bash
-ln -snf "$PWD/skills/bug-hunt" ~/.codex/skills/bug-hunt
-ln -snf "$PWD/skills/bug-hunt" ~/.claude/skills/bug-hunt
+for s in bug-hunt eval-triage; do
+  ln -snf "$PWD/skills/$s" ~/.codex/skills/$s
+  ln -snf "$PWD/skills/$s" ~/.claude/skills/$s
+done
 ```
 
 **Notes.**
@@ -79,8 +82,8 @@ ln -snf "$PWD/skills/bug-hunt" ~/.claude/skills/bug-hunt
   Claude and Codex lanes — exactly what the two-brain planning front needs (`arch-draft` on the Codex lane,
   `arch-finalize` / `tasks-gen` / `scaffold-generate` on the Claude lane).
 - **Managing skills with a central manager** (a tool that symlinks from a central store): register all
-  six there, and make sure **`arch-draft` AND `bug-hunt` are exposed to BOTH** `~/.codex/skills/` and
-  `~/.claude/skills/` (they're host-neutral) — most managers default to the Claude dir only.
+  seven there, and make sure **`arch-draft`, `bug-hunt`, AND `eval-triage` are exposed to BOTH**
+  `~/.codex/skills/` and `~/.claude/skills/` (they're host-neutral) — most managers default to the Claude dir only.
 - Eventually these become a packaged `cc-crew` plugin; for now, run them from this checkout.
 
 ## Artifacts & flow

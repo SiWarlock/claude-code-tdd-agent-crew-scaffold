@@ -76,9 +76,9 @@ Plugins feed-into or review *around* them — they never author them.
 
 ## The skills (the planning chain)
 
-Five custom skills run the planning/scaffolding chain (below), plus a standalone **`bug-hunt`** debug skill —
-all run from this checkout (see `skills/README.md` to install). `arch-draft` and `bug-hunt` are host-neutral
-(Codex or Claude); the rest run on Claude Code.
+Five custom skills run the planning/scaffolding chain (below), plus two standalone debug skills (**`bug-hunt`**,
+**`eval-triage`**) — all run from this checkout (see `skills/README.md` to install). `arch-draft`, `bug-hunt`,
+and `eval-triage` are host-neutral (Codex or Claude); the rest run on Claude Code.
 
 | Skill | Runs on | What it does |
 |---|---|---|
@@ -91,10 +91,13 @@ all run from this checkout (see `skills/README.md` to install). `arch-draft` and
 `skills/ROUTING.md` is the thin routing layer: which skill owns each lifecycle stage and where the composed
 plugins (and the conditional MCP tools) slot in around them.
 
-**Plus a standalone skill — `bug-hunt`** (host-neutral; Codex or Claude, any session, any repo): on-demand
-root-cause debugging — reproduce-with-a-failing-test (strong default) → localize → root cause → fix through
-the `/tdd` loop → verify → opt-in compound into a `LESSONS.md` lesson + forbidden-pattern. It's **not** a
-lifecycle stage; run it whenever a bug or incident surfaces.
+**Plus two standalone skills** (host-neutral; Codex or Claude, any session, any repo — **not** lifecycle stages):
+- **`bug-hunt`** — on-demand root-cause debugging: reproduce-with-a-failing-test (strong default) → localize →
+  root cause → fix through the `/tdd` loop → verify → opt-in compound into a `LESSONS.md` lesson + forbidden-pattern.
+- **`eval-triage`** — guided, *participatory* diagnosis of a failing **agentic/LLM eval**: reproduce → compare
+  vs a passing eval → bisect the pipeline → categorize (eval/judge · prompt · retrieval · tool-use · state ·
+  drift · parsing) → minimal-fix proposal → verify. It pauses at each phase so you stay in the loop and can
+  narrate the reasoning.
 
 ---
 

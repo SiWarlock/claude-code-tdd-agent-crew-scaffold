@@ -41,14 +41,18 @@ them — they never author them.
 ## Keeping a generated project current
 After bootstrap, pull later scaffolding improvements with **`scaffold-upgrade`** (run from a scaffolding checkout pointed at the project; `/scaffold-upgrade --check` for drift). It re-derives the templates at your generation commit + at HEAD using your stored placeholder values and **3-way-merges** upstream changes — auto-applying only machinery you never touched, *proposing* (never clobbering) everything you customized, leaving accreted state + your arch doc alone. This is a **maintenance operation, not a per-feature stage**. Detail: `SCAFFOLDING-GUIDE.md §11`.
 
-## Standalone: `/bug-hunt` (on-demand, any session — NOT a stage)
-When a bug or incident surfaces, run **`bug-hunt`** (host-neutral; Codex or Claude, any repo). It's the
-cc-crew-owned, TDD-disciplined root-cause loop: reproduce-with-a-failing-test (strong default) → localize →
-root cause → fix via `/tdd` → verify → opt-in compound into a `LESSONS.md` entry + forbidden-pattern. Two
-modes (in-build / incident). It owns the loop (composes nothing as its engine) but can optionally lean on
-gstack **`/investigate`** or CE **`ce-debug`** for a heavy dig when installed, and routes a design-level
-finding back to the escalation taxonomy. Prefer `bug-hunt` over a bare `/investigate` when you want the
-reproduce-first + compounding discipline.
+## Standalone skills (on-demand, any session — NOT stages)
+**`bug-hunt`** (host-neutral; Codex or Claude, any repo) — the cc-crew-owned, TDD-disciplined root-cause
+loop: reproduce-with-a-failing-test (strong default) → localize → root cause → fix via `/tdd` → verify →
+opt-in compound into a `LESSONS.md` entry + forbidden-pattern. Two modes (in-build / incident). Owns the loop
+but can optionally lean on gstack **`/investigate`** or CE **`ce-debug`** for a heavy dig when installed.
+Prefer it over a bare `/investigate` when you want the reproduce-first + compounding discipline.
+
+**`eval-triage`** (host-neutral) — guided, **participatory** diagnosis of a failing **agentic/LLM eval**:
+reproduce → contract → compare vs a passing eval → bisect the pipeline (midpoint-first) → categorize
+(eval/judge · prompt · retrieval · tool-use · state · nondeterminism/drift · parsing) → minimal-fix proposal
+→ verify. It coaches + pauses at each phase and is diagnostic-first (never auto-fixes the app or silently
+edits an eval). Use it for eval-suite failures; use `bug-hunt` for general code bugs.
 
 ## External code-intelligence / docs MCPs (conditional — all stages)
 Independent of the gstack/CE composition above: if a **code-intelligence MCP** (e.g. CodeGraph) is installed, prefer it for code navigation / callers / traces / impact over `grep`+read loops; if a **docs MCP** (e.g. Context7) is installed, prefer it for up-to-date library/API docs + setup steps, without being asked. Both no-op when absent. The generated root `CLAUDE.md`, `/tdd`, and the orchestrator briefing all carry this rule, so every role inherits it.
