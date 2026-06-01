@@ -58,7 +58,8 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
     └── <team>/<name>.jsonl             # Appended by orch each slice for 3-slice rolling growth
 ```
 
-<!-- ▼ EXAMPLE BLOCK: extend the inventory with the project's real layout — extra code areas, deliverable docs, eval suites. ▲ -->
+<!-- ▼ EXAMPLE BLOCK [id=inventory-extension]: extend the inventory with the project's real layout — extra code areas, deliverable docs, eval suites. ▼ -->
+<!-- ▲ END EXAMPLE BLOCK [id=inventory-extension] ▲ -->
 
 ---
 
@@ -156,14 +157,14 @@ N slice commits + 1 session-doc commit + 1 round commit = **N + 2** per round. P
 
 ## Project-specific conventions
 
-<!-- ▼ EXAMPLE BLOCK: the conventions unique to this project — its architecture sentence (if any), its forbidden patterns, its key safety rules, its layer dependency rule, its cross-doc invariant set. These distinguish this project's instance from the universal pattern. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=instance-conventions]: the conventions unique to this project — its architecture sentence (if any), its forbidden patterns, its key safety rules, its layer dependency rule, its cross-doc invariant set. These distinguish this project's instance from the universal pattern. ▼ -->
 
 - **Architecture sentence:** *{{ARCHITECTURE_SENTENCE}}*
 - **Forbidden patterns:** see `{{CODE_AREA}}CLAUDE.md`.
 - **Key safety rules:** see root `CLAUDE.md` "Key safety rules."
 - **Cross-doc invariants:** the `{{CODE_AREA}}CLAUDE.md` table tracks typed models mirroring `{{ARCH_DOC}}` sections. Field changes require atomic doc edits.
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=instance-conventions] ▲ -->
 
 ---
 

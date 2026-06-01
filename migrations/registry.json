@@ -1,0 +1,5 @@
+{
+  "registryVersion": 1,
+  "note": "Structural-migration registry for /scaffold-upgrade. One entry per migration that a content-diff cannot express. Append-only: never edit a shipped migration in place — fix a bug with a NEW migration at a later SHA. Each migration is SHA-window-gated (runs once when base < introducedAtSha <= to), idempotent, and journaled. See migrations/_TEMPLATE.md and SCAFFOLDING-GUIDE.md §11.",
+  "migrations": []
+}

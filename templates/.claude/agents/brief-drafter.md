@@ -8,7 +8,8 @@ description: |
   `.claude/agents/README.md`: generate drafts in parallel with orchestrator-authored briefs for
   2-3 real briefs, compare delta. Adopt as standard tool only if rewrite delta < ~30%.
 tools: Read, Grep, Bash
-model: sonnet
+model: opus
+effort: xhigh
 ---
 
 <!--

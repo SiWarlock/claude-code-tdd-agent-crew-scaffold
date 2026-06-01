@@ -6,7 +6,8 @@ description: |
   naming issues, edge cases the tests didn't cover, dead code, and inconsistencies with prior LESSONS.
   Dispatched by the implementer in parallel with `security-reviewer`. Findings feed Step-9 categorization.
 tools: Read, Grep, Bash
-model: sonnet
+model: opus
+effort: xhigh
 ---
 
 <!--

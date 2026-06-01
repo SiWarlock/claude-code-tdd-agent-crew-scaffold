@@ -34,6 +34,7 @@ Restate the feature in 1–2 sentences in your own words.
 - Identify the production file(s) that will hold the implementation.
 - Identify the test file(s) that will hold the tests.
 - If a test file doesn't exist yet, create the empty file in the right directory.
+- If a **code-intelligence MCP** (e.g. CodeGraph) is available, use it to locate the files/symbols and their callers/callees rather than `grep`+read loops; fall back to search if it isn't.
 
 State: *"I will write tests in `<test_path>` and implementation in `<impl_path>`."*
 
@@ -139,6 +140,8 @@ Identify the **production entry point(s)** this feature must be reachable from �
 - If the brief named an entry point, confirm the wiring exists. If it doesn't yet:
   - **Wire it in this slice** if it's small and in scope (add the test that exercises the entry path too), **or**
   - **Raise it as a Step-9 "Future TODO — belongs to a phase"** with the specific entry point that still needs wiring, so it lands as a real task — never leave a tested-but-unreachable feature silently.
+
+If a **code-intelligence MCP** (e.g. CodeGraph) is available, prefer its callers / call-path trace to confirm reachability instead of a manual grep (`/wired` automates the wiring trace either way).
 
 State explicitly: *"Reachable from `<entry point>` via `<path>`"* — or *"NOT yet wired; raising wiring task / wiring now."* A feature that is only reachable from its own tests is **not done**.
 

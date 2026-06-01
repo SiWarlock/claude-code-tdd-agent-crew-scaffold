@@ -13,7 +13,7 @@ This directory holds **subagents** — specialized roles delegated mid-session f
 
 ## Active inventory
 
-<!-- ▼ EXAMPLE BLOCK: starter subagent inventory — show what the user opted into at bootstrap. If the user opted out of all four, replace this table with "none — opt-in starter set was declined; build subagents reactively per the guidance below." ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=starter-subagent-inventory]: starter subagent inventory — show what the user opted into at bootstrap. If the user opted out of all four, replace this table with "none — opt-in starter set was declined; build subagents reactively per the guidance below." ▼ -->
 
 | Subagent | When it runs | Integration point | Status |
 |---|---|---|---|
@@ -22,7 +22,7 @@ This directory holds **subagents** — specialized roles delegated mid-session f
 | `reachability-auditor` | At the phase-exit gate. Orchestrator dispatches per touched area. | Orchestrator-side. Output drives wiring tasks; phase-exit acceptance is gated on clean audit. | **Active** |
 | `brief-drafter` | Definition only — not integrated into standard workflow without a quality trial first. | Orchestrator-side (manual invocation for trial). | **Deferred — quality trial required** |
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=starter-subagent-inventory] ▲ -->
 
 Each subagent file (`<name>.md`) carries its own scope, forbidden patterns, mandatory protocol, and output format. The forbidden-patterns section is its only guard — subagents aren't sandboxed.
 

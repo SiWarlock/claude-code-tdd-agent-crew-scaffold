@@ -20,7 +20,7 @@ Run the named eval class.
 
 Argument: `$ARGUMENTS` — one of the categories below; `all` runs the full suite. Default: prompt the user to pick if no argument.
 
-<!-- ▼ EXAMPLE BLOCK: /eval body — illustrative shape. Replace wholesale with this project's eval classes. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=eval-body]: /eval body — illustrative shape. Replace wholesale with this project's eval classes. ▼ -->
 
 Argument values (example):
 - `<eval-class-1>` — <one-line description>
@@ -56,4 +56,4 @@ Per category:
 - **Running against any target other than the configured/allowlisted one.**
 - **Auto-incrementing the cost cap.** If at cap, halt; surface to the user; the user decides.
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=eval-body] ▲ -->

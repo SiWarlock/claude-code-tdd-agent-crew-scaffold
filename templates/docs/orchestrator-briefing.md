@@ -28,20 +28,20 @@ You're picking up the **orchestrator role** — one teammate on a Claude agent t
 
 ## Who the user is
 
-<!-- ▼ EXAMPLE BLOCK: who the user is — role, expertise, working preferences. Future orchestrator sessions calibrate tone and autonomy off this. Examples: "Works in this repo daily; knows the codebase. Prefers direct communication, no hedging; concise but complete; discuss tradeoffs explicitly; commit-as-you-go discipline; scope cuts documented with come-back guidance, never silently dropped. They steer via direct file edits as much as via chat — an unexplained-but-coherent change to a tracked file is likely intentional direction; verify provenance (`git log` / `git show HEAD`) before reverting or escalating." ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=who-the-user-is]: who the user is — role, expertise, working preferences. Future orchestrator sessions calibrate tone and autonomy off this. Examples: "Works in this repo daily; knows the codebase. Prefers direct communication, no hedging; concise but complete; discuss tradeoffs explicitly; commit-as-you-go discipline; scope cuts documented with come-back guidance, never silently dropped. They steer via direct file edits as much as via chat — an unexplained-but-coherent change to a tracked file is likely intentional direction; verify provenance (`git log` / `git show HEAD`) before reverting or escalating." ▼ -->
 
 <Name / role / expertise.> They prefer:
 
 - <preference 1>
 - <preference 2>
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=who-the-user-is] ▲ -->
 
 ---
 
 ## Project context (60-second version)
 
-<!-- ▼ EXAMPLE BLOCK: project context — a state-FREE 60-second framing. What the project is, its foundation, the major moving parts. Do NOT put phase status here (that drifts; it lives in {{TASK_TRACKER}}). ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=project-context]: project context — a state-FREE 60-second framing. What the project is, its foundation, the major moving parts. Do NOT put phase status here (that drifts; it lives in {{TASK_TRACKER}}). ▼ -->
 
 **Project:** {{PROJECT_NAME}}. {{PROJECT_TAGLINE}}
 
@@ -51,7 +51,7 @@ You're picking up the **orchestrator role** — one teammate on a Claude agent t
 
 **Repo:** `{{REPO_DIRNAME}}/`. Pushes go to **{{GIT_REMOTE}}** only.
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=project-context] ▲ -->
 
 ---
 
@@ -242,11 +242,11 @@ After routing Step 9 hot AND triaging Carry-forward, scan `{{TASK_TRACKER}}` Car
 
 Full set in root `CLAUDE.md` (key safety rules, typing posture, commit messages) + area `CLAUDE.md` (forbidden patterns, cross-doc invariants, lessons). Orchestrator-specific reminders: **TDD non-negotiable** for deterministic code (Step 2.5 review between RED + GREEN); **Step 7.5 reachability** every slice; **cross-doc invariants** need atomic doc edits when fields/invariants change; **build order fixed** per the architecture; **push only at `/orchestrate-end`** if a remote exists.
 
-<!-- ▼ EXAMPLE BLOCK: project-specific conventions — the load-bearing rules unique to this project's domain (layer dependency rule, isolation boundaries, forbidden patterns worth restating, safety invariants). ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=project-conventions]: project-specific conventions — the load-bearing rules unique to this project's domain (layer dependency rule, isolation boundaries, forbidden patterns worth restating, safety invariants). ▼ -->
 
 5. **<project-specific convention>.** <...>
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=project-conventions] ▲ -->
 
 ---
 
@@ -257,6 +257,8 @@ Full set in root `CLAUDE.md` (key safety rules, typing posture, commit messages)
 **Subagents** (`.claude/agents/README.md`) — delegate read-heavy codebase research to the **Explore** agent to keep your context lean. Step-8 reviewer agents (`code-quality-reviewer`, `security-reviewer`) run on the implementer side at Step 7→8 if installed; their findings reach you via Step-9 categorization. (Optional: **`brief-drafter`** drafts first-pass briefs from a 3-5 line request — output is DRAFT, you finalize; requires quality trial before standard adoption.)
 
 **Standard tools** — `Read`, `Edit`, `Write`, `Bash`, `Grep`, the `Agent` tool.
+
+**External MCP tools (use when available)** — if a **code-intelligence MCP** (e.g. CodeGraph) is present, prefer it for "where is X", callers/callees, traces, and impact-of-change over `grep`+read loops (and over a read-heavy Explore fan-out for graph-shaped questions). If a **docs MCP** (e.g. Context7) is present, use it for up-to-date library/API docs, setup/config steps, and version-correct examples — without being asked. Both no-op when absent.
 
 ---
 

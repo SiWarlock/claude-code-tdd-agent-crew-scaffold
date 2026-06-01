@@ -1,7 +1,7 @@
 ---
 description: Report per-teammate context usage for the current team (or all teams). Usage: /context-check [team-name]
 allowed-tools: Bash, Read
-argument-hint: "[team-name]"
+argument-hint: "[team-name] [--brief]"
 ---
 
 <!--
@@ -20,7 +20,7 @@ argument-hint: "[team-name]"
 
 Report per-teammate context usage for the current team (or a named team / all teams).
 
-Argument: `$ARGUMENTS` — optional team name. If omitted, defaults to:
+Argument: `$ARGUMENTS` — optional team name + optional flags. **`--brief`** prints the compact per-slice form the orchestrator pings the lead with; `--json` / `--history` are documented below. If the team name is omitted, it defaults to:
 - `$TEAM_NAME` env var if set (lead session has this from `/team-start`)
 - Else: all teams with active registry entries
 

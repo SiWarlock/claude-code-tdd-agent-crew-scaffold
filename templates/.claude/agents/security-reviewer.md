@@ -7,7 +7,8 @@ description: |
   unbounded loops, allowance races, etc.). Findings feed Step-9 categorization; critical findings
   escalate as Step-9 `Finding` (→ human via lead).
 tools: Read, Grep, Bash
-model: sonnet
+model: opus
+effort: xhigh
 ---
 
 <!--
@@ -52,14 +53,14 @@ For one slice at a time:
 
 2. **Project safety-invariant pass** (mandatory if `invariant_touching: yes`):
 
-<!-- ▼ EXAMPLE BLOCK: project safety-invariant cross-checks — replace wholesale with the project's actual key safety rules + the specific cross-checks for each. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=safety-invariant-cross-checks]: project safety-invariant cross-checks — replace wholesale with the project's actual key safety rules + the specific cross-checks for each. ▼ -->
 
    For each invariant in root `CLAUDE.md` "Key safety rules":
    - **<Invariant 1 name>** — <specific cross-check: what to grep for, what calls to trace, what conditions to confirm>. Report PASS or FINDING with file:line + cited spec anchor.
    - **<Invariant 2 name>** — <specific cross-check>. Report PASS or FINDING.
    - ...
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=safety-invariant-cross-checks] ▲ -->
 
 3. **General security pass** (always, regardless of invariant-touching):
    - **Input validation** — does the slice introduce a boundary path without input validation? External inputs (HTTP, user-supplied, file, network) must be validated.

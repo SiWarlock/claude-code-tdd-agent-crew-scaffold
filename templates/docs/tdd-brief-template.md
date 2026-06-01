@@ -140,7 +140,7 @@ Pre-bets the orchestrator is making about what Step 9 will surface.
 
 ## Worked example
 
-<!-- ▼ EXAMPLE BLOCK: worked example — illustrative format reference, NOT project content. Replace with a worked example from this project once the first real brief lands, OR keep this one labelled as illustrative. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=tdd-brief-worked-example]: worked example — illustrative format reference, NOT project content. Replace with a worked example from this project once the first real brief lands, OR keep this one labelled as illustrative. ▼ -->
 
 ```markdown
 # /tdd brief — payment_retry_on_transient_failure
@@ -202,7 +202,7 @@ HTTP route `POST /charge` (`app/api/charge.ts:handleCharge`). Confirm the new
 - **Architecture-doc note candidate** — clarify §4.3 retry-cap behavior on exhaustion (returns failure, not throws).
 ```
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=tdd-brief-worked-example] ▲ -->
 
 ---
 
@@ -252,7 +252,9 @@ Symptom: the brief's "How to invoke" lists `/session-start` as Step 1. The imple
 
 **Rule** — "How to invoke" jumps straight to pre-flight checks + `/tdd <feature_name>`. Include `/session-start` ONLY for the first slice of a session or after an explicit session swap.
 
-<!-- ▼ EXAMPLE BLOCK: project-specific pitfalls — the source project accreted several more pitfalls unique to its domain (contract-type placement, model-ID verification against live catalogs, matrix-driven brief file-list reconciliation, agent-existence ≠ pipeline-readiness). Add the project's own recurring brief-authoring mistakes here as they emerge — each one is cheap insurance against a repeat. ▲ -->
+<!-- ▼ EXAMPLE BLOCK [id=project-specific-pitfalls]: project-specific pitfalls — the source project accreted several more pitfalls unique to its domain (contract-type placement, model-ID verification against live catalogs, matrix-driven brief file-list reconciliation, agent-existence ≠ pipeline-readiness). Add the project's own recurring brief-authoring mistakes here as they emerge — each one is cheap insurance against a repeat. ▼ -->
+
+<!-- ▲ END EXAMPLE BLOCK [id=project-specific-pitfalls] ▲ -->
 
 ---
 

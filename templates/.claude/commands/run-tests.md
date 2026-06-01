@@ -51,12 +51,13 @@ If an argument names a class that belongs to the *other* mode, **ERROR** with a 
 
 ---
 
-<!-- ▼ EXAMPLE BLOCK: test-class discipline notes — OPTIONAL. Some test classes
+<!-- ▼ EXAMPLE BLOCK [id=test-class-discipline-notes]: test-class discipline notes — OPTIONAL. Some test classes
      need preconditions (a live external dependency, an env var, a slow browser).
      The source project documented things like: "the live-attack class needs a
      reachable target + a bearer env var, else it skips with a clear message;"
      "the visual-smoke class is slow — run per-PR, not per-commit." Add the
-     project's own per-class discipline notes here, or delete this block. ▲ -->
+     project's own per-class discipline notes here, or delete this block. ▼ -->
+<!-- ▲ END EXAMPLE BLOCK [id=test-class-discipline-notes] ▲ -->
 
 ## Output
 

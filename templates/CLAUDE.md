@@ -30,13 +30,13 @@
 └── {{ARCH_DOC}}                        # Architecture / design contract
 ```
 
-<!-- ▼ EXAMPLE BLOCK: project structure — extend the tree with the project's real layout (extra code areas, deliverable docs, eval suites, etc.). Add one row per additional code area; remove team-handoffs/ if generated in single-operator-fallback mode. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=project-structure]: project structure — extend the tree with the project's real layout (extra code areas, deliverable docs, eval suites, etc.). Add one row per additional code area; remove team-handoffs/ if generated in single-operator-fallback mode. ▼ -->
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=project-structure] ▲ -->
 
 ## Tech stack
 
-<!-- ▼ EXAMPLE BLOCK: tech stack — replace with the project's real stack. One row per layer. Mark anything provisional and note where it gets locked. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=tech-stack]: tech stack — replace with the project's real stack. One row per layer. Mark anything provisional and note where it gets locked. ▼ -->
 
 | Layer | Choice |
 |---|---|
@@ -48,13 +48,15 @@
 | Static types | {{TYPECHECKER}} |
 | Test runner | {{TEST_RUNNER}} |
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=tech-stack] ▲ -->
 
 ## Cross-cutting conventions
 
 ### Strict typing posture
 
-<!-- ▼ EXAMPLE BLOCK: strict-typing posture — state the project's typing discipline. Examples: "every file declares strict types at the top; every property/parameter/return type has a native type declaration; runtime validation at boundaries via the validation library." Adapt to the language. ▲ -->
+<!-- ▼ EXAMPLE BLOCK [id=strict-typing-posture]: strict-typing posture — state the project's typing discipline. Examples: "every file declares strict types at the top; every property/parameter/return type has a native type declaration; runtime validation at boundaries via the validation library." Adapt to the language. ▼ -->
+
+<!-- ▲ END EXAMPLE BLOCK [id=strict-typing-posture] ▲ -->
 
 ### Commit messages
 
@@ -76,6 +78,13 @@
 
 - Pushes go to **{{GIT_REMOTE}}** only.
 - Push only at `/orchestrate-end` round close-out; never mid-slice.
+
+### Code intelligence & docs (external MCP tools — use when available)
+
+If this workspace has these tools, **prefer them** — they cut tool calls and context. If not, ignore this section (no setup required, nothing breaks):
+
+- **Code intelligence** (e.g. a CodeGraph MCP / indexed code graph): for "where is X", callers/callees, call-path traces, and impact-of-change, query it **before** falling back to `grep` + read loops; confirm a specific detail with a targeted read.
+- **Library / API docs** (e.g. a Context7 MCP): when you need up-to-date library/framework docs, API references, setup/config steps, or version-correct examples, pull them from the docs MCP rather than relying on memory — **without being asked**.
 
 ## Team coordination — shared rules (all roles)
 
@@ -182,18 +191,20 @@ See `docs/team-protocol.md` for the lead's full playbook (team pattern only), `d
 
 TDD applies to **deterministic code** — code where you can write a failing test that pins the behavior before the implementation exists.
 
-<!-- ▼ EXAMPLE BLOCK: TDD scope — name what is test-first vs. what is exempt. Examples: "deterministic code (state machines, parsers, harness logic, instrumentation) is `/tdd`; LLM-driven generation is eval-tested instead." A project with no non-deterministic surface can simplify this to "TDD applies to all production code." ▲ -->
+<!-- ▼ EXAMPLE BLOCK [id=tdd-scope]: TDD scope — name what is test-first vs. what is exempt. Examples: "deterministic code (state machines, parsers, harness logic, instrumentation) is `/tdd`; LLM-driven generation is eval-tested instead." A project with no non-deterministic surface can simplify this to "TDD applies to all production code." ▼ -->
+
+<!-- ▲ END EXAMPLE BLOCK [id=tdd-scope] ▲ -->
 
 When in doubt, ask: "Can I write a failing test that pins this behavior deterministically?" If yes, `/tdd`. If no, ship via the project's non-deterministic-coverage path (eval suite, design-fixture review, etc.).
 
 ## Key safety rules (do not paraphrase — explicit invariants)
 
-<!-- ▼ EXAMPLE BLOCK: key safety rules — the load-bearing domain invariants, stated explicitly. These are referenced by name from briefs, tests, and the forbidden-patterns lists. Project examples: "no real-world targets," "agent A cannot do agent B's job," "no autonomous filing of critical findings," "collateral never leaves without an equal claim burned," "settlement is one-time and immutable." If the project has no domain safety invariants, replace this whole section with a short note saying so. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=key-safety-rules]: key safety rules — the load-bearing domain invariants, stated explicitly. These are referenced by name from briefs, tests, and the forbidden-patterns lists. Project examples: "no real-world targets," "agent A cannot do agent B's job," "no autonomous filing of critical findings," "collateral never leaves without an equal claim burned," "settlement is one-time and immutable." If the project has no domain safety invariants, replace this whole section with a short note saying so. ▼ -->
 
 1. **<Invariant 1>.** <Why it is load-bearing; how it is enforced.>
 2. **<Invariant 2>.** <...>
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=key-safety-rules] ▲ -->
 
 ## Slash commands available (`.claude/commands/`)
 

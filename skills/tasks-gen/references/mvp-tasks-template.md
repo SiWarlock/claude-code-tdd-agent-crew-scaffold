@@ -50,8 +50,7 @@ _(Empty at project start; populated as Step-9 routing surfaces operational items
 | <required deliverable 1> | ❌ / 🟡 / 🟢 | <phase> |
 | <required deliverable 2> | ❌ / 🟡 / 🟢 | <phase> |
 
-<!-- ▼ EXAMPLE BLOCK [id=deliverable-map]: deliverable map — replace rows with the project's real required outputs (docs, deployed app, reports, etc.). ▼ -->
-<!-- ▲ END EXAMPLE BLOCK [id=deliverable-map] ▲ -->
+<!-- ▼ EXAMPLE BLOCK: deliverable map — replace rows with the project's real required outputs (docs, deployed app, reports, etc.). ▲ -->
 
 ---
 
@@ -85,14 +84,14 @@ The project is "done" when:
 
 ### <phase-id>.1 — <task name>
 
-<!-- ▼ EXAMPLE BLOCK [id=task-entry-format]: task entry format — dense checkbox bullets, NOT a pre-written brief. The orchestrator authors the /tdd brief from this entry + carry-forward + recent context. ▼ -->
+<!-- ▼ EXAMPLE BLOCK: task entry format — dense checkbox bullets, NOT a pre-written brief. The orchestrator authors the /tdd brief from this entry + carry-forward + recent context. ▼ -->
 
 - [ ] <acceptance behavior 1>
 - [ ] <acceptance behavior 2>
 - [ ] Files: <concrete paths — NEW vs. extended>
 - [ ] Cross-doc invariant: <NEW / extended / none>
 
-<!-- ▲ END EXAMPLE BLOCK [id=task-entry-format] ▲ -->
+<!-- ▲ END EXAMPLE BLOCK ▲ -->
 
 ### <phase-id>.2 — <task name>
 

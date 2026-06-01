@@ -7,6 +7,8 @@
 > **What ships in this package.** This guide + a companion `GENERATE-WITH-CLAUDE.md` (the Claude-facing generation instructions) + a `templates/` tree containing every scaffolding file as a project-agnostic template with `{{PLACEHOLDER}}` slots and `EXAMPLE BLOCK` markers. Read this guide first; §13 explains the handoff to Claude.
 >
 > **Architecture-doc-driven.** The generator reads the user's architecture document end-to-end as its **primary input** for personalization — stack, code areas, safety invariants, subsystem boundaries — and interviews the user only for what cannot be inferred or what's ambiguous. Any ambiguity gets a clarification question; the generator never fabricates.
+>
+> **Where this fits in cc-crew.** This guide covers the **build engine** — the agent team that implements a project. It sits inside the larger **cc-crew** workflow: a cross-model planning chain (`/arch-draft` → `/arch-finalize` → `/tasks-gen`) produces the binding `{{ARCH_DOC}}` contract + the spec-anchored `{{TASK_TRACKER}}` this engine builds against; `/scaffold-generate` writes this scaffolding into the project; and `/scaffold-upgrade` (§11) keeps it current via a provenance-manifest 3-way merge. See the top-level `README.md` for the full workflow + the optional tools that compose around it (Compound Engineering, gstack, Ultracode, CodeGraph, Context7), and `skills/ROUTING.md` for the stage-by-stage routing.
 
 ---
 
@@ -509,9 +511,18 @@ When the **workflow** changes, update the scaffolding. When the **project state*
 
 **Don't:** add *state* to slash commands or the briefing (state lives in `{{TASK_TRACKER}}`); add *workflow rules* to `{{TASK_TRACKER}}`; duplicate a convention across two scaffolding files (pick a canonical home, link from elsewhere).
 
-**Renaming caveat:** the cross-referenced files (§4) are named inside command bodies. Renaming means a grep-and-update ripple.
+**Renaming caveat:** the cross-referenced files (§4) are named inside command bodies. Renaming means a grep-and-update ripple — `/scaffold-upgrade`'s `renamed-template` / `renamed-placeholder` migrations automate this ripple when the rename ships in the templates.
 
 **Archiving:** when a major phase completes, `git mv` the old `{{TASK_TRACKER}}` to `docs/archive/` and start a fresh one; carry forward the still-relevant items.
+
+### Pulling upstream template updates into an existing project (`/scaffold-upgrade`)
+
+Everything above is about *authoring* a change. To pull scaffolding improvements **into a project you already generated**, use the **`scaffold-upgrade`** skill — don't hand-diff your files against the templates.
+
+- **How it works.** `scaffold-generate` stamps a provenance manifest (`.scaffolding/manifest.json`) recording the scaffolding commit it came from + your resolved placeholder values + a ledger of every generated file and `EXAMPLE BLOCK` region. `/scaffold-upgrade` re-derives the *old* templates at that commit and the *new* templates at the target ref using your stored values, then runs a **3-way merge** (`base` = old re-substituted, `ours` = new re-substituted, `theirs` = your files). It **auto-applies only machinery you never touched** (`theirs == base`) and **proposes — never clobbers —** everything you customized. Accreted state (`LESSONS.md`, `{{TASK_TRACKER}}` living sections) and your `{{ARCH_DOC}}` are left alone. Two PAUSE gates (plan-approval, pre-commit) mirror the generation discipline; conflicts surface as inline `<<<<<<<` markers (never `.rej`) and **block the commit** until resolved.
+- **Run it** from a scaffolding-repo checkout pointed at your project — it is **not vendored into the project**, so the upgrade logic itself never goes stale: `/scaffold-upgrade [--check] [--from <sha>] [--to <ref>] [--auto]`. `--check` reports drift ("N commits / M files behind") without writing — safe in CI.
+- **Structural changes** a text-merge can't express — a renamed placeholder/template, a new required section, a retired command, an accreted-format bump — ride **version-gated, idempotent, journaled migrations** (`migrations/registry.json`). `deleted-template` is propose-only (never auto-deletes); `added-template` is mode/optional-filtered; `accreted-format` is the only path allowed to rewrite accreted bodies, and only human-gated + sampled.
+- **Legacy projects** generated before the manifest existed are **retro-stamped** first — recovering the placeholder values + base commit by reverse-reading the files, asking you, or fingerprinting the verbatim machinery — then upgraded normally. The rule throughout: **lower base-confidence ⇒ more is proposed, never more auto-applied.**
 
 ---
 

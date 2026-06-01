@@ -20,7 +20,7 @@ Pull the structured trace for a given id and format the lifecycle for inspection
 
 Argument: `$ARGUMENTS` — the id of the run / request to inspect.
 
-<!-- ▼ EXAMPLE BLOCK: /trace body — from the source project. Replace wholesale. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=trace-body]: /trace body — from the source project. Replace wholesale. ▼ -->
 
 ## Procedure
 
@@ -55,4 +55,4 @@ A single formatted trace block + (optionally) the raw tail if the user requests 
 - **Fetching traces for ids outside this project's trace format.** If an id doesn't match, say so; don't try to interpret a foreign trace.
 - **Inferring stage output when traces are missing.** If a span is absent, report "no trace" — don't fabricate.
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=trace-body] ▲ -->

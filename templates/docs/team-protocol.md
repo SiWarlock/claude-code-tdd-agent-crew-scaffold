@@ -80,11 +80,11 @@ Explicit prohibitions. **Each violation costs context and risks correctness.**
 
 **One implementer per code area, spawned as needed.** The code areas are this project's workspaces:
 
-<!-- ▼ EXAMPLE BLOCK: code areas — list the project's actual code-area directories. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=code-areas]: code areas — list the project's actual code-area directories. ▼ -->
 
 `{{CODE_AREA}}` · `{{CODE_AREA_2}}` · …
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=code-areas] ▲ -->
 
 The lead spawns an implementer for an area when that area's work begins. Build order is fixed by the architecture (typically serial — back-end before front-end, etc.); areas run in parallel only once dependencies clear.
 

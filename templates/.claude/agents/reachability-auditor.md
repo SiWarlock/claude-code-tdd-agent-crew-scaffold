@@ -7,6 +7,7 @@ description: |
   reachability checks stay with `/tdd` Step 7.5 + `/wired <symbol>`.
 tools: Read, Grep, Bash
 model: sonnet
+effort: xhigh
 ---
 
 <!--

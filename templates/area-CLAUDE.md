@@ -64,16 +64,18 @@ Don't paste these sections into the prompt. Grep the file:section, read only wha
 
 <!-- Starts near-empty. Add a row whenever a topic is looked up twice. -->
 
+**Code intelligence & docs (when available):** prefer a code-intelligence MCP (e.g. CodeGraph) for code navigation / callers / traces over `grep`+read loops, and a docs MCP (e.g. Context7) for up-to-date library/API docs — see root `CLAUDE.md` "Code intelligence & docs." No-op if not installed.
+
 ## Stack
 
-<!-- ▼ EXAMPLE BLOCK: stack quick-reference for implementer sessions. Canonical stack lives in root CLAUDE.md + {{ARCH_DOC}}; this is the cheat sheet. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=area-stack]: stack quick-reference for implementer sessions. Canonical stack lives in root CLAUDE.md + {{ARCH_DOC}}; this is the cheat sheet. ▼ -->
 
 - **Runtime:** {{RUNTIME}}
 - **Framework:** {{FRAMEWORK}}
 - **Validation:** {{VALIDATION_LIB}}
 - **Lint / types / tests:** {{LINT}} / {{TYPECHECKER}} / {{TEST_RUNNER}}
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=area-stack] ▲ -->
 
 ## Standard commands
 
@@ -104,7 +106,7 @@ Don't paste these sections into the prompt. Grep the file:section, read only wha
 
 ## Forbidden patterns
 
-<!-- ▼ EXAMPLE BLOCK: forbidden patterns — 3-5 narrow, enforceable, domain-specific rules. Shape: "Don't <pattern X> because <reason / past incident>; use <alternative Y>." Test-pin them where possible. Starts small; accretes as lessons surface. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=forbidden-patterns]: forbidden patterns — 3-5 narrow, enforceable, domain-specific rules. Shape: "Don't <pattern X> because <reason / past incident>; use <alternative Y>." Test-pin them where possible. Starts small; accretes as lessons surface. ▼ -->
 
 Do not:
 
@@ -112,7 +114,7 @@ Do not:
 2. **<Pattern>** — <reason>; use <alternative> instead.
 3. **<Pattern>** — <reason>; use <alternative> instead.
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=forbidden-patterns] ▲ -->
 
 ## Cross-doc invariants — schema/docs mirroring
 
@@ -128,7 +130,7 @@ Several typed models in this codebase are **contracts** mirrored in `{{ARCH_DOC}
 
 ## Module organization
 
-<!-- ▼ EXAMPLE BLOCK: module layout + layer dependency rule. Replace with the project's real directory tree and import-direction DAG. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=module-layout]: module layout + layer dependency rule. Replace with the project's real directory tree and import-direction DAG. ▼ -->
 
 ```
 {{CODE_AREA}}
@@ -143,13 +145,15 @@ Layer dependency direction (top depends on bottom, never reverse):
 
 Cross-cutting layers can be imported from anywhere. Enforce the rule mechanically with a test where possible — the test *is* the spec for the rule.
 
-<!-- ▲ END EXAMPLE BLOCK ▲ -->
+<!-- ▲ END EXAMPLE BLOCK [id=module-layout] ▲ -->
 
 ## Subagents
 
 See `.claude/agents/README.md` for the canonical inventory + integration points.
 
-<!-- ▼ EXAMPLE BLOCK: area-specific subagent candidates — list candidates that would earn their keep specifically in this area (e.g. an ABI/types syncer for a frontend area, a Pyth/feed verifier for a contracts area). Build only on real friction. ▲ -->
+<!-- ▼ EXAMPLE BLOCK [id=area-subagent-candidates]: area-specific subagent candidates — list candidates that would earn their keep specifically in this area (e.g. an ABI/types syncer for a frontend area, a Pyth/feed verifier for a contracts area). Build only on real friction. ▼ -->
+
+<!-- ▲ END EXAMPLE BLOCK [id=area-subagent-candidates] ▲ -->
 
 ## Lessons logged from prior sessions
 
