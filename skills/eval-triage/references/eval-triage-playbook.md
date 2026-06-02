@@ -110,14 +110,14 @@ assertion.
 
 ---
 
-## Narration cues (what to say while you work)
+## Cues
 
 - *"I'm reproducing first, and checking whether it's deterministic — and whether responses are live or replayed."*
-- *"The other six evals are controls; I'm diffing the failing one against its nearest passing sibling."*
+- *"The other passing evals are controls; I'm diffing the failing ones against its nearest passing sibling."*
 - *"I'm checking the midpoint: did the model even have the evidence? If not, this is retrieval, not generation."*
 - *"The tool returned the right data but the answer ignored it — so I'm looking at state propagation / final synthesis."*
 - *"The answer is correct but the eval fails on phrasing — I'm checking whether the assertion is too brittle, and I'll ask before changing it."*
-- *"I'll make the smallest change at the root cause, then rerun the failing eval and the full suite to check for regressions."*
+- *"I'll make the smallest change at the root cause, then rerun the failing evals and the full suite to check for regressions."*
 
 ## What reads as senior
 
