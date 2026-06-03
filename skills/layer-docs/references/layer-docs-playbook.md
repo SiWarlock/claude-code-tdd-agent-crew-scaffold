@@ -156,3 +156,82 @@ to the rest. Someone should grasp the layer's role from this block alone.>
   the drift.
 - Prefer the test suite as a tie-breaker on intended behavior.
 - Don't editorialize beyond the evidence; "I didn't find X" is a valid, useful statement.
+
+---
+
+## Incremental updates (re-running layer-docs to keep the set in sync)
+
+The skill is meant to be run repeatedly. The first run derives the set; later runs **detect what changed and
+refresh only the affected docs** without losing human edits. This is what lets a knowledge base keep
+"owned" docs fresh (regenerate → replace the changed chunks).
+
+### The state file — `docs/layers/.layer-docs.json`
+
+Machine-owned; re-stamped on every write. It is the memory that makes change detection possible.
+
+```json
+{
+  "schemaVersion": 1,
+  "generatedAt": "<full git sha at last generation, or null>",
+  "lastRun": "<git sha or hash-digest of the last run>",
+  "layers": [
+    {
+      "slug": "01-api",
+      "name": "API Layer",
+      "doc": "01-api.md",
+      "sourceGlobs": ["src/api/**", "src/routes/**"],
+      "docHash": "sha256:<hash of 01-api.md as this skill last wrote it>"
+    }
+  ],
+  "sourceHashes": { "src/api/server.py": "sha256:…", "src/api/routes.py": "sha256:…" }
+}
+```
+
+- `sourceGlobs` per layer = the source→layer mapping used to route a changed file to the doc(s) it affects.
+- `docHash` = the hash of each layer doc **as the skill last wrote it**; if the file's current hash differs,
+  a human edited it (see don't-clobber below).
+- `sourceHashes` = per-file hashes at last generation; the fallback change-detector when git isn't available.
+- Works without git. Store the git sha when present purely as a fast-path / provenance.
+
+### Change detection (Update / Check)
+
+1. **Find changed files.** With git: `git diff --name-status <generatedAt>..HEAD` (or `git status` for
+   uncommitted). Without git: re-hash the source tree and diff against `sourceHashes`. Classify into
+   **added / modified / deleted / renamed**.
+2. **Widen by impact.** When CodeGraph is present, run `codegraph_impact` on changed symbols to catch files
+   that *depend on* the change (a changed interface can stale a doc whose file didn't itself change).
+3. **Route changes to layers.** A changed file belongs to a layer if it matches that layer's `sourceGlobs`
+   **or** appears as a `file:line` anchor in that layer's doc. Union → the **affected layers**.
+4. **Classify the deltas:**
+   - *modified within a mapped layer* → refresh that layer doc.
+   - *added, unmapped* → candidate **new layer** or reassignment → §3 gate.
+   - *deleted* → prune references; if a layer's whole basis is gone, propose retiring its doc.
+   - *renamed/moved* → update anchors and `sourceGlobs`.
+5. **Map-level change?** If the set of layers, the inter-layer flow, the stack, or cross-cutting concerns
+   shifted → also refresh `OVERVIEW.md`.
+
+### Don't-clobber: preserving human edits
+
+A layer doc whose current hash ≠ its stored `docHash` has been **hand-edited** and is now partly human-owned.
+On update, do **not** overwrite it wholesale:
+- The per-layer template's sections are stable headings. Regenerate only the **stale** sections (the ones the
+  change touched); leave hand-written prose and added sections intact.
+- If a human-written statement now **contradicts the code**, surface it as a flagged conflict for the user to
+  resolve — don't silently "correct" their words.
+- After a clean update, recompute and store the new `docHash`.
+
+This mirrors `scaffold-upgrade`'s propose-don't-clobber stance: machinery you own is refreshed automatically;
+anything a human customized is preserved or flagged, never steamrolled.
+
+### `--check` (drift report, writes nothing)
+
+Run steps 1–4 and report, per layer: `fresh | stale (which sources changed) | hand-edited | new-area-unmapped`,
+plus whether the overview needs a refresh. This is the read-only signal a knowledge base or CI uses to decide
+when to trigger a real update. Exit without writing.
+
+### Handoff to a knowledge base
+
+After an update, the changed docs are **content-hash-replaceable**: a consuming index re-chunks only the
+files whose hash changed and swaps the old chunks for the new. So "refresh the docs → new docs replace old in
+the vector DB" needs nothing special here beyond writing the updated files + re-stamping the state — the
+index keys on `source_path` + hash.

@@ -61,7 +61,7 @@ Run these **near the end of a build, from inside the finished project**, to unde
 (`ARCHITECTURE.md`, the `/arch-draft` artifacts, `/office-hours` & `/plan-ceo-review` output, `MVP_TASKS.md`)
 → derive the project's real **layers** → write a full-scope `docs/layers/OVERVIEW.md` + one digestible doc
 per layer (executive summary first, depth below). Faithful (cites `file:line`, flags architecture-vs-code
-drift); prefers CodeGraph/Context7 when present; degrades to code-only when planning docs are absent.
+drift); prefers CodeGraph/Context7 when present; degrades to code-only when planning docs are absent. **Re-runnable + incremental** — run it again as the code evolves and it detects what changed and updates only the affected docs (preserving hand-edits) via a stamped `docs/layers/.layer-docs.json` state file; `/layer-docs --check` reports which docs are stale without writing — the signal a knowledge base / drift detector uses.
 
 **`learn-site`** (Claude Code) — consumes `docs/layers/` and builds an **interactive learning website** in
 `docs/learn-site/`: a clickable layer map, a "follow a request" walkthrough, search, and a **Plain-English ⇄

@@ -44,7 +44,7 @@ into something you can *understand and teach*:
 
 | Skill | Runs on | What it does | Status |
 |---|---|---|---|
-| **`layer-docs`** | **Codex or Claude** (host-neutral) | deep end-to-end analysis of the code **+** the planning/architecture docs → derive the project's real **layers** → write a full-scope `docs/layers/OVERVIEW.md` + one digestible doc per layer (executive summary first, depth below). Faithful (cites `file:line`, flags drift from the architecture doc); prefers CodeGraph/Context7 when present. | ✅ built |
+| **`layer-docs`** | **Codex or Claude** (host-neutral) | deep end-to-end analysis of the code **+** the planning/architecture docs → derive the project's real **layers** → write a full-scope `docs/layers/OVERVIEW.md` + one digestible doc per layer (executive summary first, depth below). Faithful (cites `file:line`, flags drift from the architecture doc); prefers CodeGraph/Context7 when present. **Re-runnable** — later runs incrementally update only what changed (preserving hand-edits; `--check` reports drift) via a stamped state file. | ✅ built |
 | **`learn-site`** | **Claude Code** | turn `docs/layers/` into an **interactive educational website** in `docs/learn-site/` — a clickable layer map, a "follow a request" walkthrough, search, and a **Plain-English ⇄ Deeper-Dive** toggle per topic. Static/zero-build by default; React-via-CDN or a React app only when interactivity earns it. | ✅ built |
 
 `layer-docs → learn-site` is its own little chain (the site builds *from* the docs). Both are **standalone —

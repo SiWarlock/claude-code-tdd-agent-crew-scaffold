@@ -107,6 +107,7 @@ lifecycle stages; they degrade to code-only when planning docs are absent):
 - **`layer-docs`** (host-neutral) — deep end-to-end analysis of the code **+** the planning/architecture docs →
   derive the project's real **layers** → write `docs/layers/OVERVIEW.md` + one digestible doc per layer
   (executive summary first, depth below). Faithful: cites `file:line`, flags architecture-vs-code drift.
+  **Re-runnable** — later runs incrementally update only what changed (preserving hand-edits; `--check` for drift).
 - **`learn-site`** (Claude Code) — turn `docs/layers/` into an **interactive learning website** in
   `docs/learn-site/` (clickable layer map, "follow a request" walkthrough, **Plain-English ⇄ Deeper-Dive**
   toggle per topic). Static/zero-build by default; React only when interactivity earns it. Runs **after `layer-docs`**.
