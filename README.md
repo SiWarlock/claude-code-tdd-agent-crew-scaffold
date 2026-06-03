@@ -59,6 +59,8 @@ contract, a spec-anchored `MVP_TASKS.md`, a hard 10-step `/tdd` walker, hot-rout
   ▼
  review · ship · deploy · compound        ← composed plugins (gstack / CE), see ROUTING.md
   │
+  ├─▶ /layer-docs → /learn-site ── document the layers + build an interactive learning site (near project's end)
+  │
   └─▶ /scaffold-upgrade ── pull later scaffolding improvements via 3-way merge, anytime
 ```
 
@@ -77,8 +79,9 @@ Plugins feed-into or review *around* them — they never author them.
 ## The skills (the planning chain)
 
 Five custom skills run the planning/scaffolding chain (below), plus two standalone debug skills (**`bug-hunt`**,
-**`eval-triage`**) — all run from this checkout (see `skills/README.md` to install). `arch-draft`, `bug-hunt`,
-and `eval-triage` are host-neutral (Codex or Claude); the rest run on Claude Code.
+**`eval-triage`**) and an end-of-project comprehension pair (**`layer-docs`**, **`learn-site`**) — all run from
+this checkout (see `skills/README.md` to install). `arch-draft`, `bug-hunt`, `eval-triage`, and `layer-docs`
+are host-neutral (Codex or Claude); the rest run on Claude Code.
 
 | Skill | Runs on | What it does |
 |---|---|---|
@@ -98,6 +101,15 @@ plugins (and the conditional MCP tools) slot in around them.
   vs a passing eval → bisect the pipeline → categorize (eval/judge · prompt · retrieval · tool-use · state ·
   drift · parsing) → minimal-fix proposal → verify. It pauses at each phase so you stay in the loop and can
   narrate the reasoning.
+
+**Plus an end-of-project comprehension pair** (run in a fresh session from inside the finished project — **not**
+lifecycle stages; they degrade to code-only when planning docs are absent):
+- **`layer-docs`** (host-neutral) — deep end-to-end analysis of the code **+** the planning/architecture docs →
+  derive the project's real **layers** → write `docs/layers/OVERVIEW.md` + one digestible doc per layer
+  (executive summary first, depth below). Faithful: cites `file:line`, flags architecture-vs-code drift.
+- **`learn-site`** (Claude Code) — turn `docs/layers/` into an **interactive learning website** in
+  `docs/learn-site/` (clickable layer map, "follow a request" walkthrough, **Plain-English ⇄ Deeper-Dive**
+  toggle per topic). Static/zero-build by default; React only when interactivity earns it. Runs **after `layer-docs`**.
 
 ---
 
@@ -179,8 +191,10 @@ cc-crew/
 ├── README.md                  ← you are here
 ├── SCAFFOLDING-GUIDE.md       ← how the agent-team pattern works (read for context)
 ├── GENERATE-WITH-CLAUDE.md    ← the Claude-facing generation procedure (§7 steps, §10 placeholders, Step 12.5 manifest)
-├── skills/                    ← the 5 cc-crew skills (SKILL.md + bundled references/) + README.md + ROUTING.md
-│   ├── arch-draft/  arch-finalize/  tasks-gen/  scaffold-generate/  scaffold-upgrade/
+├── skills/                    ← all 9 cc-crew skills (SKILL.md + bundled references/) + README.md + ROUTING.md
+│   ├── arch-draft/  arch-finalize/  tasks-gen/  scaffold-generate/  scaffold-upgrade/   ← planning chain
+│   ├── bug-hunt/  eval-triage/                                                          ← standalone debugging
+│   └── layer-docs/  learn-site/                                                         ← end-of-project comprehension
 ├── migrations/                ← structural-migration registry for /scaffold-upgrade (registry.json + _TEMPLATE.md)
 ├── docs/archive/              ← superseded docs kept for reference (e.g. the playbook, now bundled into arch-draft)
 └── templates/                 ← every scaffolding file as a project-agnostic template

@@ -37,6 +37,19 @@ Both are **standalone — not lifecycle stages.** `bug-hunt` is general root-cau
 the specialized agentic-eval flavor (a participatory walkthrough you can narrate). They use the project's
 `/tdd` / `/wired` / `LESSONS.md` when present and degrade gracefully elsewhere.
 
+## End-of-project comprehension skills (a 2-step chain)
+
+Near the end of a build — in a **fresh session, from inside the target project** — turn the finished system
+into something you can *understand and teach*:
+
+| Skill | Runs on | What it does | Status |
+|---|---|---|---|
+| **`layer-docs`** | **Codex or Claude** (host-neutral) | deep end-to-end analysis of the code **+** the planning/architecture docs → derive the project's real **layers** → write a full-scope `docs/layers/OVERVIEW.md` + one digestible doc per layer (executive summary first, depth below). Faithful (cites `file:line`, flags drift from the architecture doc); prefers CodeGraph/Context7 when present. | ✅ built |
+| **`learn-site`** | **Claude Code** | turn `docs/layers/` into an **interactive educational website** in `docs/learn-site/` — a clickable layer map, a "follow a request" walkthrough, search, and a **Plain-English ⇄ Deeper-Dive** toggle per topic. Static/zero-build by default; React-via-CDN or a React app only when interactivity earns it. | ✅ built |
+
+`layer-docs → learn-site` is its own little chain (the site builds *from* the docs). Both are **standalone —
+not lifecycle stages**, and both **degrade gracefully** when planning docs are absent (working from code alone).
+
 ## Why the cross-model split
 `arch-draft` runs on **GPT-5.5 via Codex** and `arch-finalize` runs on **Claude** on purpose: two
 independent models over the architecture (one drafts, the other adversarially finalizes) catch more than
@@ -73,6 +86,14 @@ for s in bug-hunt eval-triage; do
 done
 ```
 
+**`layer-docs` → both Codex and Claude; `learn-site` → Claude Code** (the end-of-project comprehension pair,
+run from inside a target project):
+```bash
+ln -snf "$PWD/skills/layer-docs" ~/.codex/skills/layer-docs
+ln -snf "$PWD/skills/layer-docs" ~/.claude/skills/layer-docs
+ln -snf "$PWD/skills/learn-site" ~/.claude/skills/learn-site   # builds + serves a site → Claude Code
+```
+
 **Notes.**
 - **Symlinks, not copies** — they stay live against this checkout (and `scaffold-upgrade` keeps running *from
   the checkout*, never vendored into a project).
@@ -82,8 +103,9 @@ done
   Claude and Codex lanes — exactly what the two-brain planning front needs (`arch-draft` on the Codex lane,
   `arch-finalize` / `tasks-gen` / `scaffold-generate` on the Claude lane).
 - **Managing skills with a central manager** (a tool that symlinks from a central store): register all
-  seven there, and make sure **`arch-draft`, `bug-hunt`, AND `eval-triage` are exposed to BOTH**
-  `~/.codex/skills/` and `~/.claude/skills/` (they're host-neutral) — most managers default to the Claude dir only.
+  nine there, and make sure the host-neutral ones — **`arch-draft`, `bug-hunt`, `eval-triage`, AND
+  `layer-docs`** — are exposed to BOTH `~/.codex/skills/` and `~/.claude/skills/`; `learn-site` is Claude-only
+  (it builds + serves a site). Most managers default to the Claude dir only.
 - Eventually these become a packaged `cc-crew` plugin; for now, run them from this checkout.
 
 ## Artifacts & flow

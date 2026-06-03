@@ -54,6 +54,21 @@ reproduce → contract → compare vs a passing eval → bisect the pipeline (mi
 → verify. It coaches + pauses at each phase and is diagnostic-first (never auto-fixes the app or silently
 edits an eval). Use it for eval-suite failures; use `bug-hunt` for general code bugs.
 
+## End-of-project comprehension pair (on-demand, fresh session — NOT a per-feature stage)
+Run these **near the end of a build, from inside the finished project**, to understand and teach what was made:
+
+**`layer-docs`** (host-neutral) — deep end-to-end analysis of the **code + the planning/architecture docs**
+(`ARCHITECTURE.md`, the `/arch-draft` artifacts, `/office-hours` & `/plan-ceo-review` output, `MVP_TASKS.md`)
+→ derive the project's real **layers** → write a full-scope `docs/layers/OVERVIEW.md` + one digestible doc
+per layer (executive summary first, depth below). Faithful (cites `file:line`, flags architecture-vs-code
+drift); prefers CodeGraph/Context7 when present; degrades to code-only when planning docs are absent.
+
+**`learn-site`** (Claude Code) — consumes `docs/layers/` and builds an **interactive learning website** in
+`docs/learn-site/`: a clickable layer map, a "follow a request" walkthrough, search, and a **Plain-English ⇄
+Deeper-Dive** toggle per topic. Static/zero-build by default; React only when interactivity earns it. Run it
+**after `layer-docs`** (it builds *from* those docs). This pair closes the loop — the same conditional
+CodeGraph/Context7 preference below applies to `layer-docs`'s analysis.
+
 ## External code-intelligence / docs MCPs (conditional — all stages)
 Independent of the gstack/CE composition above: if a **code-intelligence MCP** (e.g. CodeGraph) is installed, prefer it for code navigation / callers / traces / impact over `grep`+read loops; if a **docs MCP** (e.g. Context7) is installed, prefer it for up-to-date library/API docs + setup steps, without being asked. Both no-op when absent. The generated root `CLAUDE.md`, `/tdd`, and the orchestrator briefing all carry this rule, so every role inherits it.
 
