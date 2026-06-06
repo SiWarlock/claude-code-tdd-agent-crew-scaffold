@@ -11,7 +11,7 @@
 {
   "id": "M-0001",
   "title": "Add Step-8 reviewer-policy section + {{SECURITY_REVIEW_POLICY}}/{{CODE_QUALITY_REVIEW_POLICY}} to root CLAUDE.md",
-  "introducedAtSha": "<SET-ON-COMMIT: the SHA that lands the context-optimization change>",
+  "introducedAtSha": "7bad3fe9e6b958cec9fb1c0486bf770b00048381",
   "kind": "new-required-section",
   "appliesWhen": "base < introducedAtSha <= to",
   "gate": "human",

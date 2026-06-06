@@ -5,7 +5,7 @@
     {
       "id": "M-0001",
       "title": "Add Step-8 reviewer-policy section + {{SECURITY_REVIEW_POLICY}}/{{CODE_QUALITY_REVIEW_POLICY}} to root CLAUDE.md",
-      "introducedAtSha": "PENDING-set-to-the-commit-SHA-that-lands-the-context-optimization",
+      "introducedAtSha": "7bad3fe9e6b958cec9fb1c0486bf770b00048381",
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
@@ -15,7 +15,7 @@
     {
       "id": "M-0002",
       "title": "Install ~/.claude/scripts/team-register.sh (team mode) — spawn prompts now call it",
-      "introducedAtSha": "PENDING-set-to-the-commit-SHA-that-lands-the-context-optimization",
+      "introducedAtSha": "7bad3fe9e6b958cec9fb1c0486bf770b00048381",
       "kind": "added-template",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",

@@ -10,7 +10,7 @@
 {
   "id": "M-0002",
   "title": "Install ~/.claude/scripts/team-register.sh (team mode) — spawn prompts now call it",
-  "introducedAtSha": "<SET-ON-COMMIT: the SHA that lands the context-optimization change>",
+  "introducedAtSha": "7bad3fe9e6b958cec9fb1c0486bf770b00048381",
   "kind": "added-template",
   "appliesWhen": "base < introducedAtSha <= to",
   "gate": "human",
