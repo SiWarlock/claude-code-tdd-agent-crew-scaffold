@@ -12,25 +12,25 @@ You're starting an orchestrator session for {{PROJECT_NAME}}. Orient before taki
 
 Read `docs/orchestrator-briefing.md` end-to-end. It covers: who the user is, project context, your responsibilities + messaging budget, the Step-9 routing matrix, commit cadence, conventions, tools available.
 
-## Step 2 — Read the /tdd brief format
+## Step 2 — (defer) the /tdd brief format
 
-Read `docs/tdd-brief-template.md`. This is the format you'll author briefs in for the implementer session.
+You'll read `docs/tdd-brief-template.md` **when you actually author a brief** (Step 8 / `/orchestrate-end` next-brief), not at orient — it isn't needed to summarize state. Deferring it keeps the session-start load lean.
 
 ## Step 3 — Read focused sections of `{{TASK_TRACKER}}`
 
-Don't read the whole file. Focus on:
-- **"Currently in progress"** at the top
-- **"Carry-forward to upcoming briefs"** (orchestrator working set)
-- The **active phase section**
-- The most recent 2-3 entries in the **Log** section
+**Don't read the whole file** — `grep -n "^##" {{TASK_TRACKER}}` for section offsets, then `Read` with `offset`/`limit` just:
+- **"Currently in progress"** (top)
+- **"Carry-forward to upcoming briefs"** (your working set)
+- the **active phase section**
+- the last 2-3 **Log** entries (tail the Log section)
 
-## Step 4 — Read the most recent session doc
+## Step 4 — Read the most recent session doc (named sections only)
 
 ```bash
-ls docs/sessions/
+ls docs/sessions/    # take the highest-numbered file
 ```
 
-Read the highest-numbered file. The "What was built", "Decisions made", "Decisions explicitly NOT made", and "Open follow-ups" sections are critical context for understanding what just landed.
+Read only its **"What was built", "Decisions made", "Decisions explicitly NOT made", "Open follow-ups"** sections (grep the headers + `Read` offset/limit) — not the whole doc.
 
 ## Step 4.5 — Pre-load architecture anchors cited by the active task(s)
 

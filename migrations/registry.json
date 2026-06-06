@@ -1,5 +1,26 @@
 {
   "registryVersion": 1,
   "note": "Structural-migration registry for /scaffold-upgrade. One entry per migration that a content-diff cannot express. Append-only: never edit a shipped migration in place — fix a bug with a NEW migration at a later SHA. Each migration is SHA-window-gated (runs once when base < introducedAtSha <= to), idempotent, and journaled. See migrations/_TEMPLATE.md and SCAFFOLDING-GUIDE.md §11.",
-  "migrations": []
+  "migrations": [
+    {
+      "id": "M-0001",
+      "title": "Add Step-8 reviewer-policy section + {{SECURITY_REVIEW_POLICY}}/{{CODE_QUALITY_REVIEW_POLICY}} to root CLAUDE.md",
+      "introducedAtSha": "7bad3fe9e6b958cec9fb1c0486bf770b00048381",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:root-CLAUDE:reviewer-subagents-step-8-policy",
+      "touches": ["CLAUDE.md", "manifest.placeholders"]
+    },
+    {
+      "id": "M-0002",
+      "title": "Install ~/.claude/scripts/team-register.sh (team mode) — spawn prompts now call it",
+      "introducedAtSha": "7bad3fe9e6b958cec9fb1c0486bf770b00048381",
+      "kind": "added-template",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "script:team-register.sh-installed",
+      "touches": ["~/.claude/scripts/team-register.sh"]
+    }
+  ]
 }

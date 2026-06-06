@@ -11,10 +11,12 @@
 # INSTALL: copy to ~/.claude/scripts/check-team-context.sh
 #
 # USAGE:
-#   check-team-context.sh                  # auto-detect team (from $TEAM env, current cwd's team, or all teams)
-#   check-team-context.sh <team-name>      # specific team
-#   check-team-context.sh --json           # JSON output instead of human-readable
-#   check-team-context.sh --history        # include trajectory data (per-slice growth)
+#   check-team-context.sh                        # auto-detect team (from $TEAM_NAME env, else all teams)
+#   check-team-context.sh <team-name>            # specific team
+#   check-team-context.sh <team> --brief         # one-line per-team aggregate (orch's per-slice ping form)
+#   check-team-context.sh <team> --snapshot <h>  # append this slice's ctx to trajectory history, then print --brief
+#   check-team-context.sh --json                 # JSON output instead of human-readable
+#   check-team-context.sh --history              # include trajectory data (per-slice growth)
 #
 # DESIGN: data sources
 #   - ~/.claude/team-registry/<session_id>.json — written by team-mode sessions
@@ -23,9 +25,9 @@
 #   - ~/.claude/heartbeats/<session_id>.json — written continuously by the
 #     status line script (only when registry entry exists). Contains ctx_pct,
 #     tokens, cost, rate limits, ts.
-#   - ~/.claude/team-history/<team>/<name>.jsonl — per-slice ctx snapshots
-#     appended by the orchestrator's /context-check call. Each line:
-#     {ts, ctx_pct, slice_hash}. Used for 3-slice rolling trajectory.
+#   - ~/.claude/team-history/<team>/<name>.jsonl — per-slice ctx snapshots,
+#     appended by `check-team-context.sh --snapshot <hash>`. Each line:
+#     {ts, ctx_pct, slice_hash}. Used for the 3-slice rolling trajectory.
 #
 # THRESHOLDS (configurable via env):
 #   CLAUDE_TEAM_CTX_WARN   default 70   one-line surface; trajectory shown
@@ -48,15 +50,25 @@ HARD="${CLAUDE_TEAM_CTX_HARD:-80}"
 TEAM_FILTER=""
 OUTPUT="human"
 INCLUDE_HISTORY="false"
-for arg in "$@"; do
-  case "$arg" in
-    --json)    OUTPUT="json" ;;
-    --brief)   OUTPUT="brief" ;;
-    --history) INCLUDE_HISTORY="true" ;;
-    --*)       echo "Unknown flag: $arg" >&2; exit 2 ;;
-    *)         TEAM_FILTER="$arg" ;;
+SNAPSHOT_HASH=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json)     OUTPUT="json" ;;
+    --brief)    OUTPUT="brief" ;;
+    --history)  INCLUDE_HISTORY="true" ;;
+    --snapshot) SNAPSHOT_HASH="${2:?--snapshot needs a <slice-hash>}"; shift ;;
+    --*)        echo "Unknown flag: $1" >&2; exit 2 ;;
+    *)          TEAM_FILTER="$1" ;;
   esac
+  shift
 done
+
+# --snapshot implies: append per-slice history first, then emit the --brief line
+# (with trajectory). One call does the orchestrator's whole per-slice context step.
+if [ -n "$SNAPSHOT_HASH" ]; then
+  OUTPUT="brief"
+  INCLUDE_HISTORY="true"
+fi
 
 # Auto-detect: if no team filter, try $TEAM_NAME env (set by /team-start);
 # otherwise scan all teams.
@@ -73,6 +85,26 @@ if [ ! -d "$REGISTRY_DIR" ] || [ -z "$(ls -A "$REGISTRY_DIR" 2>/dev/null)" ]; th
 fi
 
 NOW=$(date -u +%s)
+
+# ─── Snapshot mode: append this slice's ctx to per-member trajectory history ──
+if [ -n "$SNAPSHOT_HASH" ]; then
+  for reg_file in "$REGISTRY_DIR"/*.json; do
+    [ -f "$reg_file" ] || continue
+    team=$(jq -r '.team // empty' "$reg_file" 2>/dev/null)
+    [ -n "$TEAM_FILTER" ] && [ "$team" != "$TEAM_FILTER" ] && continue
+    name=$(jq -r '.name // empty' "$reg_file" 2>/dev/null)
+    sid=$(jq -r '.session_id // empty' "$reg_file" 2>/dev/null)
+    [ -z "$name" ] && continue
+    [ -z "$sid" ] && continue
+    hb="$HEARTBEAT_DIR/${sid}.json"
+    [ -f "$hb" ] || continue
+    ctx=$(jq -r '.ctx_pct // empty' "$hb" 2>/dev/null)
+    [ -z "$ctx" ] && continue
+    mkdir -p "$HISTORY_DIR/$team"
+    jq -nc --argjson ts "$NOW" --argjson ctx "$ctx" --arg hash "$SNAPSHOT_HASH" \
+      '{ts:$ts, ctx_pct:$ctx, slice_hash:$hash}' >> "$HISTORY_DIR/$team/$name.jsonl"
+  done
+fi
 
 # ─── Join: registry → heartbeats → optionally history ───────────────────────
 # Output one JSON object per teammate.
@@ -113,7 +145,7 @@ joined=$(
     # Live entry — merge registry name/team + heartbeat data + recent history.
     history=""
     if [ "$INCLUDE_HISTORY" = "true" ] && [ -f "$HISTORY_DIR/$team/$name.jsonl" ]; then
-      # Last 3 entries → trajectory delta.
+      # Last 4 snapshots → up to 3 pairwise deltas for the rolling trajectory.
       history=$(tail -n 4 "$HISTORY_DIR/$team/$name.jsonl" 2>/dev/null | jq -s '.')
     fi
 
@@ -242,7 +274,7 @@ echo "$enriched" | jq -r '
 
 # ─── Surface aggregate recommendation (one-line) ────────────────────────────
 echo
-echo "$enriched" | jq -r '
+echo "$enriched" | jq -r --argjson warn "$WARN" --argjson action "$ACTION" --argjson hard "$HARD" '
   group_by(.team)[]
   | {
       team: .[0].team,
@@ -251,12 +283,12 @@ echo "$enriched" | jq -r '
       warn:   ([.[] | select(.tier == "warn")] | length)
     }
   | if .hard > 0 then
-      "Team \(.team): HARD-STOP — \(.hard) teammate(s) ≥ 80%. Halt dispatch + cycle immediately."
+      "Team \(.team): HARD-STOP — \(.hard) teammate(s) ≥ \($hard)%. Halt dispatch + cycle immediately."
     elif .action > 0 then
-      "Team \(.team): ACTION — \(.action) teammate(s) ≥ 75%. Initiate close-out cycle at next clean break."
+      "Team \(.team): ACTION — \(.action) teammate(s) ≥ \($action)%. Initiate close-out cycle at next clean break."
     elif .warn > 0 then
-      "Team \(.team): WARN — \(.warn) teammate(s) ≥ 70%. Approaching cycle threshold."
+      "Team \(.team): WARN — \(.warn) teammate(s) ≥ \($warn)%. Approaching cycle threshold."
     else
-      "Team \(.team): OK — all teammates < 70%."
+      "Team \(.team): OK — all teammates < \($warn)%."
     end
 '

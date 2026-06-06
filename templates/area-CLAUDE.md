@@ -27,7 +27,7 @@ If you find yourself fighting the wrong conventions, check your cwd.
 ## Session start/end protocol
 
 **At session start:**
-1. Read `{{TASK_TRACKER}}` (repo root) → "Currently in progress" section.
+1. Read `{{TASK_TRACKER}}` (repo root) **by section, not whole** — `grep -n "^##" {{TASK_TRACKER}}` for offsets, then Read with offset/limit just "Currently in progress" + the active phase. (The file grows; never load it whole.)
 2. Confirm with the user what feature this session is targeting.
 3. Read the relevant section of `{{ARCH_DOC}}` from the lookup table below.
 
@@ -48,7 +48,7 @@ If you find yourself fighting the wrong conventions, check your cwd.
    - other top-level deliverable / design docs
    - `.gitignore` and root-level dotfiles (unless adding a new artifact to ignore, flagged at Step 9)
 
-   At the slice's Step 10 commit, **explicit `git add <path>` for each slice file**; **never `git add -A`** or `git add .`; **never stage an orchestrator-territory file**. If the slice surfaces a change to any orchestrator-territory file (new model needing a cross-doc table row, a lesson candidate, an architecture note), the implementer **flags it at Step 9** per the routing matrix in `docs/orchestrator-briefing.md`. The orchestrator writes the change hot during the same session — working-tree state stays aligned within the round even though commits stagger.
+   At Step 10: **explicit `git add <path>` per slice file; never `git add -A`/`.`; never stage an orchestrator-territory file.** Changes to any orchestrator-territory file (a new cross-doc model, a lesson, an arch note) are **flagged at Step 9**, not edited here — the orchestrator writes them hot (root `CLAUDE.md` + the Step-9 matrix).
 
 2. **Orchestrator runs `/orchestrate-end`** for round close-out + Carry-forward triage + round terminal commit + push.
 
@@ -64,7 +64,7 @@ Don't paste these sections into the prompt. Grep the file:section, read only wha
 
 <!-- Starts near-empty. Add a row whenever a topic is looked up twice. -->
 
-**Code intelligence & docs (when available):** prefer a code-intelligence MCP (e.g. CodeGraph) for code navigation / callers / traces over `grep`+read loops, and a docs MCP (e.g. Context7) for up-to-date library/API docs — see root `CLAUDE.md` "Code intelligence & docs." No-op if not installed.
+**Code intelligence & docs (when available):** prefer a code-intelligence MCP / docs MCP over grep+read loops — see root `CLAUDE.md` "Code intelligence & docs."
 
 ## Stack
 
@@ -120,7 +120,7 @@ Do not:
 
 Several typed models in this codebase are **contracts** mirrored in `{{ARCH_DOC}}` and indexed in the table below. The architecture doc is the canonical contract; the model is the executable enforcement. Drift produces silent disagreement.
 
-**Authoring discipline (orchestrator owns this table).** When the implementer adds, removes, or renames a field on one of these models, the implementer **flags it at Step 9 categorized as `Cross-doc invariant change`** per the routing matrix in `docs/orchestrator-briefing.md`. The implementer does NOT edit `{{CODE_AREA}}CLAUDE.md` or `{{ARCH_DOC}}` directly — the orchestrator writes the table row + the architecture edit hot during the same session. Working-tree state aligns within the round; commits stagger (implementer's slice commit lands code+tests; orchestrator's round commit lands the doc rows).
+**Authoring discipline (orchestrator owns this table).** The implementer never edits this table or `{{ARCH_DOC}}` directly — it flags a field add/remove/rename at Step 9 as a `Cross-doc invariant change`; the orchestrator writes the row + the arch edit hot the same round (see root `CLAUDE.md` + `docs/orchestrator-briefing.md`). Commits stagger; the working tree stays aligned within the round.
 
 | Model | `{{ARCH_DOC}}` section | Notes |
 |---|---|---|

@@ -4,7 +4,7 @@ allowed-tools: Read, Grep
 argument-hint: "<topic>"
 ---
 
-Look up a topic in the area `CLAUDE.md` lookup table and read **only that section** of the cited file. Context efficiency primitive — never load an entire architecture doc into the response.
+Look up a topic in the area `CLAUDE.md` lookup table and read **only that section** of the cited file (`Read` with `offset`/`limit`). Context-efficiency primitive.
 
 Argument: `$ARGUMENTS` — the topic to look up.
 

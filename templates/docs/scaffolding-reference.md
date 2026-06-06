@@ -55,7 +55,7 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
 ├── heartbeats/                         # Per-session ctx_pct heartbeats (status line writes IFF registry exists)
 │   └── <session_id>.json               # Updated every status line refresh
 └── team-history/                       # Per-slice trajectory data
-    └── <team>/<name>.jsonl             # Appended by orch each slice for 3-slice rolling growth
+    └── <team>/<name>.jsonl             # Per-slice ctx snapshot (/context-check --snapshot) for 3-slice rolling growth
 ```
 
 <!-- ▼ EXAMPLE BLOCK [id=inventory-extension]: extend the inventory with the project's real layout — extra code areas, deliverable docs, eval suites. ▼ -->
@@ -65,44 +65,19 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
 
 ## Team pattern (three roles + human)
 
-Full topology + escalation rules: `docs/team-protocol.md` (team pattern) + root `CLAUDE.md` "Team coordination — shared rules" (all roles).
+The full topology, role/cwd/loads table, escalation taxonomy, and naming/cross-bleed rule are **canonical in root `CLAUDE.md` "Team coordination — shared rules"** (+ `docs/team-protocol.md` for the lead). One-line map:
 
-| Role | cwd | Loads |
-|---|---|---|
-| Team lead (thin) | repo root | root `CLAUDE.md` + `docs/team-protocol.md` |
-| Orchestrator | repo root | root `CLAUDE.md` + `docs/orchestrator-briefing.md` |
-| Implementer (per area) | `{{CODE_AREA}}` | area `CLAUDE.md` + root `CLAUDE.md` |
+- **Team lead** — thin, durable; `/team-start` + `/team-end`; escalation conduit to the human; stateless between events. Reads progress from the task list + free idle-notifications; pings nobody per-slice.
+- **Orchestrator** — planning, scope, docs, Step-2.5 review, Step-9 routing, commit messages, push, `/orchestrate-end`.
+- **Implementer (per area)** — `/tdd` cycles, `/preflight`, `/session-end`, code commits only.
 
-*Teammate names: `<track>-<area>-<role>` when parallel teams run in the same repo, else `<area>-<role>`. The track prefix is load-bearing for cross-bleed prevention.*
-
-- **Team lead:** `/team-start` + `/team-end`, **escalation conduit** to the human. **Stateless between events; persists across orchestrator/implementer session cycles; stays lean both ways** — no relaying down, no per-slice narration up, no task tracker (re-reads `{{TASK_TRACKER}}` on demand for cycles/escalations); upward output only for the **close-out gate** (user-on-demand OR auto-cycle when context monitoring detects ACTION threshold) + the 4 escalation categories + context tier surfaces. **At auto-cycle: BOTH orch + impl cycle together** for clean handoff.
-- **Orchestrator:** planning, scope, docs, **Step-2.5 review**, commit messages, push, Step-9 routing, `/orchestrate-end`.
-- **Implementer:** `/tdd` cycles, `/preflight`, `/session-end`, code commits only.
-
-Orchestrator and implementers communicate **directly**. The lead is looped in **only** for the 4 escalation categories.
+Orchestrator ↔ implementer communicate **directly** (`SendMessage` for checkpoints, the **task list** for status); the lead is looped in only for the 4 escalation categories + tier-crossing context.
 
 ---
 
 ## Slash commands
 
-| Command | Purpose |
-|---|---|
-| `/team-start [track]` | _(lead)_ stand up the team; establish direct comms + escalation |
-| `/team-end` | _(lead)_ close out the team session; write handoff doc (user-on-demand or auto-cycle) |
-| `/orchestrate-start` | Orient an orchestrator session |
-| `/orchestrate-end` | Orchestrator close-out + Carry-forward triage + round commit + push |
-| `/session-start` | Orient an implementer session |
-| `/session-end` | Implementer close-out (incl. wiring/reachability audit) |
-| `/tdd <feature>` | TDD discipline walker — deterministic code (Step 2.5 design review + Step 7.5 reachability) |
-| `/wired <feature>` | Trace a feature's call path from a production entry point |
-| `/context-check [team]` | _(team mode)_ report per-teammate context usage; auto-flow + manual |
-| `/preflight` | Quality gate |
-| `/run-tests [class]` | Typed test runner shortcut |
-| `/check-arch <topic>` | Architecture doc lookup |
-| `/eval [category]` | _(optional)_ runs an eval class |
-| `/trace <id>` | _(optional)_ pulls a structured trace |
-
-_( Single-operator fallback: remove the `/team-start` and `/team-end` rows. )_
+The full command list + descriptions is **canonical in root `CLAUDE.md` "Slash commands available."** Pairs: lead `/team-start`+`/team-end`; orchestrator `/orchestrate-start`+`/orchestrate-end`; implementer `/session-start`+`/session-end`; plus `/tdd`, `/wired`, `/context-check`, `/preflight`, `/run-tests`, `/check-arch` (+ optional `/eval`, `/trace`). _(Single-operator: no `/team-start`/`/team-end`.)_
 
 ---
 
@@ -111,35 +86,25 @@ _( Single-operator fallback: remove the `/team-start` and `/team-end` rows. )_
 ### Per-slice TDD round
 
 1. Orchestrator authors a brief → `docs/briefs/NNN-<task-id>-<topic>.md`
-2. Orchestrator sends brief reference directly to the area implementer
-3. Implementer runs `/tdd <feature>` → Step 0 (self-check in team mode; user-confirm in single-operator) → Step 1 → Step 2 RED → Step 2.5 design write-up
-4. Orchestrator reviews + replies directly (approve/tweak/add); escalates a safety design Q if needed
+2. Orchestrator **creates + assigns the slice's task** (`TaskCreate` + `TaskUpdate owner`) + sends the brief reference (one line) to the area implementer
+3. Implementer runs `/tdd <feature>` → Step 0 (self-check; user-confirm in single-operator) → Step 1 → Step 2 RED → Step 2.5 tight test-design write-up
+4. Orchestrator reviews + replies directly (`APPROVED.`/`TWEAK:`/`ADD:`); escalates a safety design Q if needed
 5. Implementer Steps 3-7 (confirm RED → GREEN → refactor → suite)
-6. **Step 7.5 reachability check** — confirm wiring from a production entry point
-7. Step 8 lint+typecheck (optional: parallel `code-quality-reviewer` + `security-reviewer` if installed)
-8. Implementer sends categorized Step-9 summary directly to orchestrator
-9. Orchestrator routes hot (commit-message-first reply); escalates deferments / safety findings / load-bearing architectural Option A/B/C calls
-10. Implementer Step 10: commits the slice with the orchestrator-authored message
-11. Implementer sends "done with slice — `<commit hash>`" one-liner
-12. **(Team mode)** Orchestrator runs `/context-check <team>` + appends per-slice snapshot to history file + sends structured ping to lead with the report. Lead processes silently unless threshold tier crossed.
-13. Repeat
+6. **Step 7.5 reachability** — confirm wiring from a production entry point (`/wired`)
+7. Step 8 lint+typecheck + **policy-gated** reviewer fan-out (per root `CLAUDE.md` reviewer policy — security on invariant slices, code-quality lite)
+8. Implementer sends categorized Step-9 flags directly to orchestrator
+9. Orchestrator routes hot (commit-message-first reply); escalates deferments / safety findings / load-bearing architectural calls
+10. Implementer Step 10: commits with the orchestrator-authored message, then **marks the task `completed`** (hash in metadata) + a one-line wake to the orch
+11. **(Team mode)** Orchestrator runs `/context-check <team> --snapshot <hash>` locally; pings the lead **only if a tier ≥ WARN is crossed**; then dispatches the next slice without waiting
+12. Repeat
 
 ### Context monitoring + auto-cycle (team mode only)
 
-Each team-mode teammate's status line writes a heartbeat to `~/.claude/heartbeats/<session_id>.json` (ctx_pct, tokens, cost, rate limits). The heartbeat write is gated on `~/.claude/team-registry/<session_id>.json` existing for that session — written by the teammate at startup via the `/team-start` spawn prompt. **Solo (non-team) sessions never write registry entries → no heartbeats → no monitoring for them.**
-
-Per-slice flow (Step 12 above): the orchestrator runs `/context-check <team>` after every Step-10 commit, pings the lead with the report. Lead evaluates against thresholds:
-
-- **OK** (< 70%) — silent log
-- **WARN** (70-74%) — one-line surface + trajectory
-- **ACTION** (75-79%) — auto-trigger close-out cycle at this clean break
-- **HARD-STOP** (≥ 80%) — halt dispatch + immediate cycle
-
-Full flow + auto-cycle mechanics in `docs/team-protocol.md` "Context monitoring + auto-cycle." Thresholds configurable via `CLAUDE_TEAM_CTX_WARN` / `CLAUDE_TEAM_CTX_ACTION` / `CLAUDE_TEAM_CTX_HARD` env vars.
+Status lines write per-session heartbeats (gated on a `~/.claude/team-registry/` entry, so solo sessions are silent). The orchestrator runs `/context-check <team>` **locally each slice** but pings the lead **only on a tier crossing** (≥ WARN) — OK slices produce no ping; the lead's free idle-notifications + the task list cover progress. Tiers (WARN 70 / ACTION 75 / HARD-STOP 80, env-overridable via `CLAUDE_TEAM_CTX_*`) and the full auto-cycle flow are **canonical in root `CLAUDE.md` "Context monitoring" + `docs/team-protocol.md` "Context monitoring + auto-cycle."**
 
 ### Step-9 routing matrix
 
-Canonical copy in `docs/orchestrator-briefing.md` — **don't re-copy it; point there.** Routed hot: Convention candidate → prose in `LESSONS.md` + one-line index row with anchor link · Architecture doc note → `{{ARCH_DOC}} §` · Future TODO *belongs-to-a-phase* → real task checkbox in that phase · *next-brief* → Carry-forward · *out-of-scope* → deferment escalation · Cross-doc invariant change → orchestrator writes the doc rows · Completed work → tick checkbox.
+Canonical in `docs/orchestrator-briefing.md` "Step-9 routing matrix." (Implementer categorizes; orchestrator routes hot.)
 
 ### Carry-forward triage at `/orchestrate-end`
 

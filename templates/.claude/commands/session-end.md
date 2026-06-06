@@ -12,7 +12,7 @@ The user has indicated the implementer session is wrapping. Capture state.
 
 Procedure:
 
-1. **Recap to the user** what landed this session in 3–5 bullets. The user pastes this to the orchestrator session as input for `/orchestrate-end`. **Do NOT include any context-usage estimate or self-reported ctx %** — context is monitored externally via the canonical `/context-check` heartbeat path; self-reporting is forbidden per root `CLAUDE.md` "Canonical context source — NO self-reporting." Recap is work-completed only: features built, tests added, decisions made, follow-ups surfaced.
+1. **Recap to the orchestrator** what landed this session in 3–5 bullets — work-completed only (features, tests, decisions, follow-ups). **No context % / self-reported ctx** (root `CLAUDE.md` "Canonical context source"). In team mode this recap (via `SendMessage`) wakes the orch for `/orchestrate-end`; single-operator: the user relays it.
 
 2. **Self-audit TDD compliance** for code changes this session:
    - For each non-trivial code change, did a corresponding test land *first*?
@@ -26,11 +26,9 @@ Procedure:
    - Surface to the user with a recommendation: update the doc now, or accept the drift with an explicit ADR-style note.
    - The session doc must annotate this as an open follow-up.
 
-2.6. **Verify Step 9 routing — surface for the orchestrator, don't re-route.** Per the Step-9 routing matrix in `docs/orchestrator-briefing.md`, the orchestrator routes each Step 9 item *hot* during the session. By the time `/session-end` runs, the orchestrator should already have written each item to its destination. **`/session-end` doesn't re-route — it surfaces the categorized list one more time** so the orchestrator's `/orchestrate-end` can verify nothing slipped.
+2.6. **Step-9 items — already routed hot; don't re-route or re-enumerate.** The orchestrator routed each during the session; its `/orchestrate-end` is the single verify pass. Just ensure any *still-open* follow-up is captured in the session doc's "Open follow-ups." **Do NOT modify `{{TASK_TRACKER}}` or `{{CODE_AREA}}LESSONS.md` here.**
 
-   For each slice this session, list every Step 9 categorized item with its expected destination. The categorized list goes into the session doc's "Open follow-ups" section. **Do NOT modify `{{TASK_TRACKER}}` or `{{CODE_AREA}}LESSONS.md` from this command.**
-
-2.7. **Wiring / reachability audit.** For each feature built this session, confirm `/tdd` Step 7.5 was satisfied — the feature is reachable from a real production entry point (route, job, UI handler, exported API, contract function selector, deploy step), not only from its own tests. For anything still tested-but-unwired, list the specific entry point that needs wiring as an **open follow-up** categorized "Future TODO — belongs to a phase" so the orchestrator lands it as a real task. A green suite over an unreachable feature is a silent gap — surface it here.
+2.7. **Wiring / reachability — confirm, don't re-trace.** Each feature already stated *"Reachable from `<entry>` via `<path>`"* at `/tdd` Step 7.5; carry those into the session doc's Reachability section. Re-trace (`/wired`) only a feature whose wiring a *later* slice might have removed. Any still tested-but-unwired feature → an open follow-up "Future TODO — belongs to a phase." A green suite over an unreachable feature is a silent gap.
 
 3. **ALWAYS create a session doc** at `docs/sessions/<NNN>-<YYYY-MM-DD>-<topic>.md`. This is required, not optional. Compute `<NNN>` as the next sequential number — `ls docs/sessions/`, find the max NNN prefix, increment, zero-pad to 3 digits.
 
