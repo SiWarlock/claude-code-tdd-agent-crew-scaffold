@@ -9,7 +9,9 @@
 
 # {{TASK_TRACKER}} — {{PROJECT_NAME}}
 
-> **Phase note.** <One paragraph: the doc's scope, any locked decisions, archive policy. Refreshed when a major phase boundary is crossed.>
+> **Phase note.** <One paragraph: the doc's scope, any locked decisions. Refreshed when a major phase boundary is crossed.>
+>
+> **Reading discipline.** Read this file **by section, not whole** — `/orchestrate-start` and `/session-start` grep the section header and read only "Currently in progress" + the active phase. The living sections below (Currently-in-progress, Carry-forward, Log, Trims, Decisions) are **bounded** — pruned/archived at `/orchestrate-end`, never left to grow — so a sectioned read stays cheap even late in the project.
 
 > **Session protocol:**
 > - **At session start** — orchestrator runs `/orchestrate-start`; implementer runs `/session-start`. Confirm with the user what's targeted this session.
@@ -27,17 +29,17 @@
 
 ## Currently in progress
 
+<!-- REPLACE this section at every /orchestrate-end — do NOT append. It is a snapshot of NOW (≤ ~8 lines): last commit hash, suite count, next session target, active blockers. Stale lines are deleted, not stacked. -->
+
 **Bootstrap session.** Scaffolding landed; first `/tdd` slice not yet started.
 
 **Next session target:** <first task ID>.
-
-<!-- Refreshed at every /orchestrate-end: last commit hash, suite count, next session target, anything blocking. -->
 
 ---
 
 ## Carry-forward to upcoming briefs
 
-Items the orchestrator MUST fold into upcoming slice briefs. **Triaged at every `/orchestrate-end`** — this section is NOT append-only. New entries carry an origin marker `(origin: YYYY-MM-DD <slice-id>)`.
+Items the orchestrator MUST fold into the next 1–2 briefs. **Triaged at every `/orchestrate-end` (mandatory) — NOT append-only.** Each entry carries an origin marker `(origin: YYYY-MM-DD <slice-id>)`. **Bound: keep under ~7 items.** Anything over the cap, or older than ~3 slices with no consumer, is force-triaged — DELETE (done) / INLINE-TARGET (make it a real task in its phase) / DEFER (escalate). If an imminent brief doesn't need it, it doesn't live here.
 
 _(Empty at project start; populated as Step-9 routing surfaces operational items.)_
 
@@ -111,7 +113,7 @@ The project is "done" when:
 
 ## Trims / Nice-to-Haves Catalog
 
-Deferred items with come-back guidance: why deferred, where it belongs, files to modify, tests to add, cross-doc invariant impact.
+Deferred items with come-back guidance: why deferred, where it belongs, files to modify, tests to add, cross-doc invariant impact. **Prune at `/orchestrate-end`:** a Trim that ships moves to its phase as `[x]`; an obsoleted Trim is deleted with a one-line Log note.
 
 _(Empty at project start; populated as scope cuts surface.)_
 
@@ -119,7 +121,7 @@ _(Empty at project start; populated as scope cuts surface.)_
 
 ## Decisions tabled
 
-Open scope/design questions awaiting resolution, with rationale.
+Open scope/design questions awaiting resolution, with rationale. **Resolved entries move into the Log (with the resolution) and out of here** — this holds only *open* questions.
 
 _(Empty at project start.)_
 
@@ -127,6 +129,6 @@ _(Empty at project start.)_
 
 ## Log
 
-Append-only, date-stamped, the orchestrator's framing of each round.
+The orchestrator's framing of each round, date-stamped. **Bounded, not unbounded-append:** keep the most recent ~10 rounds inline; roll older entries into `docs/sessions/` (the technical narrative) or `docs/archive/TASKS-LOG.md`, leaving a one-line pointer here. Readers only ever load the recent entries, so the inline Log stays small. (Archive — never delete — the round history is an audit trail.)
 
 _(Empty at project start; populated at every `/orchestrate-end`.)_

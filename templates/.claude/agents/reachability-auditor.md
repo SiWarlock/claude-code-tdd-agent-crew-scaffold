@@ -23,9 +23,9 @@ You audit reachability across a whole code area. Per the project's reachability 
 
 For one area at a time:
 1. Enumerate the area's exported symbols (package exports, public functions, route handlers, job registrations, etc.).
-2. Enumerate production entry points (router routes, cron jobs, CLI scripts, UI handlers, contract function selectors, deploy steps, exported package APIs).
-3. For each exported symbol, trace whether at least one production-side reference reaches it.
-4. Classify each symbol: REACHABLE / UNREACHABLE.
+2. **Narrow to what needs auditing (incremental):** symbols already proven reachable this round — the session docs' "Reachable from `<entry>`" statements from `/tdd` Step 7.5 — can be trusted unless a later slice removed their wiring. Focus the trace on new / changed / unverified symbols (`git diff` the area since the last phase-exit audit). Re-audit a trusted symbol only if a later slice touched its wiring.
+3. Enumerate production entry points (router routes, cron jobs, CLI scripts, UI handlers, contract function selectors, deploy steps, exported package APIs).
+4. For each symbol in scope, trace whether at least one production-side reference reaches it; classify REACHABLE / UNREACHABLE.
 5. Report the gap list with recommended entry points.
 
 ## You do NOT

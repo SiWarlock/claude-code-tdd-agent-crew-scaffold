@@ -220,19 +220,10 @@ The format scales down for trivial slices by dropping sections that don't apply 
 
 ## Common pitfalls (orchestrator self-check before handing the brief over)
 
-### Pitfall — Bundling a safety-critical slice with anything else
+### Pitfall — Bundling / atomizing wrong (criteria in "Estimated commit count")
 
-Symptom: a brief bundles a safety-critical pin (an authorization gate, an isolation boundary, a data-handling invariant) with unrelated work. The safety pin ends up in a commit that also carries other changes, making it harder to bisect a regression and harder to review the safety pin on its own.
-
-**Rule** — every safety-critical slice gets its own commit. The brief's "Estimated commit count" should call it out explicitly when one of the acceptance criteria is a safety pin.
-
-### Pitfall — Over-atomizing trivial slices
-
-Symptom: a brief authored for one 8-line helper. Then another for the next 12-line helper. Then another for wiring them together. Three separate `/tdd` cycles, three Step-2.5 reviews, three commits — when the whole thing could have shipped as one slice with three features.
-
-**Rule** — when 2-4 small related features could ship as one brief without violating any "Do NOT bundle" criterion (see "Estimated commit count"), bundle them. The bundled brief lists each feature in its own RED-test section; the implementer goes RED → 2.5 → GREEN for each feature in sequence, then one Step-10 commit at the end. Saves time + review overhead without losing rigor.
-
-The default posture is **"bundle when safe, atomize only when required"** — not the other way around.
+- **Safety-critical pin bundled with other work** — every safety-critical slice gets its OWN commit; flag it in "Estimated commit count" when an acceptance criterion is a safety pin.
+- **Over-atomizing** — three 10-line helpers as three briefs / reviews / commits when they're one logical unit. Default posture: **bundle when safe, atomize only when required**; a bundled brief lists each feature's RED tests and ends in one Step-10 commit.
 
 ### Pitfall — Skipping Step 2.5 design questions because the brief "felt small"
 
@@ -246,11 +237,9 @@ Symptom: "the parser is robust" / "storage is performant" / "the API is well-des
 
 **Rule** — every acceptance criterion is a concrete behavior pin: "filter-by-category returns the subset," "round-trip preserves equality." If you can't write a test for it, it's not an acceptance criterion.
 
-### Pitfall — Prescribing `/session-start` in the brief's "How to invoke"
+### Pitfall — Prescribing `/session-start` in "How to invoke"
 
-Symptom: the brief's "How to invoke" lists `/session-start` as Step 1. The implementer reuses the same terminal across slices in a round — session context is already oriented — so re-running `/session-start` is redundant friction.
-
-**Rule** — "How to invoke" jumps straight to pre-flight checks + `/tdd <feature_name>`. Include `/session-start` ONLY for the first slice of a session or after an explicit session swap.
+The implementer reuses its session across a round's slices — it's already oriented. "How to invoke" jumps straight to `/tdd <feature_name>`; include `/session-start` only for the first slice of a session or after a swap. (Stated in the template's "How to invoke.")
 
 <!-- ▼ EXAMPLE BLOCK [id=project-specific-pitfalls]: project-specific pitfalls — the source project accreted several more pitfalls unique to its domain (contract-type placement, model-ID verification against live catalogs, matrix-driven brief file-list reconciliation, agent-existence ≠ pipeline-readiness). Add the project's own recurring brief-authoring mistakes here as they emerge — each one is cheap insurance against a repeat. ▼ -->
 

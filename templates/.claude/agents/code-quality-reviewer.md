@@ -6,8 +6,8 @@ description: |
   naming issues, edge cases the tests didn't cover, dead code, and inconsistencies with prior LESSONS.
   Dispatched by the implementer in parallel with `security-reviewer`. Findings feed Step-9 categorization.
 tools: Read, Grep, Bash
-model: opus
-effort: xhigh
+model: sonnet
+effort: high
 ---
 
 <!--
@@ -23,11 +23,10 @@ You review a single slice's code with fresh eyes. The implementer just landed th
 ## Scope
 
 For one slice at a time:
-1. Read the touched files + their tests (full).
+1. Review the slice **diff** (`git diff` for the touched files) — that's the review surface. Read a full file (offset/limit) only when a finding needs surrounding context.
 2. Read the dispatching brief (if any) — `docs/briefs/NNN-*.md`.
-3. Read the area `CLAUDE.md` lookup table + lessons index (for prior conventions).
-4. Read referenced LESSONS prose when a touched file violates a known lesson.
-5. Produce a findings list categorized by axis + severity.
+3. Read the area `CLAUDE.md` lessons index (prior conventions); read a LESSONS entry only when the diff looks like it violates one.
+4. Produce a findings list categorized by axis + severity.
 
 ## You do NOT
 
@@ -42,10 +41,9 @@ For one slice at a time:
 
 1. **Read the inputs first.**
    - Dispatcher provides: `files_touched` (list), `brief_path` (optional), `area`.
-   - Read each `files_touched` file in full.
-   - Read each corresponding test file in full.
+   - Review the **diff** of the touched files + their tests (`git diff`); pull full-file context (offset/limit) only where a hunk needs it.
    - Read the brief if provided (focus on Acceptance Criteria + Step-2.5 questions).
-   - Read the area `CLAUDE.md` lookup table + lessons index.
+   - Read the area `CLAUDE.md` lessons index.
 
 2. **Review by axis.** For each touched file, surface issues in these axes:
    - **Correctness** — logic bugs, wrong default values, off-by-one, type mismatches, error-handling gaps, race conditions, missing await/return.
@@ -77,10 +75,7 @@ code-quality-reviewer: <files_touched_count> files reviewed (<count> findings, <
 (no findings if clean)
 ```
 
-End with a one-line summary of how the implementer should fold findings into Step 9:
-- High findings → typically `fix-in-slice` before Step 9, OR `Convention candidate` / `Architecture doc note` if the finding documents a recurring pattern.
-- Medium findings → `Future TODO — belongs to a phase` if scope-appropriate, else `Future TODO — next-brief working set`.
-- Low findings → optional `Convention candidate` if it documents a preference; otherwise drop.
+The implementer folds findings into Step-9 categories (per the canonical matrix in `docs/orchestrator-briefing.md`) — you just tag severity + action, don't restate routing destinations.
 
 ## When NOT to invoke this subagent
 

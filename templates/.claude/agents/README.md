@@ -17,8 +17,8 @@ This directory holds **subagents** — specialized roles delegated mid-session f
 
 | Subagent | When it runs | Integration point | Status |
 |---|---|---|---|
-| `code-quality-reviewer` | At `/tdd` Step 7 → Step 8 boundary (after full suite green, before reachability). Implementer dispatches. | Implementer-side, parallel with `security-reviewer`. Findings feed Step-9 categorization. | **Active** |
-| `security-reviewer` | At `/tdd` Step 7 → Step 8 boundary (parallel with `code-quality-reviewer`). Mandatory if the slice is `invariant-touching`. | Implementer-side. Critical findings escalate as Step-9 `Finding` → orchestrator → lead → human. | **Active** |
+| `code-quality-reviewer` | At `/tdd` Step 8, **per the reviewer policy** in root `CLAUDE.md` (default: every slice, lite — `sonnet`, diff-only). | Implementer-side. Findings feed Step-9 categorization. | **Active** |
+| `security-reviewer` | At `/tdd` Step 8, **per the reviewer policy** (default: invariant-/security-touching slices only; `opus`). Mandatory on invariant-touching slices. | Implementer-side. Critical findings escalate as Step-9 `Finding` → orchestrator → lead → human. | **Active** |
 | `reachability-auditor` | At the phase-exit gate. Orchestrator dispatches per touched area. | Orchestrator-side. Output drives wiring tasks; phase-exit acceptance is gated on clean audit. | **Active** |
 | `brief-drafter` | Definition only — not integrated into standard workflow without a quality trial first. | Orchestrator-side (manual invocation for trial). | **Deferred — quality trial required** |
 
@@ -26,16 +26,17 @@ This directory holds **subagents** — specialized roles delegated mid-session f
 
 Each subagent file (`<name>.md`) carries its own scope, forbidden patterns, mandatory protocol, and output format. The forbidden-patterns section is its only guard — subagents aren't sandboxed.
 
+**Reviewer policy (the toggle).** The Step-8 reviewer fan-out is gated by the **reviewer policy** in root `CLAUDE.md` "Reviewer subagents — Step-8 policy" — one of `off` · `invariant` · `every-slice` · `phase-boundary` per reviewer (default: security `invariant`, code-quality `every-slice` lite). Both reviewers review the slice **diff**, not whole files. Tune it to trade review depth for per-slice tokens.
+
 ## How subagents fit the slash-command workflow
 
 ```
 /tdd cycle (implementer)
   Step 7: full suite green
-  Step 7 → 8 boundary: parallel fan-out
-    ├── code-quality-reviewer (always)
-    └── security-reviewer (always; mandatory if invariant_touching)
   Step 7.5: reachability check (per-slice; `/wired <symbol>` for specific traces)
-  Step 8: lint + typecheck
+  Step 8: lint + typecheck, then policy-gated reviewer fan-out:
+    ├── code-quality-reviewer (per policy — default every slice, lite)
+    └── security-reviewer     (per policy — default invariant-/security-touching only)
   Step 9: implementer aggregates reviewer findings into categorized list, sends to orchestrator
   Step 10: commit
 

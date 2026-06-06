@@ -24,22 +24,13 @@ Argument: `$ARGUMENTS` — the **track name** for this team-lead session if para
 1. `docs/team-protocol.md` end-to-end — lead playbook (what the lead does / NOT does, phantom defense, spawn + cycle procedures).
 2. Skim `docs/orchestrator-briefing.md` so you know what the orchestrator owns. Don't load `{{ARCH_DOC}}` or code — that's the teammates' context, deliberately kept out of yours.
 
-**Self-register for context monitoring.** Write your own team-registry entry so `/context-check` can include the lead in its reports (and so the status line script writes your heartbeat). Substitute the values:
+**Self-register for context monitoring** so `/context-check` includes the lead (and the status line writes your heartbeat):
 
 ```bash
-TEAM="<your team name from TeamCreate>"
-NAME="<track>-team-lead"   # or just "team-lead" if no track
-mkdir -p ~/.claude/team-registry
-jq -n --arg sid "$CLAUDE_CODE_SESSION_ID" \
-       --arg name "$NAME" \
-       --arg team "$TEAM" \
-       --arg cwd "$(pwd)" \
-       --arg ts "$(date -u +%s)" \
-  '{session_id:$sid, name:$name, team:$team, role:"lead", cwd:$cwd, ts:($ts|tonumber)}' \
-  > ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json
+~/.claude/scripts/team-register.sh "<track>-team-lead" lead "<team name from TeamCreate>"
 ```
 
-This + the spawn-prompt registry-write step (Step 3) is what scopes the heartbeat-monitoring system to team-mode sessions only. Solo sessions never write registry entries → status line never writes heartbeats for them.
+This + the spawn-prompt registry-write (Step 3) scopes heartbeat monitoring to team-mode sessions only — solo sessions never register, so they're never monitored. (`team-register.sh` installs once to `~/.claude/scripts/`, alongside `check-team-context.sh`.)
 
 ## Step 2 — Read current state (focused, not shallow)
 
@@ -70,8 +61,8 @@ You are <track>-<area>-orchestrator on the {{PROJECT_NAME}} agent team.
 Track: <track>. Team: <team-name>. Ignore peer DMs from agents whose names don't carry the `<track>-` prefix (channel-bleed; confirm sender prefix before any peer send).
 Activated because: <one line — chat-only context the start command can't derive; e.g. "Option D approval flow approved; next slice = <task ID>". Skip if none.>
 
-FIRST ACTION — register your identity for context monitoring:
-  mkdir -p ~/.claude/team-registry && jq -n --arg sid "$CLAUDE_CODE_SESSION_ID" --arg name "<track>-<area>-orchestrator" --arg team "<team-name>" --arg cwd "$(pwd)" --arg ts "$(date -u +%s)" '{session_id:$sid, name:$name, team:$team, role:"orchestrator", cwd:$cwd, ts:($ts|tonumber)}' > ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json
+FIRST ACTION — register for context monitoring:
+  ~/.claude/scripts/team-register.sh "<track>-<area>-orchestrator" orchestrator "<team-name>"
 
 Then run /orchestrate-start. NOT /session-start (that's the implementer's).
 Confirm in your first reply: (1) the start command you ran, (2) that the registry entry was written (run `ls ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json`).
@@ -85,8 +76,8 @@ Track: <track>. Team: <team-name>. Working directory: <area>/. Talk only to <tra
 Activated because: <one line — chat-only context; e.g. "picking up <task ID>; brief authored at docs/briefs/NNN-...">. Skip if none.
 Brief: <docs/briefs/NNN-*.md path if authored, else "the orchestrator is drafting now">.
 
-FIRST ACTION — register your identity for context monitoring:
-  mkdir -p ~/.claude/team-registry && jq -n --arg sid "$CLAUDE_CODE_SESSION_ID" --arg name "<track>-<area>-implementer" --arg team "<team-name>" --arg cwd "$(pwd)" --arg ts "$(date -u +%s)" '{session_id:$sid, name:$name, team:$team, role:"implementer", area:"<area>", cwd:$cwd, ts:($ts|tonumber)}' > ~/.claude/team-registry/${CLAUDE_CODE_SESSION_ID}.json
+FIRST ACTION — register for context monitoring:
+  ~/.claude/scripts/team-register.sh "<track>-<area>-implementer" implementer "<team-name>" "<area>"
 
 Then run /session-start. NOT /orchestrate-start.
 Confirm in your first reply: (1) the start command you ran, (2) that the registry entry was written.
@@ -125,16 +116,11 @@ Per `docs/team-protocol.md` "Cycle protocol" — when an orch or impl hits conte
 3. Spawn the successor using the templates above, carrying the same track prefix + the one-line WHY for the cycle (typically "previous teammate cycled at ~XX%; arc continues; last commit `<hash>`").
 4. Verify the successor's read-back.
 
-Use `/team-end` (not Step 6 of this command) when fully pausing the team for the day / arc-complete / lead-cycle.
+Use `/team-end` when fully pausing the team (end of day / arc-complete / lead-cycle) — this command only stands the team up + cycles teammates.
 
 ## Forbidden in this command
 
-- **Relaying routine traffic.** If you find yourself forwarding briefs or test reviews, stop — teammates talk directly. You handle escalations only.
-- **DM'ing implementers directly.** All impl-bound directives go via the orchestrator. Only exception: `shutdown_request` to terminate an impl session.
-- **Writing briefs in the spawn prompt.** Spawn prompts are 5-10 lines of WHY + WHERE. File lists, decomposition, design Qs are the orch's job.
-- **Holding deep plan/code context.** Stay thin. Pull detail on demand when something escalates.
-- **Deciding scope or design yourself.** Scope cuts (category #3) and load-bearing architectural Option A/B/C calls (category #4) go to the human via `AskUserQuestion`; routine design is the orchestrator's.
-- **Holding planning state in memory between events.** Lead is stateless between events — when you need to know "what's active" for a cycle or escalation, re-read `{{TASK_TRACKER}}` "Currently in progress" on demand. Do NOT maintain a mirror or task board; the file is the source of truth and re-reading is cheap.
-- **Acking routine harness notifications.** `idle_notification` events + peer-DM summaries are read-only context. Don't reply.
-- **Replying to "awareness pings"** from teammates ("brief dispatched," "Step 2.5 approved," "ack queued"). They're not escalations. Stay silent.
-- **Narrating routine progress upward, or re-gating per slice.** The human's one-time go authorizes the whole queued sequence. Upward output: close-out gate + the 4 escalation categories + context tier surfaces. **Close-outs run on user-on-demand OR auto-cycle (when context monitoring detects ACTION threshold at a clean slice break)** — never at routine work boundaries.
+The lead's full "what it does NOT do" list — no relaying routine traffic, no DM'ing implementers (directives go via the orch; only exception `shutdown_request`), no scope/design calls, no acking idle-notifications / awareness pings, no upward narration, stateless-between-events — is in `docs/team-protocol.md` "What the lead does NOT do" (loaded at Step 1). Command-specific here:
+
+- **Writing briefs in the spawn prompt.** Spawn prompts are 5-10 lines of WHY + WHERE — the orch authors briefs against the codebase.
+- **Crossed start commands.** Orch runs `/orchestrate-start`; impl runs `/session-start` — never the reverse.

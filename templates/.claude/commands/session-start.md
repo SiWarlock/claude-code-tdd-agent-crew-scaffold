@@ -10,9 +10,9 @@ The user is starting a new working session. Get oriented before doing any work.
 
 Procedure:
 
-1. Read `{{TASK_TRACKER}}` (repo root). Focus on three sections:
-   - **"Currently in progress"** at the top
-   - **The most recent ~2 entries** in the Log section at the bottom
+1. Read `{{TASK_TRACKER}}` (repo root) **by section, not whole** — `grep -n "^##" {{TASK_TRACKER}}` for offsets, then `Read` offset/limit just:
+   - **"Currently in progress"** (top)
+   - the last ~2 **Log** entries (tail)
    - **"Decisions tabled"**
 
 2. If working in a code area, also read its `CLAUDE.md` lookup table so you know where canonical answers live.

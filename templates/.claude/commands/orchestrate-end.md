@@ -10,7 +10,7 @@ An implementer just ran `/session-end` and produced a session doc (its recap cam
 
 `/orchestrate-end` is verification + reconciliation, not aggregation. Hot routing should already have done most of the work. This command catches drift and captures the orchestrator's framing.
 
-> **Note on per-slice context-checks:** the per-slice context-monitoring step (orch → `/context-check` → ping lead) is NOT part of this command. It fires AFTER every slice's Step-10 commit, per the orchestrator's per-slice flow in `docs/orchestrator-briefing.md` "Per-slice context check + lead ping." By the time `/orchestrate-end` runs, many per-slice checks have already fired. `/orchestrate-end` itself just performs the round close-out.
+> **Note on per-slice context-checks:** the per-slice context check (orch runs `/context-check` locally; pings the lead only on a tier crossing) is NOT part of this command — it runs after each slice's Step-10 (see `docs/orchestrator-briefing.md` "Per-slice context check"). `/orchestrate-end` is just the round close-out.
 
 ## Step 1 — Locate the implementer's session doc
 
@@ -24,19 +24,9 @@ If no implementer session ran this round (orchestrator-only session — scaffold
 
 ## Step 2 — Verify Step-9 hot-routing landed
 
-Walk the Step 9 summaries you received from the implementer this session. For each categorized item, verify it landed in the destination defined by the **canonical routing matrix in `docs/orchestrator-briefing.md`**:
+You routed each Step-9 item hot during the session, per the **canonical matrix in `docs/orchestrator-briefing.md`** (loaded at `/orchestrate-start` — don't re-copy it here). Verify each landed: grep the lesson title in `{{CODE_AREA}}LESSONS.md` + its linked index row in `{{CODE_AREA}}CLAUDE.md`; `git diff` any `{{ARCH_DOC}}` edits; grep Carry-forward / the phase for routed TODOs; confirm any deferment was escalated. The **most-likely-to-slip** is *Completed work → ticked checkbox* — Step 3.
 
-| Step 9 category | Destination | Verify |
-|---|---|---|
-| Convention candidate | full prose in `{{CODE_AREA}}LESSONS.md` (next anchor) + a one-line index row **with an anchor link** `[topic](LESSONS.md#N)` in `{{CODE_AREA}}CLAUDE.md` (never prose in `CLAUDE.md`) | grep the lesson title in `LESSONS.md`; confirm the `CLAUDE.md` row links to it |
-| Architecture doc note | `{{ARCH_DOC}} §X.Y` prose | git diff the section against pre-session HEAD |
-| Future TODO — belongs to a phase | a normal task checkbox in the correct phase/subphase of `{{TASK_TRACKER}}` (not an `Operational TODO` annotation) | grep for the task description |
-| Future TODO — next-brief working set | Carry-forward section (with origin marker) | grep |
-| Future TODO — out of scope | deferment was escalated + approved → deferred phase / Trims Catalog | grep + confirm escalation happened |
-| Cross-doc invariant change | `{{ARCH_DOC}}` edit + `{{CODE_AREA}}CLAUDE.md` table row | `git log -p` for the relevant section |
-| **Completed work** | **Ticked checkbox in `{{TASK_TRACKER}}`** | walk the implementer's "What was built" → confirm each completed task is `[x]` |
-
-Anything that slipped through hot routing — write the fix now (escalate only if it's a deferment or safety finding).
+Anything that slipped — write the fix now (escalate only if it's a deferment or safety finding).
 
 ## Step 3 — Reconcile `{{TASK_TRACKER}}` checkbox state
 
@@ -46,7 +36,7 @@ If a slice landed partial work, leave the box `[ ]` and add a parenthetical note
 
 ## Step 4 — Append a Log entry to `{{TASK_TRACKER}}`
 
-The implementer's session doc is the technical narrative. The Log entry is the **orchestrator's framing** — what landed at the planning level, decisions made, scope shifts, what's now unblocked or blocked.
+The implementer's session doc is the technical narrative. The Log entry is the **orchestrator's framing** — what landed at the planning level, decisions made, scope shifts, what's now unblocked or blocked. **Keep the Log bounded** (per the tracker's Log policy): once more than ~10 rounds have accumulated inline, roll the oldest into `docs/archive/TASKS-LOG.md` with a one-line pointer.
 
 Format:
 
@@ -84,7 +74,7 @@ Walk every bullet under `## Carry-forward to upcoming briefs`. Read each item + 
 
 Per-item: apply the outcome directly. DELETE/KEEP/INLINE/SPREAD are orchestrator-handled; **DEFER escalates** (deferment approval).
 
-After the walk, surface counts: *"Triage complete: K deleted, M inlined, J deferred, S spread, N kept."* If N (kept) > 5 AND triage didn't reduce the section materially, surface an **informational** warning (not blocking — different phases accumulate at different rates).
+After the walk, surface counts: *"Triage complete: K deleted, M inlined, J deferred, S spread, N kept."* **Hard cap: keep Carry-forward under ~7 items.** If it's still over the cap after triage, or any item is >3 slices old with no consumer, force-resolve those (INLINE-TARGET or DEFER) — Carry-forward is a small working set, not a backlog.
 
 This step runs BEFORE the round commit (Step 7) so triage outcomes land in the same commit.
 

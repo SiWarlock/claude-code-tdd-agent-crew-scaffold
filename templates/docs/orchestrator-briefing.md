@@ -78,14 +78,9 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5). **Prefer bundled slices** — when 2-4 related tasks share context and none touches a safety invariant, author one bundled brief instead of multiple atomic briefs. Default posture: bundle when safe; atomize only when required. See `docs/tdd-brief-template.md` "Estimated commit count" for the bundle/atomize criteria.
 3. **Update `{{ARCH_DOC}}`** with atomic edits when implementation surfaces architectural detail; cite anchors.
 4. **Manage cross-doc invariants** — area `CLAUDE.md` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
-5. **Step-2.5 review** — implementer sends the per-test write-up via `SendMessage`; review against spec; reply via `SendMessage` with a **parseable magic-words header** (load-bearing for the impl's wake-up logic — see root `CLAUDE.md` "Inter-teammate messaging"):
-   - **`APPROVED.`** — tests are correct as-is; impl proceeds to Step 3.
-   - **`TWEAK: <what to change>`** — tests need revision.
-   - **`ADD: <test to add>`** — a missing test needs to be added.
-
-   Address any open Step-2.5 questions in the message body, but the header must come first. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
+5. **Step-2.5 review** — the implementer sends a tight write-up (one `Asserts: <invariant> (§anchor)` line per test). Review the *asserted invariant* against the spec — that's what catches a conceptually-wrong test; open the test file only if an assertion looks off. Reply with a magic-words header (`APPROVED.` / `TWEAK: <what>` / `ADD: <test>` — see root `CLAUDE.md`), questions in the body. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
 6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
-7. **Per-slice context check + lead ping** (team mode only) — after Step-10 commit + hot-routing complete, **run `/context-check <team>`** + send the report to lead as a structured ping. Lead processes silently unless threshold tier crossed. See "Per-slice context check + lead ping" section below.
+7. **Per-slice context check** (team mode only) — after Step-10 + hot-routing, run `/context-check <team>` locally, and **ping the lead only when a tier ≥ WARN is crossed**. OK slices → no ping (the lead sees progress via the task list + idle-notifications). See "Per-slice context check" below.
 8. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
 9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress."
 10. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
@@ -97,100 +92,36 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 
 ## Messaging budget
 
-The traffic between teammates is **strictly bounded** by the slash-command checkpoints. **Brief authors MUST NOT instruct extra sends; implementers MUST NOT initiate extras.** Both directions of discipline are required.
+The full two-channel budget — **task list for status; `SendMessage` only for interactive checkpoints; lead ping only on a tier crossing** — is in root `CLAUDE.md` "Messaging budget" (you've loaded it). Your side:
 
-### Implementer → Orchestrator (per slice)
+- **Dispatch** a slice by creating + assigning its task (`TaskCreate` + `TaskUpdate owner`) + a one-line message naming the brief file. Don't paste the brief — the impl reads the file.
+- **Step-2.5** and **Step-9** are your two interactive replies (review; then route + commit-message-first). Keep both terse.
+- **done** arrives as a `TaskUpdate` (`completed` + hash in metadata) + a one-line wake — not a prose report. Read the hash from the task.
+- **Lead ping** only on a tier crossing — see "Per-slice context check" below.
 
-| When | What flows | Mandatory? |
-|---|---|---|
-| **Brief dispatch** | Orchestrator → implementer (one-way). Implementer reads + runs `/tdd <feature>` silently through Steps 0/1/2. | n/a (orch → impl) |
-| **Step 2.5** | Implementer → orchestrator: design write-up + per-test descriptions + answers to brief's Step-2.5 questions. Orchestrator reviews → approves OR requests changes. If changes: implementer makes them + re-sends; cycle until approval. | **Mandatory** |
-| **Step 7.5** | Implementer → orchestrator **only if a wiring / reachability concern surfaces** that needs your attention. Otherwise silent — the reachability claim rolls into Step 9. | **Conditional** |
-| **Step 9** | Implementer → orchestrator: categorized summary + ship/no-ship + draft commit message. Orchestrator replies **commit-message-first** per the routing matrix below; that reply IS the approval to commit. | **Mandatory** |
-| **After Step 10 commit** | Implementer → orchestrator: short "done with slice — `<commit hash>`" message. Signals you can dispatch the next brief OR proceed to round-seal. | **Mandatory** |
-| **`/session-end`** | Implementer → orchestrator: final session-doc recap. Triggers your `/orchestrate-end`. | **Mandatory at session close** (user-on-demand OR auto-cycle trigger per close-out gating) |
+Do NOT extend it: no "ready for review" / "holding" / "FYI"; no Step-0 acknowledgement; no re-quoting a teammate's message; no status pings (status lives on the task list). Every extra message is a crossed-in-flight risk between async agents.
 
-### Orchestrator → Lead (per slice, team mode only)
-
-| When | What flows | Mandatory? |
-|---|---|---|
-| **Per-slice context-check ping** | Orchestrator → lead: after Step-10 + hot-routing complete, run `/context-check <team>`; send the report as a structured one-line summary to lead. Lead processes silently unless threshold tier crossed. | **Mandatory in team mode**; skip in single-operator mode (no lead) |
-
-**That is the entire budget. Do NOT extend it:**
-- **No Step-0 restatement send.** `/tdd` Step 0 is a self-check, not a message. The orchestrator's first signal that the brief parsed correctly is the Step 2.5 write-up.
-- **No "ready for review" / "holding" / "FYI" pings between checkpoints.**
-- **No crossed-message reconciliations.** If a reply lands referencing stale state, continue from latest; the next checkpoint naturally re-syncs.
-- **No hash report after Step 10 except the bounded one above.** One short send naming the commit hash — not a structured report.
-
-**Why bounded:** every extra message increases the chance of crossed-in-flight replies between asynchronous LLM agents working in parallel. Bounded messaging keeps the protocol deterministic, the round narrative readable, and reconciliation overhead at zero.
-
-_(Single-operator fallback: the recipient is "you (the human acting as bridge)" — the budget still applies, just paste between sessions yourself.)_
+_(Single-operator fallback: no lead and no team task list — you and the implementer are two sessions the human bridges; the human is the recipient and carries status. Keep the same terseness.)_
 
 ---
 
-## Handling an implementer "where is my approval?" nag
+## If an implementer seems stuck waiting
 
-If an implementer's Step-2.5 nag arrives ("still waiting", "did you get my Step-2.5?", "re-stating my pause"), **DO NOT re-send your previous approval verbatim** as your reflex. That's the loop. Instead, diagnose:
-
-1. **Verify your previous reply used `SendMessage`** (not plain text). Check your transcript for the `SendMessage` tool call to the implementer. Plain assistant output never reaches teammates.
-
-2. **If you did NOT use `SendMessage` last time:** send the approval NOW via `SendMessage`, with the parseable `APPROVED.` / `TWEAK:` / `ADD:` header. This is the bug — your reply never left your session. Note the protocol gap in your own session (one line, no need to surface to the impl); going forward, always use `SendMessage`.
-
-3. **If you DID use `SendMessage` last time AND the impl still claims missing:** there's a real delivery issue. This is unusual — surface as a finding to the user (via the lead). The implementer should also self-check its transcript for messages it might have missed scanning for `APPROVED.` headers; if the message IS in the impl's transcript and it failed to parse it, that's an impl-side bug.
-
-**Verbatim re-send-as-plain-text** is the failure mode this protocol exists to prevent. Don't perpetuate it.
+Messages auto-deliver and wake the recipient, so a "still waiting?" almost always means **your last reply went out as plain text, not via `SendMessage`** — check your transcript for the tool call. If so, send it now via `SendMessage` with the `APPROVED.` / `TWEAK:` / `ADD:` header. Don't re-send as plain text (that's the loop). A genuine delivery failure after a confirmed `SendMessage` is rare — surface it as a finding.
 
 ---
 
-## Per-slice context check + lead ping (team mode only)
+## Per-slice context check (team mode only)
 
-**When:** after Step-10 commit + hot-routing complete AND you've received the implementer's "done with slice — `<hash>`" message. This is the slice-boundary trigger.
+**When:** after the Step-10 commit + hot-routing, once the slice task is marked `completed`.
 
-**What to do (4 steps; should take ≤5 seconds):**
+1. **Snapshot + check, locally:** run `/context-check <team> --snapshot <commit-hash>`. It appends the per-slice history (for trajectory) and returns the one-line `--brief` aggregate. Local read — **no message**.
+2. **Ping the lead ONLY if the aggregate is `WARN` / `ACTION` / `HARD-STOP`.** Send the verbatim `--brief` line via `SendMessage` (no paraphrase, no self-assessment — root `CLAUDE.md` "Canonical context source"). On `OK`, send **nothing** — the lead's free idle-notification + the task list already show the slice landed.
+3. **Dispatch the next slice — don't wait for the lead.** The `/team-start` approval authorized the whole queue. If cycle instructions arrive (only on a crossing), treat them as an interrupt: pause, run the cycle, resume.
 
-1. **Append per-slice history** for trajectory tracking:
-   ```bash
-   # The /context-check helper reads from team-history/<team>/<name>.jsonl for
-   # the 3-slice rolling growth calc. Snapshot all team members for this slice:
-   mkdir -p ~/.claude/team-history/<team>
-   for f in ~/.claude/team-registry/*.json; do
-     [ "$(jq -r '.team' "$f")" = "<team>" ] || continue
-     name=$(jq -r '.name' "$f")
-     sid=$(jq -r '.session_id' "$f")
-     hb=~/.claude/heartbeats/${sid}.json
-     [ -f "$hb" ] || continue
-     ctx=$(jq -r '.ctx_pct' "$hb")
-     ts=$(date -u +%s)
-     echo "{\"ts\":$ts,\"ctx_pct\":$ctx,\"slice_hash\":\"<commit-hash>\"}" >> ~/.claude/team-history/<team>/${name}.jsonl
-   done
-   ```
+**Idle only when:** the active phase has no queued slices and the user hasn't said what's next; a blocking dependency needs user direction; or the lead instructed `/orchestrate-end`. Otherwise the default is "next slice now."
 
-2. **Invoke `/context-check <team> --brief`** to get the one-line aggregate. (Use `--brief` for the per-slice ping; reserve full output for manual debugging.)
-
-3. **Send the one-line aggregate to lead via SendMessage** (short summary, structured data — **verbatim from the canonical script; no self-assessment, no paraphrase**):
-   ```
-   SendMessage to: team-lead
-   summary: "slice <hash> ctx-check"
-   message: "Slice <hash>: <one-line aggregate from /context-check --brief, copied verbatim>"
-   ```
-   Example messages:
-   - `Slice abc123: Team mvp: OK — max ctx 42% (impl)` (silent for lead)
-   - `Slice abc123: Team mvp: WARN (impl=71%). Cycle approaching.` (lead surfaces one-liner)
-   - `Slice abc123: Team mvp: ACTION (impl=76%). Initiate close-out cycle now.` (lead auto-cycles)
-
-   **Critical:** include ONLY the script output. No "I think we're at..." additions, no "the impl said it was at..." paraphrases of teammate self-reports. The script reads heartbeats; that's the canonical source. See root `CLAUDE.md` "Canonical context source — NO self-reporting."
-
-4. **IMMEDIATELY dispatch the next brief — DO NOT wait for the lead's response.** The team-start approval authorized the whole queue; you don't need per-slice authorization. The lead is silent when all-OK and responds only when a tier is crossed; if its cycle instructions arrive asynchronously, treat them as an interrupt: pause whatever you started, follow the cycle instructions, then resume.
-
-**Idle only when:** (a) the active phase has no more queued slices and the user hasn't said what's next, (b) a blocking dependency surfaced and you need user direction, OR (c) the lead instructed `/orchestrate-end` (cycle or end-of-round). After the per-slice ping, your default action is "next slice now" — not "wait for lead."
-
-**Why this matters:**
-- Lead can't see ctx_pct without your ping (no other reliable slice-boundary trigger).
-- The ping is **structured data, not an awareness ping** — one short line, machine-readable, keeps lead context lean across many slices.
-- Per-slice cadence + `--brief` keeps the read/eval cost minimal (≤100 tokens per ping vs full multi-line report).
-- Non-blocking dispatch is critical — waiting for the lead causes both orch + impl to idle indefinitely when there's nothing for the lead to say.
-
-**When NOT to ping:** during the auto-cycle flow itself (when the lead has just instructed close-out, your next "slice" is the close-out, not a real slice). Resume per-slice pings after a successor implementer is alive and the next real slice lands.
+**Why:** the lead can't see `ctx_pct` without a ping, but it doesn't *need* one per slice — the auto-cycle gate fires at ACTION (75%), and a WARN-gated send catches it with margin while removing one `SendMessage` + one lead wake on every OK slice (the common case). The local `--snapshot` keeps the trajectory data fresh regardless.
 
 ---
 
@@ -267,7 +198,7 @@ Full set in root `CLAUDE.md` (key safety rules, typing posture, commit messages)
 1. Run `/orchestrate-start` (this briefing is loaded by it) → Step 6 conditional pre-orient → Step 7 summary back to user. Don't act yet.
 2. Once direction is confirmed, propose the **first unit of work** — default: `{{TASK_TRACKER}}` "Next session target."
 3. Author the next `/tdd` brief per `docs/tdd-brief-template.md` → `docs/briefs/NNN-...`. Pre-load Step-2.5 design questions; cite anchors; name the entry point; identify cross-doc invariant impact.
-4. Send the brief reference directly to the area's implementer.
+4. Create + assign the slice's task (`TaskCreate` + `TaskUpdate owner`) + send a one-line message naming the brief file. (Single-operator: hand the brief reference to the implementer session.)
 
 ---
 

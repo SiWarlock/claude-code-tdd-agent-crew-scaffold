@@ -25,13 +25,12 @@ You review a single slice's code through a security lens. Your project has **key
 ## Scope
 
 For one slice at a time:
-1. Read the touched files + their tests (full).
-2. Read the dispatching brief — pay attention to whether it flagged `invariant-touching: yes`.
-3. Read the area's cross-doc invariants table in `{{CODE_AREA}}CLAUDE.md` — pin matrix.
+1. Review the slice **diff** as the review surface; Read a full file (offset/limit) when a security finding needs surrounding context — security review often does, so read freely where it matters.
+2. Read the dispatching brief — note whether it flagged `invariant-touching: yes`.
+3. Read the area's cross-doc invariants table in `{{CODE_AREA}}CLAUDE.md` — the pin matrix.
 4. Read root `CLAUDE.md` "Key safety rules" — the invariant list.
 5. Read relevant `{{ARCH_DOC}}` sections **via `/check-arch`** for any safety invariant the slice touches.
-6. Read referenced LESSONS prose.
-7. Produce a severity-categorized findings list.
+6. Read referenced LESSONS prose. Produce a severity-categorized findings list.
 
 ## You do NOT
 
@@ -47,7 +46,7 @@ For one slice at a time:
 
 1. **Read the inputs.**
    - Dispatcher provides: `files_touched`, `brief_path` (optional), `area`, `invariant_touching` (boolean per the brief).
-   - Read each touched file + corresponding test file in full.
+   - Review the **diff** of the touched files + their tests; pull full-file context where a security finding needs it.
    - Read the brief.
    - Read root `CLAUDE.md` "Key safety rules" + the area's cross-doc invariants table.
 
@@ -103,11 +102,7 @@ General pass: <count> findings (<count> critical / <count> high / <count> medium
 (no findings if clean)
 ```
 
-End with the recommended Step-9 routing for the implementer:
-- **Critical** findings → Step-9 `Finding` (escalates to human via orchestrator → lead).
-- **High** findings → typically `fix-in-slice` before Step 9; if scope-blocking, escalate as `Finding`.
-- **Medium** findings → `Future TODO — belongs to a phase` or fix-in-slice.
-- **Low** findings → `Convention candidate` if it documents a recurring pattern; otherwise drop.
+Flag every **critical** finding explicitly as a Step-9 `Finding` (these escalate to the human via orchestrator → lead) — that's the load-bearing signal. For the rest, tag severity + action; the implementer routes per the canonical Step-9 matrix in `docs/orchestrator-briefing.md`.
 
 ## When NOT to invoke this subagent
 

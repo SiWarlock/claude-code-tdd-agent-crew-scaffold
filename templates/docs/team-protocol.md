@@ -47,7 +47,7 @@ Leanness runs in **two directions**:
 
 Outside those three — and a genuine new direction from the human — the lead is **silent**. Silence is the lead working correctly, not the lead idle.
 
-**Per-slice context-report pings** (orch → lead) are processed silently by the lead — they're routine data, not awareness pings. The lead only emits text when a tier threshold is crossed (or escalation category arrives, or user direction arrives).
+**The orchestrator pings the lead only when a context tier is crossed** (≥ WARN), not every slice. Between those, the lead's visibility is the **free idle-notifications** the harness sends when a teammate's turn ends, plus the shared **task list** (`TaskList`) — both cost the lead nothing and need no reply. The lead emits text only on a tier-crossing ping, an escalation category, or user direction.
 
 ---
 
@@ -118,7 +118,7 @@ The lead spawns each teammate with a **brief, focused spawn prompt** carrying th
 
 ## Context monitoring + auto-cycle
 
-The lead receives a per-slice context-report ping from the orchestrator after every Step-10 slice commit. The report carries each teammate's current `ctx_pct` (from the status line's heartbeat write, joined against the team-registry via session_id). The lead evaluates against three thresholds:
+The orchestrator runs `/context-check <team>` locally after each slice but **pings the lead only when a tier ≥ WARN is crossed** (per root `CLAUDE.md` Messaging budget) — OK slices produce no ping, and the lead reads "work is advancing" from the free idle-notifications + the task list. When a ping does arrive it carries each teammate's `ctx_pct` (status-line heartbeat joined to the team-registry by session_id). The lead evaluates three thresholds:
 
 | Tier | Default % | What the lead does |
 |---|---|---|
@@ -131,11 +131,11 @@ Thresholds configurable via env vars: `CLAUDE_TEAM_CTX_WARN`, `CLAUDE_TEAM_CTX_A
 
 ### How the lead reads the ping
 
-The orch's ping carries the `/context-check <team>` output (human-readable + the aggregate-recommendation line). The lead processes it silently unless a tier line appears. Lead can also invoke `/context-check <team>` directly any time for an ad-hoc snapshot (uses the same helper script as the auto-flow).
+A ping arrives only on a tier crossing, carrying the verbatim `/context-check <team> --brief` line — act on the tier it names. The lead can also invoke `/context-check <team>` directly any time for an ad-hoc snapshot (same helper script).
 
 ### The auto-cycle flow at ACTION threshold
 
-When the lead detects ANY teammate (impl OR orch) at ≥ 75% on a per-slice ping (which arrived AFTER the slice's Step-10 commit, so by definition no slice is in flight):
+When a ping reports ANY teammate (impl OR orch) at ≥ 75% (a ping arrives at a slice boundary, after Step-10 commit, so by definition no slice is in flight):
 
 **Cycle BOTH teammates together — orchestrator AND implementer.** Even if only the impl crossed the threshold, the orch also cycles. Reasons:
 - Cleanest handoff: both sessions fresh, no risk of one having stale context about the other.
@@ -212,11 +212,12 @@ In either case, the swap procedure is the same:
 
 These flow **directly between teammates**. The lead is **not** in the loop unless something escalates.
 
-- **Brief dispatch:** orchestrator → implementer (file in `docs/briefs/NNN-*.md` + a reference send).
-- **Step-2.5 test-design review:** implementer → orchestrator (per-test write-up); orch reviews against spec, replies approve/tweak/add. The orch is the reviewer, not the human (unless a critical/safety design Q surfaces).
-- **Step-9 routing:** implementer → orchestrator (categorized summary + ship/no-ship). Orch routes hot per the **canonical Step-9 matrix in `docs/orchestrator-briefing.md`**. Lead receives only escalated items.
-- **Per-slice context-check:** orchestrator runs `/context-check <team>` after Step-10 + hot-routing complete; sends the report as a structured ping to lead. Lead processes silently unless threshold tier crossed (per "Context monitoring + auto-cycle" above).
-- **Commit + close-out:** implementer commits the slice (Step 10) with orchestrator-authored message. `/session-end` + `/orchestrate-end` run on user-explicit go OR auto-cycle trigger.
+- **Dispatch:** orchestrator → implementer — create + assign the slice task (`TaskCreate` + `TaskUpdate owner`) + a one-line message naming the brief file (`docs/briefs/NNN-*.md`).
+- **Step-2.5 test-design review:** implementer → orchestrator (tight write-up); orch reviews against spec, replies `APPROVED.`/`TWEAK:`/`ADD:`. The orch is the reviewer, not the human (unless a critical/safety design Q surfaces).
+- **Step-9 routing:** implementer → orchestrator (categorized flags + ship-ask). Orch routes hot per the **canonical Step-9 matrix in `docs/orchestrator-briefing.md`**. Lead receives only escalated items.
+- **Status (no prose):** slice assignment / in-progress / completion + commit hash live on the **task list** via `TaskUpdate`. The lead reads `TaskList` on demand; the harness's free idle-notifications signal turn-ends. No status pings.
+- **Context-check:** orchestrator runs `/context-check <team>` locally each slice; pings the lead **only on a tier crossing**.
+- **Commit + close-out:** implementer commits the slice (Step 10) with the orchestrator-authored message and marks the task `completed`. `/session-end` + `/orchestrate-end` run on user-explicit go OR auto-cycle trigger.
 
 ---
 
@@ -226,7 +227,7 @@ These flow **directly between teammates**. The lead is **not** in the loop unles
 
 **The lead is stateless between events.** It does NOT maintain a task board, mirror, or planning view between events. When a cycle, escalation, or close-out arrives, the lead re-reads `{{TASK_TRACKER}}` "Currently in progress" + the most recent session doc on demand (≤2 file reads, ~50 lines total). This is cheaper than continuous state maintenance + survives many orchestrator/implementer cycles without context bloat.
 
-Between events: the lead processes per-slice context-check pings silently (1-line aggregate, ~50 tokens each), takes no action unless a tier is crossed. No task tracker. No internal state. Files are the source of truth; re-read them when needed.
+Between events the lead is silent. Visibility comes from the free idle-notifications + the shared task list (`TaskList`), not from pings; a ping arrives only on a tier crossing. No task board, no mirror, no internal state. Files + the task list are the source of truth; re-read on demand.
 
 ---
 

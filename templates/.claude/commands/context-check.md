@@ -1,99 +1,43 @@
 ---
-description: Report per-teammate context usage for the current team (or all teams). Usage: /context-check [team-name]
-allowed-tools: Bash, Read
-argument-hint: "[team-name] [--brief]"
+description: Report per-teammate context usage (team mode). Usage: /context-check [team] [--brief | --snapshot <hash>]
+allowed-tools: Bash, Read, SendMessage
+argument-hint: "[team] [--brief | --snapshot <hash>]"
 ---
 
 <!--
-  TEMPLATE NOTE (delete when generating):
-  TEAM PATTERN ONLY. Skip generating this file in single-operator-fallback mode.
-  Highly portable. Depends on:
-    - ~/.claude/scripts/check-team-context.sh (the helper script that joins
-      registry + heartbeats; user installs from templates/scripts/)
-    - ~/.claude/team-registry/<session_id>.json files (written by team-mode
-      sessions via the /team-start spawn prompt)
-    - ~/.claude/heartbeats/<session_id>.json files (written by the status line
-      script when a registry entry exists)
-  If the user hasn't installed the helper script yet, this command fails loud
-  with the install instruction.
+  TEMPLATE NOTE (delete when generating): TEAM PATTERN ONLY — skip in
+  single-operator-fallback mode. Wraps ~/.claude/scripts/check-team-context.sh
+  (installed once from templates/scripts/). Tiers + thresholds are the script's
+  (env-overridable); this command does not restate them.
 -->
 
-Report per-teammate context usage for the current team (or a named team / all teams).
+Report per-teammate context usage by wrapping the canonical helper. The helper joins `~/.claude/team-registry/` + `~/.claude/heartbeats/` — the ONLY canonical context source; no agent self-reports (root `CLAUDE.md` "Canonical context source").
 
-Argument: `$ARGUMENTS` — optional team name + optional flags. **`--brief`** prints the compact per-slice form the orchestrator pings the lead with; `--json` / `--history` are documented below. If the team name is omitted, it defaults to:
-- `$TEAM_NAME` env var if set (lead session has this from `/team-start`)
-- Else: all teams with active registry entries
+Argument: `$ARGUMENTS` — optional team name (default `$TEAM_NAME`, else all teams) + optional flag.
 
-## Procedure
-
-1. **Verify the helper script is installed.** If missing, surface the install instruction (the user must install once from `templates/scripts/check-team-context.sh` → `~/.claude/scripts/check-team-context.sh`):
-
-   ```bash
-   [ -x "$HOME/.claude/scripts/check-team-context.sh" ] || {
-     echo "ERROR: check-team-context.sh not installed."
-     echo "Install: cp templates/scripts/check-team-context.sh ~/.claude/scripts/ && chmod +x ~/.claude/scripts/check-team-context.sh"
-     exit 1
-   }
-   ```
-
-2. **Run the helper** with the argument (or empty for auto-detect):
-
-   ```bash
-   ~/.claude/scripts/check-team-context.sh ${ARGUMENTS:-}
-   ```
-
-3. **Report the output verbatim.** The helper produces:
-   - A per-team grouping with each teammate's `ctx_pct`, tier (`OK` / `WARN` / `ACTION` / `HARD-STOP`), trajectory estimate (slices-to-action threshold if history is available), heartbeat age.
-   - A one-line aggregate recommendation per team (e.g. `Team frontend-team: WARN — 1 teammate at 71%, ~1 slice to ACTION threshold`).
-
-4. **If invoked by the orchestrator as part of its per-slice flow**, after reporting the output, the orchestrator sends a structured ping to the team lead:
-
-   ```
-   SendMessage to: team-lead
-   summary: "Slice <hash> context-check"
-   message: "<helper output, condensed to per-team aggregate line>"
-   ```
-
-   The lead evaluates the report against its threshold logic (per `docs/team-protocol.md` "Context monitoring + auto-cycle"):
-   - All teammates `OK` → silent log; no surface.
-   - Any `WARN` → emit one-line surface text with trajectory.
-   - Any `ACTION` → initiate close-out cycle at the next clean break (this slice already landed, so cycle starts now).
-   - Any `HARD-STOP` → halt brief dispatch + cycle immediately.
-
-5. **If invoked manually** (by user or lead for visibility), just report; no action needed.
-
-## Output format
-
-The helper outputs human-readable text by default. For programmatic consumption (the orch's per-slice ping construction), use:
+## Run the helper
 
 ```bash
-~/.claude/scripts/check-team-context.sh ${ARGUMENTS:-} --json
+[ -x "$HOME/.claude/scripts/check-team-context.sh" ] || {
+  echo "ERROR: check-team-context.sh not installed."
+  echo "Install: cp templates/scripts/check-team-context.sh ~/.claude/scripts/ && chmod +x ~/.claude/scripts/check-team-context.sh"; exit 1; }
+
+~/.claude/scripts/check-team-context.sh ${ARGUMENTS:-}
 ```
 
-Add `--history` to include trajectory data (per-slice growth from `~/.claude/team-history/`):
+**Flags:** `--brief` = one-line per-team aggregate (the orchestrator's per-slice form). `--snapshot <hash>` = append this slice's per-member ctx to the trajectory history **and** print the `--brief` line (one call does the snapshot + the check — use it in the orchestrator's per-slice flow). `--json` / `--history` = machine / trajectory output.
 
-```bash
-~/.claude/scripts/check-team-context.sh ${ARGUMENTS:-} --history
-```
+## Orchestrator per-slice use (the common path)
 
-## Threshold tiers (configurable via env)
+After Step-10, run `~/.claude/scripts/check-team-context.sh <team> --snapshot <commit-hash>` — a **local read, no message**. Then:
 
-| Env var | Default | Meaning |
-|---|---|---|
-| `CLAUDE_TEAM_CTX_WARN` | `70` | Warning tier — surface one-line text + trajectory |
-| `CLAUDE_TEAM_CTX_ACTION` | `75` | Action tier — auto-trigger close-out cycle |
-| `CLAUDE_TEAM_CTX_HARD` | `80` | Hard-stop tier — halt dispatch + immediate cycle |
+- **Ping the lead ONLY if the line is `WARN` / `ACTION` / `HARD-STOP`** — `SendMessage` the line **verbatim** (no paraphrase). On `OK`, send **nothing** (the lead's free idle-notifications + the task list already show the slice landed).
+- Then dispatch the next slice (don't wait on the lead).
 
-Set in `~/.claude/settings.json` `env` block to override.
+The lead acts on a tier line per `docs/team-protocol.md` "Context monitoring + auto-cycle," and may run this command directly any time for an ad-hoc snapshot.
 
-## When NOT to invoke this command
+## Forbidden
 
-- **Solo sessions** — there's no team registry. Output will be empty.
-- **Mid-slice** — the trigger lives at slice-boundaries (post-Step-10). Manually invoking mid-slice gives a stale snapshot of the last status-line refresh; not necessarily wrong, but the data isn't slice-boundary-anchored.
-- **No teammates spawned yet** — no registry entries → no output. Spawn teammates via `/team-start` first.
-
-## Forbidden in this command
-
-- **Acting on threshold detection unilaterally.** This command REPORTS. The lead acts per `docs/team-protocol.md` "Context monitoring + auto-cycle." A reporter that also triggers close-out would couple data + action — keep them separated.
-- **Fabricating context data.** If the helper script returns empty / stale, report it as such. Never guess at ctx%.
-- **Editing heartbeat / registry files.** This command is read-only against those files.
+- **Acting on a tier yourself** beyond the orchestrator's conditional send — this command REPORTS; the lead adjudicates close-out.
+- **Paraphrasing or fabricating ctx** — send the helper line verbatim; if it's empty/stale, say so.
+- **Editing heartbeat / registry files.**

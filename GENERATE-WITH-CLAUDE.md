@@ -206,10 +206,11 @@ Most of this should be inferrable from package manifests. Confirm rather than as
   - Include `/trace`? (only for observability-heavy projects with structured traces).
   - If unsure, **omit** — they're easy to add later.
 - **Optional starter subagents** (team-pattern projects benefit most):
-  - `code-quality-reviewer` — Step 7→8 parallel review. **Default yes** for any non-trivial project.
-  - `security-reviewer` — Step 7→8 parallel review, mandatory on invariant-touching slices. **Default yes** for projects with safety invariants; default no otherwise.
+  - `code-quality-reviewer` — Step-8 review. **Default yes** for any non-trivial project (runs `sonnet`, diff-only — cheap).
+  - `security-reviewer` — Step-8 review, mandatory on invariant-touching slices. **Default yes** for projects with safety invariants; default no otherwise.
   - `reachability-auditor` — phase-exit gate audit. **Default yes** — universal value.
   - `brief-drafter` — orchestrator's brief-skeleton tool. **Default yes for definition file; integration deferred until quality trial.** (See `agents/README.md` for the trial protocol.)
+- **Reviewer policy** — sets `{{SECURITY_REVIEW_POLICY}}` + `{{CODE_QUALITY_REVIEW_POLICY}}` in root `CLAUDE.md` (the Step-8 fan-out cadence; reviewers run on the slice diff). Each is one of `off` · `invariant` · `every-slice` · `phase-boundary`. **Defaults: `security-reviewer = invariant`, `code-quality-reviewer = every-slice`.** Confirm or override with the user — it trades review depth for per-slice tokens. (If the user opted out of a reviewer above, set its policy `off`.)
 
 ---
 
@@ -223,6 +224,7 @@ After the interview, present a compact **generation plan** and **wait for approv
 - **Phase IDs + the phase list** going into `{{TASK_TRACKER}}`.
 - **Optional commands included:** `/eval`? `/trace`? `/wired` (standard, always).
 - **Optional starter subagents included:** which of the 4.
+- **Reviewer policy:** `security-reviewer = <policy>`, `code-quality-reviewer = <policy>`.
 - **Filled values for every `{{PLACEHOLDER}}`** — a short table.
 - **EXAMPLE BLOCKs you'll rewrite** — one-line summary of what each becomes.
 - **Provenance manifest** — note that `.scaffolding/manifest.json` will be stamped at the end (Step 12.5): it records the scaffolding commit, your filled placeholder values, and the file/EXAMPLE-BLOCK ledger so future `/scaffold-upgrade` runs are clean 3-way merges, not hand-diffs.
@@ -344,7 +346,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "optionalCommands": ["eval", "trace"],
   "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "brief-drafter"],
 
-  "placeholders": { "PROJECT_NAME": "…", "ARCH_DOC": "ARCHITECTURE.md", "TASK_TRACKER": "MVP_TASKS.md", "AI_TRAILER": "…", "…": "…" },
+  "placeholders": { "PROJECT_NAME": "…", "ARCH_DOC": "ARCHITECTURE.md", "TASK_TRACKER": "MVP_TASKS.md", "AI_TRAILER": "…", "SECURITY_REVIEW_POLICY": "invariant", "CODE_QUALITY_REVIEW_POLICY": "every-slice", "…": "…" },
   "codeAreas": [
     { "CODE_AREA": "app/", "CODE_AREA_NAME": "backend", "CODE_AREA_BASENAME": "app",
       "RUNTIME": "Python 3.12", "PKG_MANAGER": "uv", "TEST_CMD": "uv run pytest",
@@ -380,8 +382,9 @@ The team-mode context monitoring + auto-cycle (per `SCAFFOLDING-GUIDE.md §8` "C
 
 **Scripts to install:**
 
-1. **`~/.claude/statusline-command.sh`** — renders the status bar + writes the heartbeat (conditional on team-registry entry existing for the session).
-2. **`~/.claude/scripts/check-team-context.sh`** — the join + threshold-tier helper that `/context-check` invokes.
+1. **`~/.claude/statusline-command.sh`** — renders the status bar + writes the heartbeat (conditional on a team-registry entry existing for the session).
+2. **`~/.claude/scripts/check-team-context.sh`** — the join + threshold-tier helper that `/context-check` invokes (incl. `--snapshot`).
+3. **`~/.claude/scripts/team-register.sh`** — writes a teammate's registry entry; called as each teammate's first action by the `/team-start` spawn prompts.
 
 **Handle three scenarios:**
 
@@ -393,7 +396,8 @@ Install fresh. Copy from template:
 mkdir -p ~/.claude/scripts
 cp templates/scripts/statusline-command.sh ~/.claude/statusline-command.sh
 cp templates/scripts/check-team-context.sh ~/.claude/scripts/check-team-context.sh
-chmod +x ~/.claude/statusline-command.sh ~/.claude/scripts/check-team-context.sh
+cp templates/scripts/team-register.sh      ~/.claude/scripts/team-register.sh
+chmod +x ~/.claude/statusline-command.sh ~/.claude/scripts/check-team-context.sh ~/.claude/scripts/team-register.sh
 ```
 
 Then add to the user's `~/.claude/settings.json`:
@@ -417,11 +421,12 @@ Replace `<USER>` with the actual username.
 
 - **(B2) Use the template script as-is.** If the user is OK swapping their custom status line for ours, back up theirs first (`mv ~/.claude/statusline-command.sh ~/.claude/statusline-command.sh.bak`), then copy the template in. They can re-merge their formatting later.
 
-**Always:** install the helper script:
+**Always:** install the helper scripts:
 ```bash
 mkdir -p ~/.claude/scripts
 cp templates/scripts/check-team-context.sh ~/.claude/scripts/check-team-context.sh
-chmod +x ~/.claude/scripts/check-team-context.sh
+cp templates/scripts/team-register.sh      ~/.claude/scripts/team-register.sh
+chmod +x ~/.claude/scripts/check-team-context.sh ~/.claude/scripts/team-register.sh
 ```
 
 #### Scenario C — User wants Claude to do it
@@ -523,6 +528,15 @@ Every `{{PLACEHOLDER}}` the templates use. Confirm a value for each during the i
 | `{{TASK_TRACKER}}` | The state + phase-plan file | `MVP_TASKS.md` |
 | `{{ARCH_DOC}}` | The design-contract file | `ARCHITECTURE.md` |
 | `{{PHASE_IDS}}` | How phases are labelled | `W3.M / W3.F / W3.D` or `P1 / P2 / P3` or `M1.C.01 / M2.A.03` |
+
+### Reviewer policy (Step-8 fan-out cadence)
+
+| Placeholder | Meaning | Default |
+|---|---|---|
+| `{{SECURITY_REVIEW_POLICY}}` | When `security-reviewer` fans out at `/tdd` Step 8 | `invariant` |
+| `{{CODE_QUALITY_REVIEW_POLICY}}` | When `code-quality-reviewer` fans out at `/tdd` Step 8 | `every-slice` |
+
+Each is one of `off` · `invariant` (invariant-/security-touching slices only) · `every-slice` · `phase-boundary`. Set a reviewer's policy to `off` if the user opted out of that subagent.
 
 ### Team pattern only
 

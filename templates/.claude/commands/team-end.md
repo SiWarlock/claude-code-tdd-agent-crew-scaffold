@@ -44,7 +44,7 @@ Read for the handoff doc:
 1. `git log --oneline -5` — last 5 commits, includes the round-seal hash.
 2. `{{TASK_TRACKER}}` "Currently in progress" + "Next session target" + "Carry-forward to upcoming briefs" + last Log entry.
 3. The most recent `docs/sessions/<NNN>-*.md` — what just landed.
-You already hold the rest of the coordination state in memory (team composition, active arc, open decisions, who's been working on what — derived from per-slice context-check pings + escalations during the team's life).
+You already hold the rest of the coordination state (team composition, active arc, open decisions) from the task list, tier-crossing pings, and escalations during the team's life; re-read `{{TASK_TRACKER}}` if unsure.
 
 ## Step 3 — Compute the handoff doc number
 
