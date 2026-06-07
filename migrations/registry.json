@@ -25,7 +25,7 @@
     {
       "id": "M-0003",
       "title": "Rename the task tracker MVP_TASKS.md -> IMPLEMENTATION_PLAN.md (neutral 'implementation plan' name) + update the {{TASK_TRACKER}} placeholder default",
-      "introducedAtSha": "PENDING-wire-to-shipping-commit",
+      "introducedAtSha": "1f6cf8e9e91513ecfb99d7d5de7b94fa262cf69d",
       "kind": "renamed-template",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",

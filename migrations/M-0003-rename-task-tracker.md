@@ -5,12 +5,11 @@
 > migration at a later SHA. SHA-window-gated (fires once when `base < introducedAtSha <= to`),
 > idempotent, journaled (touchfile `.scaffolding/.migrations/M-0003.done`), per-migration failure non-fatal.
 
-> **⚠ `introducedAtSha` must be wired to the commit that ships this rename** (the commit that flips the
-> `{{TASK_TRACKER}}` default in `GENERATE-WITH-CLAUDE.md` + `generate-procedure.md` and `git mv`s
-> `templates/MVP_TASKS.md` → `templates/IMPLEMENTATION_PLAN.md`). It currently holds the placeholder
-> `"PENDING-wire-to-shipping-commit"`, which is unresolvable, so the script SKIPS this migration with a
-> warning (safe — it cannot fire before it ships). After committing, set it to that commit's 40-char SHA —
-> exactly the two-step pattern commit `a939bd0` used to wire M-0001/M-0002's `introducedAtSha`.
+> **`introducedAtSha` is wired to the commit that ships this rename** —
+> `1f6cf8e9e91513ecfb99d7d5de7b94fa262cf69d` (the commit that flipped the `{{TASK_TRACKER}}` default in
+> `GENERATE-WITH-CLAUDE.md` + `generate-procedure.md` and `git mv`d `templates/MVP_TASKS.md` →
+> `templates/IMPLEMENTATION_PLAN.md`). It was set in a follow-up commit — the two-step pattern commit
+> `a939bd0` used for M-0001/M-0002, since the shipping SHA can't be known until that commit exists.
 
 ## Registry entry (in `registry.json` `migrations[]`)
 
@@ -18,7 +17,7 @@
 {
   "id": "M-0003",
   "title": "Rename the task tracker MVP_TASKS.md -> IMPLEMENTATION_PLAN.md (neutral 'implementation plan' name) + update the {{TASK_TRACKER}} placeholder default",
-  "introducedAtSha": "PENDING-wire-to-shipping-commit",
+  "introducedAtSha": "1f6cf8e9e91513ecfb99d7d5de7b94fa262cf69d",
   "kind": "renamed-template",
   "appliesWhen": "base < introducedAtSha <= to",
   "gate": "human",
