@@ -14,7 +14,7 @@ could hand a new engineer to understand the system in an afternoon — and that 
 - **Binding design:** `ARCHITECTURE.md` (the cc-crew contract), ADRs, API specs (OpenAPI/GraphQL schema).
 - **Planning artifacts:** `docs/planning/*` from `/arch-draft` (`ARCHITECTURE_DRAFT.md`,
   `CLAUDE_CODE_HANDOFF.md`, interview notes), `/office-hours` output (problem/wedge framing),
-  `/plan-ceo-review` & `/plan-eng-review` notes, `MVP_TASKS.md` (what was actually scoped/built).
+  `/plan-ceo-review` & `/plan-eng-review` notes, `IMPLEMENTATION_PLAN.md` (what was actually scoped/built).
 - **Accreted knowledge:** `LESSONS.md`, `README`s, `CHANGELOG`, issue/PR templates.
 
 If planning docs are absent, the code is the source of truth — proceed, noting you couldn't cross-check

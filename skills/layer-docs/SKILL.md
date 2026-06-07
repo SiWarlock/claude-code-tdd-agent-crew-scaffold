@@ -4,7 +4,7 @@ description: >-
   Derive AND continuously maintain a project's layer documentation. On the FIRST run it does a deep
   end-to-end comprehension pass — analyzing the whole codebase AND its planning/architecture artifacts
   (ARCHITECTURE.md, the /arch-draft docs in docs/planning/, any /office-hours or /plan-ceo-review output,
-  MVP_TASKS.md, READMEs) — derives the project's REAL layers (not a generic template), and writes a
+  IMPLEMENTATION_PLAN.md, READMEs) — derives the project's REAL layers (not a generic template), and writes a
   full-scope overview plus one digestible doc per layer (executive summary first, depth below) into
   docs/layers/. On LATER runs it works INCREMENTALLY: it figures out what changed (new code, new features,
   refactors, deletions) since the docs were last generated and updates ONLY the affected layer docs — never
@@ -84,7 +84,7 @@ without git (hashes are the source of truth); a git sha is stored as fast-path p
    **code-intelligence MCP (CodeGraph)** is available, use it (`codegraph_status`, `codegraph_files`,
    `codegraph_context`) for the symbol/edge map instead of a grep-and-read sweep.
 3. **Collect the design record.** `ARCHITECTURE.md`, `docs/planning/*` (the `/arch-draft` artifacts), any
-   `/office-hours` or `/plan-ceo-review` output, `MVP_TASKS.md`, `LESSONS.md`, `README`s, ADRs, API specs.
+   `/office-hours` or `/plan-ceo-review` output, `IMPLEMENTATION_PLAN.md`, `LESSONS.md`, `README`s, ADRs, API specs.
    No planning docs ⇒ proceed from the **code as source of truth**.
 
 ⏸ **Check-in:** confirm the mode + the input inventory before the deep read.

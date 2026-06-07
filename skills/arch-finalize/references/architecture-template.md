@@ -19,6 +19,14 @@
 
 # {{ARCH_DOC}} — {{PROJECT_NAME}}
 
+> **Build posture:** <production-grade | MVP/prototype — the delivery target confirmed at planning start>.
+> Steers task decomposition (`{{TASK_TRACKER}}`), the gap audit, and the build order. Under
+> **production-grade**, architecturally-correct / best-practice choices are baseline — auth, input
+> validation, error paths, idempotency, observability, secrets handling, and a deploy/rollback path are
+> **in-scope requirements**, not deferrable. Under **MVP / prototype**, the build is lean with explicit,
+> *flagged* deferrals. A demo is an **optional** phase under either posture. (Load-bearing safety / security /
+> correctness invariants are never cut regardless of posture.)
+
 ## Executive summary
 
 <~300-500 words: what the system is, the core design posture, the major

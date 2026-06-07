@@ -57,7 +57,7 @@ Discipline (applies on every host):
 2. **Read the playbook.** Read `references/architecture-planning-playbook.md` end-to-end. It is the
    authoritative process; everything below just operationalizes it.
 3. **Create the output directory:** `docs/planning/` (this is where every artifact lands; the final
-   `ARCHITECTURE.md` and `MVP_TASKS.md` are produced *downstream* at the repo root by `/arch-finalize`
+   `ARCHITECTURE.md` and `IMPLEMENTATION_PLAN.md` are produced *downstream* at the repo root by `/arch-finalize`
    and `/tasks-gen`, not here).
    ```bash
    mkdir -p docs/planning
@@ -65,11 +65,11 @@ Discipline (applies on every host):
 
 ---
 
-## 2. Phase 0 — Intake + planning-mode selection
+## 2. Phase 0 — Intake + planning-mode & build-posture selection
 
-Run the playbook's **Phase 0** (PRD Intake) and **§3 Mode Selection**:
+Run the playbook's **Phase 0** (PRD Intake) and **§3 Mode & Build Posture Selection**:
 
-1. Extract the 13 intake items (product-in-one-sentence, is / is-not, primary problem, primary user,
+1. Extract the intake items (product-in-one-sentence, is / is-not, primary problem, primary user,
    core workflow, explicit + implied requirements, external deps, ambiguities, risks).
 2. **Recommend a planning mode** and confirm with the user (host-neutral question). The mode decides
    which artifacts you produce:
@@ -77,7 +77,7 @@ Run the playbook's **Phase 0** (PRD Intake) and **§3 Mode Selection**:
    | Mode | When | Artifacts you will write |
    |---|---|---|
    | **Compact** | tiny PRD, 1–3 day build, low risk | `PRESEARCH.md`, `ARCHITECTURE_DRAFT.md`, `CLAUDE_CODE_HANDOFF.md` |
-   | **Default** | most 3–10 day MVPs | `PRESEARCH.md`, `RESEARCH.md`, `DECISIONS.md`, `ARCHITECTURE_DRAFT.md`, `DIAGRAM_PLAN.md`, `CLAUDE_CODE_HANDOFF.md` |
+   | **Default** | most multi-day builds | `PRESEARCH.md`, `RESEARCH.md`, `DECISIONS.md`, `ARCHITECTURE_DRAFT.md`, `DIAGRAM_PLAN.md`, `CLAUDE_CODE_HANDOFF.md` |
    | **Expanded** | security / compliance / enterprise / team-heavy | `PRODUCT_BRIEF`, `USERS`, `STAKEHOLDERS`, `USER_FLOWS`, `DOMAIN_MODEL`, `REQUIREMENTS`, `CONSTRAINTS`, `EVALUATION_CRITERIA`, `ASSUMPTIONS`, `OPEN_QUESTIONS`, `RESEARCH`, `DECISIONS`, `RISKS`, `THREAT_MODEL`, `DATA_MODEL`, `ARCHITECTURE_DRAFT`, `DIAGRAM_PLAN`, `CLAUDE_CODE_HANDOFF` |
 
    In **Compact / Default**, `PRESEARCH.md` is the consolidated doc (product understanding, users,
@@ -85,7 +85,16 @@ Run the playbook's **Phase 0** (PRD Intake) and **§3 Mode Selection**:
    criteria, risks, early decisions). In **Expanded**, that content is **split** into the separate files
    above. Either way the chosen mode's *whole set* is what flows downstream.
 
-3. Do **not** start drafting the architecture until intake is confirmed.
+3. **Recommend a build posture** (playbook §3.3–3.4) and confirm with the user — a **separate, orthogonal**
+   decision from the planning mode. Posture is the *delivery target* the design + implementation aim at:
+   **production-grade** (default — architecturally-correct, best-practice; auth / input-validation /
+   error-paths / idempotency / observability / deploy-rollback are in-scope baseline, not deferrable) vs
+   **MVP / prototype** (a timeboxed proof; lean, with explicit, *flagged* deferrals). **Always ask; never
+   assume a posture.** Record the confirmed posture in `PRESEARCH.md` and carry it into
+   `CLAUDE_CODE_HANDOFF.md` + the `ARCHITECTURE_DRAFT.md` header (§4). It steers Phase-8 inference and every
+   downstream stage; a demo becomes an OPTIONAL phase under it.
+
+4. Do **not** start drafting the architecture until intake, planning mode, **and build posture** are confirmed.
 
 ---
 
@@ -97,8 +106,9 @@ by `references/architecture-planning-playbook.md`. For each phase:
 - Ask the phase's interview questions (host-neutral, one topic at a time).
 - Synthesize the user's answers into that phase's section.
 - **Tag every recommendation** with one of: `locked decision` / `proposed recommendation` /
-  `open question` / `MVP simplification` / `deferred work` / `research required` (per the playbook).
-- Honor every **stop condition** the playbook names (e.g. *every MVP requirement maps to a flow*; *do
+  `open question` / `scope simplification` (a posture-gated cut) / `production-hardening` (load-bearing under
+  a production-grade posture) / `deferred work` / `research required` (per the playbook).
+- Honor every **stop condition** the playbook names (e.g. *every in-scope requirement maps to a flow*; *do
   not draft the architecture until load-bearing decisions are locked or explicitly marked open*).
 - Use **WebSearch** only where the playbook's Research phase calls for current/external/pricing/legal
   facts; record them in `RESEARCH.md` with sources, and state the fallback if a fact can't be relied on.
@@ -124,9 +134,10 @@ Per the playbook's Phase 16, it tells Claude Code to:
    overbuilt scope, missing tests / deploy path / trust boundaries / diagrams / task-planning anchors).
 4. Propose precise edits, confirm load-bearing changes with the human, then produce the **finalized**
    `ARCHITECTURE.md` (repo root) from the project's `templates/ARCHITECTURE.md` — and only then generate
-   `MVP_TASKS.md`.
+   `IMPLEMENTATION_PLAN.md`.
 
-List, in the handoff, exactly which artifact files you wrote and any **still-open** questions /
+List, in the handoff, the confirmed **Build posture** (`production-grade` | `MVP/prototype` — so Brain 2
+finalizes + audits against it), exactly which artifact files you wrote, and any **still-open** questions /
 research-required items the finalize pass must resolve.
 
 ---
@@ -137,8 +148,11 @@ research-required items the finalize pass must resolve.
 - **Never skip the interview.** A "work without stopping" / "don't ask questions" instruction scopes to
   *clarifying* questions, not to this skill's phase gates — they are the point of the skill. Surface the
   conflict instead of silently skipping.
+- **Never skip — or silently assume — the build posture.** The posture question (§2 step 3) is a phase gate,
+  not a clarifying question: always ask, always confirm (production-grade is the *recommendation*, not an
+  auto-default), and record it in the handoff so it survives the model switch.
 - **Never fabricate values.** Unanswered → tag as `open question`, never invent.
-- **Never produce the *finalized* `ARCHITECTURE.md` or `MVP_TASKS.md` here.** You emit
+- **Never produce the *finalized* `ARCHITECTURE.md` or `IMPLEMENTATION_PLAN.md` here.** You emit
   `ARCHITECTURE_DRAFT.md`; finalization is `/arch-finalize`'s job (a different model, on purpose).
 
 ---
@@ -150,6 +164,6 @@ When the chosen mode's artifact set is complete, tell the user:
 > **Architecture draft complete.** Wrote `<list of files>` to `docs/planning/`. This is a *rough draft*
 > for adversarial finalization. **Next:** in Claude Code, run **`/arch-finalize`** — it reads all of
 > `docs/planning/*` + the PRD, runs the gap audit + adversarial scrutiny, and produces the binding
-> `ARCHITECTURE.md`. Then `/tasks-gen` turns that into `MVP_TASKS.md`.
+> `ARCHITECTURE.md`. Then `/tasks-gen` turns that into `IMPLEMENTATION_PLAN.md`.
 
 Then stop. Do not invoke downstream skills yourself — the handoff to Claude is deliberate (two brains).

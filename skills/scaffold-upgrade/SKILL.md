@@ -3,7 +3,7 @@ name: scaffold-upgrade
 description: >-
   Bring an already-generated, already-customized project's agent-team scaffolding up to date with the
   current templates via a provenance-manifest 3-way merge — WITHOUT clobbering placeholder values,
-  customized EXAMPLE BLOCK regions, or accreted state (LESSONS.md, MVP_TASKS.md living sections). Runs on
+  customized EXAMPLE BLOCK regions, or accreted state (LESSONS.md, IMPLEMENTATION_PLAN.md living sections). Runs on
   Claude Code from a scaffolding-repo checkout pointed at the target project; never vendored into projects.
   A bundled bash+jq script does the deterministic git/substitution/merge work; this skill adjudicates
   classification edges, drafts the conflicts git can't, runs structural migrations, and drives two human
@@ -120,7 +120,7 @@ never run on the default branch. Short-circuit "already up to date" if `base == 
 | `verbatim` | `tdd.md` 10 steps, Step-9 routing, escalation taxonomy, commit cadence | **AUTO-APPLY iff `theirs == base`** → take `ours`. Else **PROPOSE** with a loud "you diverged from verbatim machinery" flag. |
 | `placeholder-only` | `preflight.md`, `wired.md`, single-area `run-tests.md` | **AUTO-APPLY iff `theirs == base`** (provably untouched). A clean-but-diverged 3-way ⇒ **PROPOSE** (low risk, `propose-clean`); a conflict ⇒ PROPOSE (resolve). |
 | `mixed` | `CLAUDE.md`, `area-CLAUDE.md`, `orchestrator-briefing.md` | **Per-region split** (§5): machinery + `illustrative` blocks → auto-eligible; `customized` blocks → PROPOSE-ONLY, never clobber. |
-| `accreted` | `LESSONS.md`, `MVP_TASKS.md` living sections, area tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
+| `accreted` | `LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, area tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
 | `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only an appended Appendix A skeleton is a PROPOSE candidate. |
 
 > **The prime directive governs.** Where a bundled reference phrases a per-kind rule more permissively (e.g.
@@ -211,7 +211,7 @@ chore(scaffolding): upgrade <base8> → <to8>
 Auto-applied: <verbatim/placeholder files>.
 Proposed+accepted: <customized files re-merged>.
 Migrations run: <ids + titles>.
-Left untouched: accreted state (LESSONS.md, MVP_TASKS.md living sections), ARCHITECTURE.md.
+Left untouched: accreted state (LESSONS.md, IMPLEMENTATION_PLAN.md living sections), ARCHITECTURE.md.
 Skipped/deferred: <list>.
 
 {{AI_TRAILER}}
@@ -224,7 +224,7 @@ Skipped/deferred: <list>.
 
 - **Never re-render over the top.** No blind overwrite of any customized or accreted file. Propose; don't clobber.
 - **Never auto-delete a template's file** (`deleted-template` is PROPOSE-only) — a project may depend on it.
-- **Never touch accreted bodies** (`LESSONS.md`, `MVP_TASKS.md` living sections) except via an explicit,
+- **Never touch accreted bodies** (`LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections) except via an explicit,
   human-gated `accreted-format` migration. **Never touch `{{ARCH_DOC}}`** beyond an appended Appendix A skeleton.
 - **Never fabricate a placeholder** — an unresolved `{{TOKEN}}` STOPS and asks; recovered legacy values are confirmed.
 - **Never auto-apply without a trustworthy base** — lower `baseConfidence` ⇒ more gating, never more auto-apply.

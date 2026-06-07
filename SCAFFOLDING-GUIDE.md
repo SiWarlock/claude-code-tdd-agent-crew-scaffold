@@ -553,7 +553,7 @@ The package has three parts:
 ### What you provide (the user)
 
 - **An architecture document** (`ARCHITECTURE.md`, `design.md`, etc.) — the **primary input**. The generator reads it end-to-end and extracts everything it can infer: stack, code areas, subsystem boundaries, safety invariants, deliverables, layer-dependency rules. The more your architecture doc captures, the less the generator interviews you for.
-- **Optionally, a task tracker / MVP plan** — if you have one already (`MVP_TASKS.md`, `TASKS.md`, etc.). If not, the generator stubs one with your phase plan from the interview.
+- **Optionally, a task tracker / implementation plan** — if you have one already (`IMPLEMENTATION_PLAN.md`, `TASKS.md`, etc.). If not, the generator stubs one with your phase plan from the interview.
 - **The repo to scaffold** — a directory where the generator writes the customized scaffolding.
 
 ### What you don't have to provide

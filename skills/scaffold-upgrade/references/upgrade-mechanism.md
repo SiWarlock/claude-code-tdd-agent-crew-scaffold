@@ -3,7 +3,7 @@
 > **Problem.** When the scaffolding repo is updated and a project that was generated from an OLDER
 > commit pulls the new templates, there is today no clean way to bring its scaffolding up to date
 > WITHOUT clobbering its `{{PLACEHOLDER}}` substitutions, its rewritten EXAMPLE BLOCK regions, and its
-> accreted state (`LESSONS.md`, `MVP_TASKS.md` living sections, the area-`CLAUDE.md` lookup +
+> accreted state (`LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, the area-`CLAUDE.md` lookup +
 > invariants tables). Before `/scaffold-upgrade`, the only path was hand-diffing generated files against
 > current templates — error-prone and unbounded; `SCAFFOLDING-GUIDE.md §11` now documents this skill instead.
 >
@@ -72,7 +72,7 @@ Rationale for the choices:
     "REPO_DIRNAME": "apex-logistics",
     "GIT_REMOTE": "origin",
     "AI_TRAILER": "Assisted-by: Claude Code",
-    "TASK_TRACKER": "MVP_TASKS.md",
+    "TASK_TRACKER": "IMPLEMENTATION_PLAN.md",
     "ARCH_DOC": "ARCHITECTURE.md",
     "PHASE_IDS": "M1.C.01 / M2.A.03",
     "TRACK_NAME": "backend"
@@ -115,7 +115,7 @@ Rationale for the choices:
     { "dest": "CLAUDE.md",                         "template": "templates/CLAUDE.md",                         "kind": "mixed" },
     { "dest": "app/CLAUDE.md",                      "template": "templates/area-CLAUDE.md",                    "kind": "mixed",   "area": "app/" },
     { "dest": "app/LESSONS.md",                     "template": "templates/area-LESSONS.md",                   "kind": "accreted" },
-    { "dest": "MVP_TASKS.md",                       "template": "templates/MVP_TASKS.md",                      "kind": "accreted" },
+    { "dest": "IMPLEMENTATION_PLAN.md",             "template": "templates/IMPLEMENTATION_PLAN.md",            "kind": "accreted" },
     { "dest": "ARCHITECTURE.md",                    "template": "templates/ARCHITECTURE.md",                   "kind": "user-canonical" },
     { "dest": "docs/team-protocol.md",              "template": "templates/docs/team-protocol.md",             "kind": "mixed" },
     { "dest": "docs/orchestrator-briefing.md",      "template": "templates/docs/orchestrator-briefing.md",     "kind": "mixed" },
@@ -164,7 +164,7 @@ single most load-bearing field for a clean merge — it tells the upgrade sessio
 | `verbatim` | (a) VERBATIM machinery — `/tdd` 10 steps, Step-9 routing, commit cadence, escalation taxonomy | If the project file == base (re-substituted old template), upstream wins outright — take `ours` wholesale. If it differs, the project hand-edited machinery (rare, discouraged): surface as a conflict for human review. |
 | `placeholder-only` | (b) only `{{PLACEHOLDER}}` substitution, no EXAMPLE BLOCKs (e.g. `/preflight`, single-area `/run-tests`) | Re-substitute new template with recorded placeholders → that is `ours`. 3-way merge against the project file; non-placeholder regions should match base, so changes apply cleanly. |
 | `mixed` | (b)+(c) — placeholders AND EXAMPLE BLOCKs (`CLAUDE.md`, `area-CLAUDE.md`, the briefing) | Per-region 3-way merge driven by the `exampleBlocks` ledger: machinery + still-illustrative blocks take upstream; `customized` blocks are kept as project content. |
-| `accreted` | (d) ACCRETED-STATE files — `LESSONS.md`, `MVP_TASKS.md` living sections, area-`CLAUDE.md` tables | **Never overwrite.** Only the *skeleton/format* regions (header, lesson-format block, section headings) are merge candidates; the accreted body is untouched. Upstream skeleton changes are surfaced as a suggested patch, never auto-applied. |
+| `accreted` | (d) ACCRETED-STATE files — `LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, area-`CLAUDE.md` tables | **Never overwrite.** Only the *skeleton/format* regions (header, lesson-format block, section headings) are merge candidates; the accreted body is untouched. Upstream skeleton changes are surfaced as a suggested patch, never auto-applied. |
 | `user-canonical` | the user's own `{{ARCH_DOC}}` | Out of scope for upgrades. Only the appended **Appendix A** skeleton is a candidate; the user's prose is never touched. |
 
 ---
@@ -238,15 +238,15 @@ project's customized block to the corresponding upstream block. Today the marker
 ```
 
 This is a non-breaking template edit (the slug is inside the existing comment). **Verified against the
-current templates: there are exactly 24 EXAMPLE BLOCK regions across 12 template files** — CLAUDE.md×5,
-area-CLAUDE.md×4, orchestrator-briefing.md×3, MVP_TASKS.md×2, tdd-brief-template.md×2,
+current templates: there are exactly 25 EXAMPLE BLOCK regions across 12 template files** — CLAUDE.md×5,
+area-CLAUDE.md×4, orchestrator-briefing.md×3, IMPLEMENTATION_PLAN.md×3, tdd-brief-template.md×2,
 scaffolding-reference.md×2, and one each in security-reviewer.md, README.md, run-tests.md, eval.md,
-trace.md, team-protocol.md. Slugging all 24 once gives every region a durable identity. Add a note to
+trace.md, team-protocol.md. Slugging all 25 once gives every region a durable identity. Add a note to
 `GENERATE-WITH-CLAUDE.md §10` EXAMPLE-BLOCK list that the slug is the manifest `id`.
 
 **Two marker forms exist in the templates today — slug both.** Some regions are *paired* (an opening
 `<!-- ▼ EXAMPLE BLOCK: … ▼ -->` and a separate closing `<!-- ▲ END EXAMPLE BLOCK ▲ -->`); others are
-*single-line self-closing* (`<!-- ▼ EXAMPLE BLOCK: … ▲ -->`, no separate END line — e.g. MVP_TASKS.md:53
+*single-line self-closing* (`<!-- ▼ EXAMPLE BLOCK: … ▲ -->`, no separate END line — e.g. IMPLEMENTATION_PLAN.md:53
 deliverable map, area-CLAUDE.md:152 area-subagent-candidates, scaffolding-reference.md:61, the
 tdd-brief-template.md project-pitfalls block, the README.md inventory block, the run-tests.md notes
 block). For the *paired* form, put `[id=<slug>]` in BOTH the open and close markers (so a region boundary
@@ -351,5 +351,5 @@ Not requested as a deliverable, but stated so the manifest fields are justified 
 | Manifest path | `.scaffolding/manifest.json` (committed) + `.scaffolding/README.md` (do-not-edit note) |
 | Format | JSON with `schemaVersion`, written via `jq`/direct, validated with `jq .` |
 | Fields | provenance (SHA/ref/repo/timestamps) · mode+track+optional commands/subagents · resolved `placeholders` + per-area `codeAreas[]` · `generatedFiles[]` (dest←template, `kind`) · `exampleBlocks[]` (file, id, customized/illustrative) |
-| Generator change | New **Step 12.5** writes it; one-line bookkeeping hooks added to §6, §7 Steps 1/2/6/7/8/9/10/11, §10; one-time stable-slug edit to the 24 EXAMPLE BLOCK markers across 12 template files |
+| Generator change | New **Step 12.5** writes it; one-line bookkeeping hooks added to §6, §7 Steps 1/2/6/7/8/9/10/11, §10; one-time stable-slug edit to the 25 EXAMPLE BLOCK markers across 12 template files |
 | Retro-stamping | R1 reverse placeholders+mode from generated files · R2 recover SHA via ask → git-history-date → verbatim-fingerprint (priority order, with confidence markers) · R3 write + commit `retroStamped: true` manifest |

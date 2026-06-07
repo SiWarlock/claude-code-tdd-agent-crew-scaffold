@@ -34,7 +34,7 @@ Any time you encounter ambiguity — a stack detail that could go two ways, a co
 - The arch doc says "Python" but doesn't specify version → ask.
 - The doc lists `api/` and `worker/` as directories but doesn't say which is the primary code area → ask.
 - Two safety invariants seem to contradict each other → surface the apparent conflict; ask which is canonical.
-- The phase plan in the user's existing `MVP_TASKS.md` uses `P1.x.x` IDs but the arch doc uses `M<n>.<Cat>.<NN>` — ask which is current.
+- The phase plan in the user's existing `IMPLEMENTATION_PLAN.md` uses `P1.x.x` IDs but the arch doc uses `M<n>.<Cat>.<NN>` — ask which is current.
 
 When a clarification question has discrete options (e.g. "is this a single-operator project or a team-pattern project?"), use `AskUserQuestion`. For free-form answers (project tagline, deliverable list), ask conversationally.
 
@@ -110,12 +110,15 @@ Before the interview begins, do this read pass:
    - Layer / module organization rules
    - Deliverables (what the project must produce)
    - Architecture sentence (if any single load-bearing one-liner exists)
+   - **Build posture** (`production-grade` | `MVP/prototype`) from the executive summary — it informs the
+     reviewer-policy defaults (Batch E) and whether a demo phase is expected. If the arch doc has no posture
+     line, **ask** (production-grade is the recommended default) rather than assuming.
    - Any phase plan or roadmap hints
 4. **Inspect the repo.** What's already there?
    - Package manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `composer.json`, etc.) — pin language + version + framework.
    - Existing directory layout — pin code areas.
    - Existing `CLAUDE.md` (if the project already has scaffolding to upgrade) — note what's there.
-   - Existing task tracker (`MVP_TASKS.md`, `TASKS.md`, `ROADMAP.md`) — extract phase plan + IDs.
+   - Existing task tracker (`IMPLEMENTATION_PLAN.md`, or a legacy `MVP_TASKS.md` / `TASKS.md` / `ROADMAP.md`) — extract phase plan + IDs.
    - Existing `LESSONS.md`, `docs/sessions/`, `docs/briefs/` — note non-empty content.
    - `.git/config` for the remote, if any.
 
@@ -188,7 +191,7 @@ Most of this should be inferrable from package manifests. Confirm rather than as
 
 ### Batch D — Workflow
 
-- **Task tracker filename** — default `MVP_TASKS.md`. (Rename only with care — referenced across many files.)
+- **Task tracker filename** — default `IMPLEMENTATION_PLAN.md`. (Rename only with care — referenced across many files.)
 - **Phase IDs** — how phases are labelled. Examples: `W3.M / W3.F / W3.D` (work-stream.MVP/Final/Deferred), `P1 / P2 / P3` (generic), `M1.C.01 / M2.A.03` (Milestone.Category.NN). Check if the user's existing task tracker has an ID convention; otherwise propose one.
 - **Phase plan** — the actual phases. From the arch doc + any existing task tracker, extract or propose; let the user confirm.
 - **Milestones / deadlines** — if any.
@@ -210,7 +213,7 @@ Most of this should be inferrable from package manifests. Confirm rather than as
   - `security-reviewer` — Step-8 review, mandatory on invariant-touching slices. **Default yes** for projects with safety invariants; default no otherwise.
   - `reachability-auditor` — phase-exit gate audit. **Default yes** — universal value.
   - `brief-drafter` — orchestrator's brief-skeleton tool. **Default yes for definition file; integration deferred until quality trial.** (See `agents/README.md` for the trial protocol.)
-- **Reviewer policy** — sets `{{SECURITY_REVIEW_POLICY}}` + `{{CODE_QUALITY_REVIEW_POLICY}}` in root `CLAUDE.md` (the Step-8 fan-out cadence; reviewers run on the slice diff). Each is one of `off` · `invariant` · `every-slice` · `phase-boundary`. **Defaults: `security-reviewer = invariant`, `code-quality-reviewer = every-slice`.** Confirm or override with the user — it trades review depth for per-slice tokens. (If the user opted out of a reviewer above, set its policy `off`.)
+- **Reviewer policy** — sets `{{SECURITY_REVIEW_POLICY}}` + `{{CODE_QUALITY_REVIEW_POLICY}}` in root `CLAUDE.md` (the Step-8 fan-out cadence; reviewers run on the slice diff). Each is one of `off` · `invariant` · `every-slice` · `phase-boundary`. **Defaults: `security-reviewer = invariant`, `code-quality-reviewer = every-slice`.** Confirm or override with the user — it trades review depth for per-slice tokens. (If the user opted out of a reviewer above, set its policy `off`.) **Let the Build posture inform the default:** a `production-grade` posture leans toward tighter review (e.g. `security-reviewer = every-slice` on security-touching areas); an `MVP/prototype` posture is fine with the lighter defaults.
 
 ---
 
@@ -262,7 +265,7 @@ From `templates/area-LESSONS.md`, written to `<code-area>/LESSONS.md`. This is j
 
 ### Step 4 — `{{TASK_TRACKER}}`
 
-From `templates/MVP_TASKS.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**.
+From `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**.
 
 ### Step 5 — `{{ARCH_DOC}}`
 
@@ -346,7 +349,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "optionalCommands": ["eval", "trace"],
   "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "brief-drafter"],
 
-  "placeholders": { "PROJECT_NAME": "…", "ARCH_DOC": "ARCHITECTURE.md", "TASK_TRACKER": "MVP_TASKS.md", "AI_TRAILER": "…", "SECURITY_REVIEW_POLICY": "invariant", "CODE_QUALITY_REVIEW_POLICY": "every-slice", "…": "…" },
+  "placeholders": { "PROJECT_NAME": "…", "ARCH_DOC": "ARCHITECTURE.md", "TASK_TRACKER": "IMPLEMENTATION_PLAN.md", "AI_TRAILER": "…", "SECURITY_REVIEW_POLICY": "invariant", "CODE_QUALITY_REVIEW_POLICY": "every-slice", "…": "…" },
   "codeAreas": [
     { "CODE_AREA": "app/", "CODE_AREA_NAME": "backend", "CODE_AREA_BASENAME": "app",
       "RUNTIME": "Python 3.12", "PKG_MANAGER": "uv", "TEST_CMD": "uv run pytest",
@@ -525,7 +528,7 @@ Every `{{PLACEHOLDER}}` the templates use. Confirm a value for each during the i
 
 | Placeholder | Meaning | Default |
 |---|---|---|
-| `{{TASK_TRACKER}}` | The state + phase-plan file | `MVP_TASKS.md` |
+| `{{TASK_TRACKER}}` | The state + phase-plan file | `IMPLEMENTATION_PLAN.md` |
 | `{{ARCH_DOC}}` | The design-contract file | `ARCHITECTURE.md` |
 | `{{PHASE_IDS}}` | How phases are labelled | `W3.M / W3.F / W3.D` or `P1 / P2 / P3` or `M1.C.01 / M2.A.03` |
 
@@ -577,14 +580,14 @@ For 3+ areas, expand placeholders by suffix: `{{CODE_AREA_2}}` / `{{CODE_AREA_3}
 
 ### EXAMPLE BLOCKs (rewrite wholesale, don't substitute a value)
 
-Each `EXAMPLE BLOCK` region carries a stable **`[id=<slug>]`** in both its opening (`<!-- ▼ EXAMPLE BLOCK [id=<slug>]: … ▼ -->`) and closing (`<!-- ▲ END EXAMPLE BLOCK [id=<slug>] ▲ -->`) marker. The slug is the manifest's `exampleBlocks[].id`. Rewrite each block's **content** for the project (or leave the illustrative default and record it as `illustrative`); **never alter the marker line or its `[id=`** — `/scaffold-upgrade` keys per-region merges on it. The 24 regions across 12 files:
+Each `EXAMPLE BLOCK` region carries a stable **`[id=<slug>]`** in both its opening (`<!-- ▼ EXAMPLE BLOCK [id=<slug>]: … ▼ -->`) and closing (`<!-- ▲ END EXAMPLE BLOCK [id=<slug>] ▲ -->`) marker. The slug is the manifest's `exampleBlocks[].id`. Rewrite each block's **content** for the project (or leave the illustrative default and record it as `illustrative`); **never alter the marker line or its `[id=`** — `/scaffold-upgrade` keys per-region merges on it. The 25 regions across 12 files (`optional-demo-phase` is emitted only when a demo is in scope):
 
 | File | EXAMPLE BLOCK ids |
 |---|---|
 | `CLAUDE.md` | `project-structure` · `tech-stack` · `strict-typing-posture` · `tdd-scope` · `key-safety-rules` |
 | `<code-area>/CLAUDE.md` (`area-CLAUDE.md`) | `area-stack` · `forbidden-patterns` · `module-layout` · `area-subagent-candidates` |
 | `docs/orchestrator-briefing.md` | `who-the-user-is` · `project-context` · `project-conventions` |
-| `{{TASK_TRACKER}}` (`MVP_TASKS.md`) | `deliverable-map` · `task-entry-format` |
+| `{{TASK_TRACKER}}` (`IMPLEMENTATION_PLAN.md`) | `deliverable-map` · `task-entry-format` · `optional-demo-phase` |
 | `docs/tdd-brief-template.md` | `tdd-brief-worked-example` · `project-specific-pitfalls` |
 | `docs/scaffolding-reference.md` | `inventory-extension` · `instance-conventions` |
 | `docs/team-protocol.md` | `code-areas` |

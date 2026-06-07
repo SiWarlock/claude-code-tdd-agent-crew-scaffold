@@ -2,21 +2,21 @@
 name: scaffold-generate
 description: >-
   Personalize the agent-team scaffolding into a target project from the finalized ARCHITECTURE.md +
-  MVP_TASKS.md + the planning artifacts, then stamp a provenance manifest so future upgrades are clean.
+  IMPLEMENTATION_PLAN.md + the planning artifacts, then stamp a provenance manifest so future upgrades are clean.
   Runs on Claude Code, from the scaffolding repo checkout. The 4th stage of the planning chain (after
   /tasks-gen) and the last step before the /tdd engine runs. Invoke when the user says "generate the
-  scaffolding", "personalize the scaffolding", "set up the agent-team harness", or after MVP_TASKS.md exists.
+  scaffolding", "personalize the scaffolding", "set up the agent-team harness", or after IMPLEMENTATION_PLAN.md exists.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 ---
 
 # scaffold-generate — personalize the harness into the project (Brain 2)
 
 The **4th** stage of the planning chain. The binding `ARCHITECTURE.md` and the spec-anchored
-`MVP_TASKS.md` exist; now generate the customized agent-team scaffolding (slash commands, layered
+`IMPLEMENTATION_PLAN.md` exist; now generate the customized agent-team scaffolding (slash commands, layered
 `CLAUDE.md`, briefing docs, area `LESSONS.md`, optional subagents) into the target project so the `/tdd`
 engine can run. This skill **runs from the scaffolding-repo checkout** (it reads `templates/` there).
 
-**You do not write application code, and you do not author `ARCHITECTURE.md` / `MVP_TASKS.md`** (they're
+**You do not write application code, and you do not author `ARCHITECTURE.md` / `IMPLEMENTATION_PLAN.md`** (they're
 the binding contract + tracker — read-only inputs here).
 
 ---
@@ -39,7 +39,7 @@ planning context to personalize and to know what to interview the user on:
 
 1. **`ARCHITECTURE.md`** (repo root, PRIMARY) — stack per area, code areas + layout, layer DAG, the
    architecture sentence, deliverables, Appendix A model inventory.
-2. **`MVP_TASKS.md`** (repo root) — phase IDs + phase plan + deliverable map (seeds `{{PHASE_IDS}}`, the
+2. **`IMPLEMENTATION_PLAN.md`** (repo root) — phase IDs + phase plan + deliverable map (seeds `{{PHASE_IDS}}`, the
    tracker, the deliverable map).
 3. **Planning artifacts in `docs/planning/`** (mode-dependent) to drive personalization + the gap/inference
    interview: `THREAT_MODEL.md` / `CONSTRAINTS.md` → **key safety rules + forbidden patterns**;
@@ -98,7 +98,7 @@ Validate it parses (`jq . .scaffolding/manifest.json`).
 ## 5. Hard rules (forbidden)
 
 - **No application code.** This generates the harness, not the product.
-- **Don't author / edit `ARCHITECTURE.md` or `MVP_TASKS.md`** — read-only inputs.
+- **Don't author / edit `ARCHITECTURE.md` or `IMPLEMENTATION_PLAN.md`** — read-only inputs.
 - **Never fabricate placeholder values** — pull from artifacts, else ask; an unanswerable gap is a real
   blocker to resolve, not a value to invent (`GENERATE-WITH-CLAUDE.md` Rule).
 - **Keep the workflow machinery verbatim** — the `/tdd` walker, Step-9 routing, commit cadence, escalation
@@ -112,6 +112,6 @@ Validate it parses (`jq . .scaffolding/manifest.json`).
 > **Scaffolding generated** into `<project>`: `<command count>` slash commands, layered `CLAUDE.md`, briefing
 > docs, task tracker, + `.scaffolding/manifest.json`. **Next:** start the engine — `/team-start` (team mode)
 > or `/orchestrate-start` + `/session-start` (single-operator) — and the **`/tdd`** walker builds each slice
-> against `ARCHITECTURE.md` + `MVP_TASKS.md`. Compose gstack/CE inserts per `skills/ROUTING.md`.
+> against `ARCHITECTURE.md` + `IMPLEMENTATION_PLAN.md`. Compose gstack/CE inserts per `skills/ROUTING.md`.
 
 Then stop.

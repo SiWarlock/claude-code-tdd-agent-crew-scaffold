@@ -11,7 +11,7 @@
 
 **Problem.** When you push scaffolding updates and pull them into a project that was already generated and
 customized, there is no clean way to bring its scaffolding up to date without clobbering its `{{PLACEHOLDER}}`
-values, its rewritten `EXAMPLE BLOCK` regions, or its accreted state (`LESSONS.md`, `MVP_TASKS.md` living
+values, its rewritten `EXAMPLE BLOCK` regions, or its accreted state (`LESSONS.md`, `IMPLEMENTATION_PLAN.md` living
 sections, area-`CLAUDE.md` tables). The pre-`/scaffold-upgrade` answer — *"diff your generated files against the
 current templates by hand"* — failed because a project's files differ from the templates for **two mixed
 reasons**: real upstream upgrades **and** the project's own customizations. You can't mechanically separate
@@ -64,7 +64,7 @@ SCAFFOLDING-GUIDE §11."
 | `verbatim` | `tdd.md` 10 steps, Step-9 routing, escalation taxonomy, commit cadence | AUTO-APPLY iff `theirs == base` (provably untouched) → take `ours`. Else PROPOSE with a loud "you diverged from verbatim machinery" flag. |
 | `placeholder-only` | `preflight.md`, `wired.md`, single-area `run-tests.md` | AUTO-APPLY if 3-way clean. Else PROPOSE (a placeholder drifted). |
 | `mixed` | `CLAUDE.md`, `area-CLAUDE.md`, `orchestrator-briefing.md` | Per-region split: machinery + `illustrative` blocks → auto-eligible; `customized` blocks → PROPOSE-ONLY, never clobber. |
-| `accreted` | `LESSONS.md`, `MVP_TASKS.md` living sections, area-`CLAUDE.md` tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
+| `accreted` | `LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, area-`CLAUDE.md` tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
 | `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only the appended Appendix A skeleton is a PROPOSE candidate. |
 
 ### 2.3 Generator changes (`GENERATE-WITH-CLAUDE.md`)
@@ -72,7 +72,7 @@ SCAFFOLDING-GUIDE §11."
   already made). Build `generatedFiles[]`/`exampleBlocks[]` **incrementally** as each file is written.
 - **One-line bookkeeping hooks** in §6 (plan), §7 steps 1/2/6/7/8/9/10/11 (append a ledger row), §10 (placeholders
   == manifest values).
-- **One-time template edit:** add stable `[id=<slug>]` to all **24 EXAMPLE BLOCK markers across 12 files**, and
+- **One-time template edit:** add stable `[id=<slug>]` to all **25 EXAMPLE BLOCK markers across 12 files**, and
   normalize the single-line self-closing form to the paired open/close form so every region has a
   machine-detectable boundary. Non-breaking (slug lives inside the existing comment).
 
@@ -165,7 +165,7 @@ involved, and **lower base-confidence ⇒ more gating, never more auto-apply.** 
 Ship incrementally so you can dogfood the safe read-only parts first.
 
 **Phase 1 — Enablement (low-risk, unblocks everything).**
-1. `templates/**` — add stable `[id=<slug>]` to all 24 EXAMPLE BLOCK markers across the 12 files; normalize
+1. `templates/**` — add stable `[id=<slug>]` to all 25 EXAMPLE BLOCK markers across the 12 files; normalize
    single-line markers to paired open/close. *(One mechanical, non-breaking edit pass.)*
 2. `GENERATE-WITH-CLAUDE.md` — add **Step 12.5** (stamp manifest), the §6/§7/§10 bookkeeping hooks, add
    `.scaffolding/` to the documented generated structure, and document the manifest schema.

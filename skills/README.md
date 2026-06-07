@@ -15,8 +15,8 @@ PRD ──▶ arch-draft ──▶ arch-finalize ──▶ tasks-gen ──▶ s
 |---|---|---|---|
 | **`arch-draft`** | **GPT-5.5 / Codex** (Brain 1; host-neutral) | PRD → architecture rough draft + supporting artifacts via the Deep Architecture Planning Playbook (interview-gated, never codes) → `docs/planning/` | ✅ built |
 | **`arch-finalize`** | Claude Code (Brain 2) | gap-audit + adversarial scrutiny of the draft → binding `ARCHITECTURE.md` | ✅ built |
-| **`tasks-gen`** | Claude Code | finalized `ARCHITECTURE.md` → spec-anchored `MVP_TASKS.md` | ✅ built |
-| **`scaffold-generate`** | Claude Code | personalize the agent-team harness from `ARCHITECTURE.md` + `MVP_TASKS.md` + planning artifacts; stamp `.scaffolding/manifest.json` | ✅ built |
+| **`tasks-gen`** | Claude Code | finalized `ARCHITECTURE.md` → spec-anchored `IMPLEMENTATION_PLAN.md` | ✅ built |
+| **`scaffold-generate`** | Claude Code | personalize the agent-team harness from `ARCHITECTURE.md` + `IMPLEMENTATION_PLAN.md` + planning artifacts; stamp `.scaffolding/manifest.json` | ✅ built |
 | **`scaffold-upgrade`** | Claude Code | keep an already-generated project's scaffolding current via a provenance-manifest **3-way merge** (propose-don't-clobber); bundled `scaffold_upgrade.sh` + `migrations/` registry | ✅ built |
 
 `scaffold-upgrade` (keep a project's scaffolding current via a provenance-manifest 3-way merge) is
@@ -113,6 +113,6 @@ ln -snf "$PWD/skills/learn-site" ~/.claude/skills/learn-site   # builds + serves
   `ARCHITECTURE_DRAFT.md` and `CLAUDE_CODE_HANDOFF.md`.
 - `arch-finalize` reads all of `docs/planning/*` + the PRD → writes the binding **`ARCHITECTURE.md`** at
   the repo root.
-- `tasks-gen` reads `ARCHITECTURE.md` → writes **`MVP_TASKS.md`** at the repo root.
-- The three 🔒 artifacts `ARCHITECTURE.md`, `MVP_TASKS.md`, and the `/tdd` ordering stay owned by these
+- `tasks-gen` reads `ARCHITECTURE.md` → writes **`IMPLEMENTATION_PLAN.md`** at the repo root.
+- The three 🔒 artifacts `ARCHITECTURE.md`, `IMPLEMENTATION_PLAN.md`, and the `/tdd` ordering stay owned by these
   skills — composed plugins (gstack/CE) feed-into or review around them, never author them.

@@ -4,9 +4,9 @@
 >
 > **Audience:** You, a fresh ChatGPT/Claude planning session, Claude Code after it reviews the draft, technical reviewers, and future project sessions that need a rigorous architecture-first workflow.
 >
-> **Primary purpose:** Reproduce the deep planning process used in past projects: product mechanics clarification, user/workflow analysis, MVP-scoped inference, research, decision discovery, decision locking, architecture section planning, and then a build-ready architecture draft.
+> **Primary purpose:** Reproduce the deep planning process used in past projects: product mechanics clarification, user/workflow analysis, posture-scoped inference, research, decision discovery, decision locking, architecture section planning, and then a build-ready architecture draft.
 >
-> **Important workflow boundary:** This playbook does **not** require generating `MVP_TASKS.md`. In this workflow, Claude Code reviews the architecture draft and supporting docs, performs a second-pass gap audit/finalization, and then creates `MVP_TASKS.md` from the user's task-template structure.
+> **Important workflow boundary:** This playbook does **not** require generating `IMPLEMENTATION_PLAN.md`. In this workflow, Claude Code reviews the architecture draft and supporting docs, performs a second-pass gap audit/finalization, and then creates `IMPLEMENTATION_PLAN.md` from the user's task-template structure.
 >
 > **Core principle:** The planning phase should feel like a structured interview plus architecture review, not a one-shot summary. When the PRD is light, the agent must interview the user until enough information exists to write a useful architecture draft.
 
@@ -22,7 +22,7 @@ You are helping me turn a PRD, project brief, or lightweight product idea into a
 Follow the attached Deep Agentic Architecture Planning Playbook.
 
 Do not jump to implementation.
-Do not produce MVP_TASKS.md.
+Do not produce IMPLEMENTATION_PLAN.md.
 Do not draft ARCHITECTURE.md until we have completed the deep planning process:
 - PRD/product intake
 - product mechanics clarification
@@ -43,11 +43,12 @@ Classify every recommendation as:
 - locked decision
 - proposed recommendation
 - open question
-- MVP simplification
+- scope simplification (a posture-gated cut — justified, never silent)
+- production-hardening (load-bearing under a production-grade posture)
 - deferred work
 - research required
 
-The final output should be a comprehensive first-draft ARCHITECTURE.md with stable anchors and enough implementation detail that Claude Code can review it, perform a second pass for gaps, finalize it, and then create MVP_TASKS.md from my template.
+The final output should be a comprehensive first-draft ARCHITECTURE.md with stable anchors and enough implementation detail that Claude Code can review it, perform a second pass for gaps, finalize it, and then create IMPLEMENTATION_PLAN.md from my template.
 
 Start with Phase 0: Intake and Planning Mode Selection.
 ```
@@ -83,7 +84,7 @@ PRD or idea
 → architecture draft
 → Claude Code second-pass gap audit
 → final architecture
-→ MVP_TASKS.md generated separately
+→ IMPLEMENTATION_PLAN.md generated separately
 ```
 
 ### 1.2 The Planning Session Should Be Interactive
@@ -121,7 +122,7 @@ DIAGRAM_PLAN.md
 CLAUDE_CODE_HANDOFF.md
 ```
 
-`MVP_TASKS.md` is intentionally not required here.
+`IMPLEMENTATION_PLAN.md` is intentionally not required here.
 
 ---
 
@@ -149,7 +150,7 @@ CLAUDE_CODE_HANDOFF.md
 | `DECISIONS.md` | ADR-style decision log showing options, tradeoffs, locked choices, fallbacks, and invalidation conditions. |
 | `ARCHITECTURE.md` | Build-ready first-draft architecture spec with stable anchors and implementation-facing sections. |
 | `DIAGRAM_PLAN.md` | Plans the full-scope architecture diagram and sub-diagrams. |
-| `CLAUDE_CODE_HANDOFF.md` | Tells Claude Code how to review/finalize the architecture draft and then generate `MVP_TASKS.md` from the user's provided template. |
+| `CLAUDE_CODE_HANDOFF.md` | Tells Claude Code how to review/finalize the architecture draft and then generate `IMPLEMENTATION_PLAN.md` from the user's provided template. |
 
 ### 2.3 Expanded Artifact Set
 
@@ -190,14 +191,19 @@ But even in compact mode, the agent must still perform the planning interview.
 
 ---
 
-## 3. Planning Mode Selection
+## 3. Planning Mode & Build Posture Selection
+
+Two **independent** classify-first decisions precede any architecture work — answer **both**, they are orthogonal:
+- **Planning mode** (§3.1–3.2) — *how much planning ceremony / how many artifacts*, sized to build duration and risk.
+- **Build posture** (§3.3–3.4) — *the quality / delivery target the design and implementation aim at*. This steers
+  every downstream inference and decision and **must be explicitly confirmed by the user — never assumed.**
 
 ### 3.1 Mode Options
 
 | Mode | When to Use | Output |
 |---|---|---|
 | Compact | Tiny PRD, 1–3 day build, low risk | `PRESEARCH.md`, `ARCHITECTURE.md`, `CLAUDE_CODE_HANDOFF.md` |
-| Standard | Most 3–10 day MVPs | `PRESEARCH.md`, `RESEARCH.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `DIAGRAM_PLAN.md`, `CLAUDE_CODE_HANDOFF.md` |
+| Standard | Most multi-day builds | `PRESEARCH.md`, `RESEARCH.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `DIAGRAM_PLAN.md`, `CLAUDE_CODE_HANDOFF.md` |
 | Expanded | Security/compliance/enterprise/team-heavy projects | Separate product/users/stakeholders/domain/etc docs plus architecture package |
 
 ### 3.2 Mode Selection Prompt
@@ -216,6 +222,35 @@ Given the PRD/project brief:
 Recommend Compact, Standard, or Expanded mode.
 Explain why.
 Ask me to confirm.
+```
+
+### 3.3 Build Posture Options
+
+The build posture is the **delivery target** the architecture and the implementation plan aim at. It is
+orthogonal to planning mode (a production-grade build can be Compact; an MVP can be Expanded). **Default
+recommendation: production-grade — but ALWAYS ask and confirm; never assume a posture.**
+
+| Posture | What it means | How it steers design + implementation |
+|---|---|---|
+| **Production-grade** (default) | The system is meant to run for real and be maintained. | Architecturally-correct, best-practice choices are the baseline. Auth, input validation, error paths, idempotency, observability/logging, secrets handling, and a deploy/rollback path are **in-scope requirements**, not deferrable "nice-to-haves." Phase-8 inference asks *"what must a correct production build handle?"* Cuts are explicit, justified `production-hardening` deferrals — flagged, never silent. A demo is OPTIONAL. |
+| **MVP / prototype** | A timeboxed proof — validate the idea, a demo, or a narrow wedge. | Lean, timebox-bounded. Robustness concerns may be deliberately deferred (and flagged as deferrals so the hardening work stays visible). A local demo, **if in scope**, is the natural near-final slice (optional under this posture too — still asked, not assumed). |
+
+Even under MVP posture, **load-bearing safety / security / correctness invariants are never cut** — posture
+governs *scope and polish*, not whether the system is correct on its load-bearing paths.
+
+### 3.4 Build Posture Selection Prompt
+
+```text
+Now choose the build posture (separate from planning mode — both are required).
+
+Given the PRD/project brief:
+- Is this meant to run in production and be maintained, or is it a timeboxed proof / prototype / demo?
+- Who depends on it being correct and available, and what breaks if it isn't?
+- Is there a hard timebox that forces deferrals?
+
+I recommend PRODUCTION-GRADE unless this is explicitly a prototype/MVP.
+State the recommendation and WHY, then ASK me to confirm production-grade or choose MVP/prototype.
+Do NOT proceed until I confirm — then record the chosen posture in PRESEARCH.md and the handoff.
 ```
 
 ---
@@ -268,6 +303,10 @@ Add to `PRESEARCH.md`:
 
 ### Recommended Planning Mode
 ...
+
+### Build Posture
+_production-grade (default) | MVP / prototype — the delivery target, **confirmed with the user**; steers Phase-8 inference + every downstream decision._
+...
 ```
 
 ### Prompt
@@ -290,8 +329,9 @@ Extract:
 10. Ambiguous terms.
 11. Initial technical risks.
 12. Initial product risks.
-13. Initial demo/evaluation risks.
+13. Initial acceptance / evaluation risks (incl. demo risk — only if a demo is in scope).
 14. Recommended planning mode.
+15. Recommended build posture (production-grade by default — to be confirmed with the user).
 
 Then ask the highest-leverage clarification questions before moving on.
 ```
@@ -301,7 +341,7 @@ Then ask the highest-leverage clarification questions before moving on.
 Use these when the PRD is light:
 
 ```text
-1. What is the one thing the product must prove in the demo?
+1. What is the one thing the product must prove for acceptance (to its evaluator / user — in a demo only if one is in scope)?
 2. Who is the primary user?
 3. What is the user's starting point and desired end state?
 4. What must happen automatically vs manually?
@@ -619,7 +659,7 @@ Include background jobs and admin flows, not just frontend flows.
 2. What is the failed path?
 3. What is the admin/operator path?
 4. What is the background automation path?
-5. What is the demo path?
+5. What is the demo path? (only if a demo is in scope)
 6. What is the recovery path?
 7. What state is created?
 8. What state is updated?
@@ -631,7 +671,7 @@ Include background jobs and admin flows, not just frontend flows.
 
 ### Stop Condition
 
-Every MVP requirement should map to a flow.
+Every in-scope requirement should map to a flow.
 
 If a requirement has no flow, either:
 - add a flow
@@ -760,7 +800,7 @@ Expanded mode: create `REQUIREMENTS.md`.
 ### Testing Requirements
 ...
 
-### Demo / Evaluation Requirements
+### Acceptance / Evaluation Requirements (demo-specific items only if a demo is in scope)
 ...
 
 ### Deferred Requirements
@@ -787,7 +827,7 @@ Classify each requirement as:
 For each requirement:
 - assign a stable ID
 - identify source: explicit / inferred / user-confirmed
-- priority: MVP / stretch / deferred
+- priority: must-ship / stretch / deferred (sized to the chosen Build posture)
 - acceptance signal
 - related user flow
 ```
@@ -846,7 +886,7 @@ Capture:
 1. How many days/hours are available?
 2. Who will build it?
 3. What tooling will be used?
-4. What must be demoed live?
+4. What must be demoed live? (only if a demo is in scope)
 5. What can be mocked?
 6. What cannot be mocked?
 7. What must be deployed?
@@ -859,40 +899,48 @@ Capture:
 
 ---
 
-## 12. Phase 8 — MVP-Scoped Inference
+## 12. Phase 8 — Scope Inference (posture-aware)
 
 ### Goal
 
-Infer hidden requirements without overbuilding.
+Infer hidden requirements — sized to the chosen **Build posture** (§3.3): neither overbuilding nor under-building.
 
 ### Required Output
 
 Add to `PRESEARCH.md`:
 
 ```md
-## Phase 8 — MVP-Scoped Inferences
+## Phase 8 — Scope Inferences (posture: <production-grade | MVP/prototype>)
 
 | Inference | Why It Matters | Classification | Architecture Impact |
 |---|---|---|---|
-| ... | ... | MVP-critical / simplification / deferred / research | ... |
+| ... | ... | must-handle / production-hardening / simplification (posture-gated cut) / deferred / research | ... |
 ```
 
 ### Prompt
 
 ```text
-Infer what the PRD does not explicitly say but the MVP must still handle.
+Infer what the PRD does not explicitly say but a CORRECT build AT THE CHOSEN BUILD POSTURE must handle.
 
 For each inference:
 - state the inference
 - explain why it matters
-- classify as:
-  - MVP-critical
-  - MVP simplification
+- classify as one of:
+  - must-handle        (in-scope for this posture — load-bearing correctness / lifecycle)
+  - production-hardening (auth, input validation, error paths, idempotency, observability, secrets, deploy/
+                          rollback — IN-SCOPE under production-grade; a flagged deferral under MVP/prototype)
+  - simplification     (a deliberate, justified scope cut — never a silent omission)
   - deferred
   - research required
 - describe architecture impact
 
-Do not expand beyond the timebox.
+Posture discipline:
+- production-grade → infer what a correct, maintainable, operable build must handle. Do NOT under-build —
+  treat the production-hardening items as in-scope requirements, not optional extras.
+- MVP / prototype → stay within the timebox; record every simplification/deferral so the hardening work
+  stays visible later.
+Either way: NEVER cut a load-bearing safety / security / correctness invariant — posture governs scope and
+polish, not whether the system is correct on its load-bearing paths.
 ```
 
 ### Common Hidden Requirements
@@ -1035,7 +1083,7 @@ Then perform the research and summarize:
 Each researched fact should answer:
 
 ```text
-Can we rely on this for the MVP, and what is the fallback if not?
+Can we rely on this for this build, and what is the fallback if not?
 ```
 
 ---
@@ -1125,8 +1173,8 @@ data model
 security boundary
 observability
 test strategy
-demo strategy
-MVP vs deferred scope
+demo strategy (optional — only if a demo is in scope)
+build posture & scope (production-grade vs MVP/prototype; in-scope vs deferred)
 ```
 
 ---
@@ -1197,7 +1245,7 @@ For each section:
 - integrations
 - failure modes
 - tests
-- MVP simplifications
+- scope simplifications (posture-gated cuts) + any production-hardening requirements
 - deferred work
 - open questions
 ```
@@ -1205,8 +1253,8 @@ For each section:
 ### Recommended Section Planning Order
 
 ```text
-1. Executive summary and architecture posture
-2. Product definition and MVP scope
+1. Executive summary, architecture posture, and Build posture
+2. Product definition and scope (per Build posture)
 3. Locked decisions
 4. System overview
 5. Domain model
@@ -1220,9 +1268,9 @@ For each section:
 13. Shared package/config strategy
 14. Testing strategy
 15. Security/risk
-16. Deployment/demo strategy
+16. Deployment strategy (+ demo strategy only if a demo is in scope)
 17. Alternatives considered
-18. MVP boundaries/deferred work
+18. Scope boundaries / deferred work
 19. Diagrams
 20. Repo scaffold
 21. Build contract
@@ -1244,7 +1292,7 @@ Include:
 - validation rules
 - error cases
 - tests
-- MVP simplifications
+- scope simplifications (posture-gated cuts) + any production-hardening requirements
 - deferred work
 - what Claude Code needs to know to build it
 ```
@@ -1289,7 +1337,7 @@ For each boundary:
 - what can go wrong
 - what logs/auditability exist
 - what secrets/sensitive data are involved
-- what the MVP mitigation is
+- what the mitigation is (sized to the chosen Build posture)
 ```
 
 ### Common Risk Categories
@@ -1346,7 +1394,7 @@ The architecture draft must be:
 ```md
 # [Project] Architecture
 
-> **Status:** First-draft canonical architecture spec for the MVP.
+> **Status:** First-draft canonical architecture spec for this build (per the chosen Build posture: production-grade | MVP/prototype).
 >
 > **Audience:** Project owner, technical reviewers, future Claude Code sessions.
 >
@@ -1354,7 +1402,7 @@ The architecture draft must be:
 >
 > **Companion docs:** `PRESEARCH.md`, `RESEARCH.md`, `DECISIONS.md`, `DIAGRAM_PLAN.md`, `CLAUDE_CODE_HANDOFF.md`.
 >
-> **Build contract:** Claude Code should treat this file as the first-draft source of truth, perform a second-pass gap audit, finalize it, and only then create `MVP_TASKS.md` from the user's template.
+> **Build contract:** Claude Code should treat this file as the first-draft source of truth, perform a second-pass gap audit, finalize it, and only then create `IMPLEMENTATION_PLAN.md` from the user's template.
 ```
 
 ### Recommended Structure
@@ -1378,7 +1426,7 @@ The architecture draft must be:
 ## 15. Security and Risk
 ## 16. Deployment Strategy
 ## 17. Alternatives Considered
-## 18. MVP Boundaries and Deferred Work
+## 18. Scope Boundaries and Deferred Work
 ## 19. Diagrams
 ## 20. Repo Scaffold
 ## 21. Decision Summary Table
@@ -1405,9 +1453,9 @@ The document must be build-ready and include:
 - frontend/backend strategy
 - testing strategy
 - security/risk
-- deployment/demo strategy
+- deployment strategy (+ demo strategy only if a demo is in scope)
 - alternatives considered
-- MVP boundaries/deferred work
+- scope boundaries / deferred work
 - repo scaffold
 - spec anchor index
 - Claude Code review instructions
@@ -1434,7 +1482,13 @@ Tell Claude Code what to do with the draft architecture before building.
 
 ## Goal
 
-Review the attached architecture draft and supporting docs, identify gaps, finalize the architecture, then create MVP_TASKS.md from the user's provided template.
+Review the attached architecture draft and supporting docs, identify gaps, finalize the architecture, then create IMPLEMENTATION_PLAN.md from the user's provided template.
+
+## Build Posture
+
+<production-grade | MVP/prototype> — the delivery target the user confirmed at planning start. **Finalize and audit AGAINST it:**
+- production-grade → treat missing production concerns (error paths, idempotency, observability, security, deploy/rollback) as critical gaps; a demo is OPTIONAL.
+- MVP / prototype → deliberate deferral is acceptable; flag every deferral, never silently expand scope.
 
 ## Inputs
 
@@ -1444,20 +1498,20 @@ Review the attached architecture draft and supporting docs, identify gaps, final
 - DECISIONS.md
 - ARCHITECTURE.md
 - DIAGRAM_PLAN.md
-- user's MVP_TASKS.md template
+- user's IMPLEMENTATION_PLAN.md template
 
 ## Instructions
 
 1. Read all docs end-to-end.
 2. Do not start implementation.
-3. Perform an architecture gap audit.
+3. Perform an architecture gap audit, honoring the Build posture above.
 4. Identify inconsistencies, missing decisions, unclear boundaries, untestable requirements, and scope creep.
 5. Propose precise edits to ARCHITECTURE.md.
 6. Ask for human confirmation on any load-bearing changes.
 7. Apply confirmed edits.
-8. Only after architecture is finalized, create MVP_TASKS.md using the provided template.
+8. Only after architecture is finalized, create IMPLEMENTATION_PLAN.md using the provided template.
 9. Every task must reference architecture anchors.
-10. Do not invent architecture in MVP_TASKS.md.
+10. Do not invent architecture in IMPLEMENTATION_PLAN.md.
 ```
 
 ### Gap Audit Prompt
@@ -1475,7 +1529,7 @@ Look for:
 - inconsistent decisions
 - overbuilt scope
 - missing tests
-- missing deployment/demo path
+- missing deployment path (and demo path, if a demo is in scope)
 - missing security/trust boundaries
 - missing diagram needs
 - missing anchors for task planning
@@ -1561,17 +1615,17 @@ Deployment topology diagram
 
 ---
 
-## 22. Optional Phase — MVP_TASKS Handoff, Not Generation
+## 22. Optional Phase — IMPLEMENTATION_PLAN Handoff, Not Generation
 
-This playbook no longer requires generating `MVP_TASKS.md`.
+This playbook no longer requires generating `IMPLEMENTATION_PLAN.md`.
 
 The recommended workflow is:
 
 ```text
 Planning agent produces ARCHITECTURE.md draft.
 Claude Code reviews and finalizes architecture.
-User provides MVP_TASKS.md template.
-Claude Code generates MVP_TASKS.md from finalized architecture + template.
+User provides IMPLEMENTATION_PLAN.md template.
+Claude Code generates IMPLEMENTATION_PLAN.md from finalized architecture + template.
 ```
 
 ### Handoff Requirements
@@ -1592,13 +1646,16 @@ deferred work
 ### Handoff Prompt for Claude Code
 
 ```text
-After finalizing ARCHITECTURE.md, create MVP_TASKS.md using my provided template.
+After finalizing ARCHITECTURE.md, create IMPLEMENTATION_PLAN.md using my provided template.
 
 Rules:
 - Every task must reference ARCHITECTURE.md anchors.
 - Do not invent architecture.
 - If a task requires architecture not present in the doc, flag it before adding the task.
-- Build order must prioritize invariants, lifecycle correctness, tests, and local demo before polish.
+- Build order must prioritize invariants, lifecycle correctness, and tests first, hardening/polish last —
+  honoring the chosen Build posture. Under production-grade, promote production concerns (error paths,
+  idempotency, observability, security pins, deploy/rollback) to early tasks. A local demo is an OPTIONAL
+  phase — include it only if a demo is in scope, never as a mandatory step.
 ```
 
 ---
@@ -1615,7 +1672,7 @@ Before accepting the architecture package:
 [ ] Stakeholders are identified.
 [ ] Core workflows are clear.
 [ ] Domain model is clear.
-[ ] MVP success criteria are clear.
+[ ] Success / acceptance criteria are clear (per the Build posture).
 ```
 
 ### Requirements
@@ -1623,7 +1680,7 @@ Before accepting the architecture package:
 ```text
 [ ] Explicit requirements are captured.
 [ ] Inferred requirements are marked.
-[ ] Inferences are MVP-scoped.
+[ ] Inferences match the chosen Build posture (production-grade is not penalized for inferring hardening).
 [ ] Constraints are captured.
 [ ] Evaluation criteria are captured.
 [ ] Non-goals are clear.
@@ -1650,7 +1707,7 @@ Before accepting the architecture package:
 [ ] Lifecycle/state rules are clear.
 [ ] Integration paths are clear.
 [ ] Automation/background jobs are clear.
-[ ] Deployment/demo path is clear.
+[ ] Deployment path is clear (demo path only if a demo is in scope).
 ```
 
 ### Build Readiness
@@ -1674,7 +1731,7 @@ Before accepting the architecture package:
 [ ] Security risks are listed.
 [ ] Data risks are listed.
 [ ] External dependency risks are listed.
-[ ] Demo risks are listed.
+[ ] Demo risks are listed (if a demo is in scope).
 [ ] Scope risks are listed.
 [ ] Deferred work is explicit.
 ```
@@ -1693,9 +1750,10 @@ Before accepting the architecture package:
 | Hidden assumptions | Surprises during build | Add assumptions/open questions |
 | Unvalidated dependency | Integration fails late | Add research/preflight phase |
 | Decisions not defensible | Reviewer asks "why?" | Add ADR-style decision log |
-| Overbuilt MVP | Timebox explodes | Add constraints/non-goals/deferred work |
+| Overbuilt for the posture | Timebox explodes / gold-plating | Add constraints/non-goals/deferred work |
+| Under-built for production posture | Ships shortcuts; missing hardening/operability | Promote the missing production concern to a required task |
 | Architecture not buildable | Claude Code invents details | Add build-ready specs and handoff |
-| Task plan invents architecture | MVP_TASKS diverges | Require anchors and Claude Code gap audit |
+| Task plan invents architecture | IMPLEMENTATION_PLAN diverges | Require anchors and Claude Code gap audit |
 
 ---
 
@@ -1728,18 +1786,20 @@ After I answer, synthesize what changed and identify remaining gaps.
 Do not ask low-value questions.
 ```
 
-### MVP-Scoped Inference
+### Posture-Scoped Inference
 
 ```text
-Infer missing requirements necessary for a credible MVP.
+Infer missing requirements a CORRECT build at the chosen Build posture must handle.
 
 Classify each as:
-- MVP-critical
-- MVP simplification
+- must-handle (in-scope correctness / lifecycle)
+- production-hardening (in-scope under production-grade; a flagged deferral under MVP/prototype)
+- simplification (a justified, recorded scope cut)
 - deferred
 - research required
 
-Do not expand beyond the timebox.
+Production-grade → do not under-build (hardening is in-scope). MVP/prototype → stay within the timebox and
+flag deferrals. Never cut a load-bearing safety / security / correctness invariant.
 ```
 
 ### Decision Matrix
@@ -1774,7 +1834,7 @@ Rewrite it as a build-ready planning section:
 - validation rules
 - failure modes
 - tests
-- MVP simplifications
+- scope simplifications (posture-gated cuts) + any production-hardening requirements
 - deferred work
 ```
 
@@ -1791,7 +1851,7 @@ Find:
 - missing data ownership
 - missing security boundaries
 - missing testing
-- missing deployment/demo path
+- missing deployment path (and demo path, if a demo is in scope)
 - unclear decisions
 - overbuilt scope
 - untracked assumptions
@@ -1818,14 +1878,14 @@ DECISIONS.md
 ARCHITECTURE.md
 DIAGRAM_PLAN.md
 CLAUDE_CODE_HANDOFF.md
-MVP_TASKS.md template
+IMPLEMENTATION_PLAN.md template
 ```
 
 and then:
 
 ```text
 1. Review/finalize ARCHITECTURE.md.
-2. Create MVP_TASKS.md from the finalized architecture and user template.
+2. Create IMPLEMENTATION_PLAN.md from the finalized architecture and user template.
 3. Build without relying on hidden chat context.
 ```
 

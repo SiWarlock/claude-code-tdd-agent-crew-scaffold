@@ -18,7 +18,7 @@ find what's missing or wrong against the PRD, resolve it with the human, and pro
 anchored `ARCHITECTURE.md`** that the whole downstream workflow (tasks, TDD crew, cross-doc invariants)
 will bind to. Two independent brains over the doc — that's the point.
 
-**You do not write application code, and you do not generate `MVP_TASKS.md`** (that's `/tasks-gen`).
+**You do not write application code, and you do not generate `IMPLEMENTATION_PLAN.md`** (that's `/tasks-gen`).
 
 ---
 
@@ -35,7 +35,7 @@ will bind to. Two independent brains over the doc — that's the point.
    dimensions below are the canonical list if the handoff is thin.
 4. **`references/architecture-template.md`** — the repo's canonical `ARCHITECTURE.md` structure (open-ended
    `§<N>` anchors, the Spec Anchor Index, **Appendix A — model/contract inventory**). The finalized doc
-   you write MUST conform to this structure so downstream tooling (MVP_TASKS spec-anchors, the cross-doc
+   you write MUST conform to this structure so downstream tooling (IMPLEMENTATION_PLAN spec-anchors, the cross-doc
    invariants table, `/check-arch`) works.
 
 **Tools (use when available):** when reading existing code during the audit, prefer a code-intelligence MCP (e.g. CodeGraph) over `grep`+read loops; for external-dependency facts (dimension 6 below), prefer a docs MCP (e.g. Context7) over memory. Both optional — skip silently if absent.
@@ -44,10 +44,14 @@ will bind to. Two independent brains over the doc — that's the point.
 
 ## 2. The gap audit (~13 dimensions)
 
-Audit the draft + artifacts against the PRD across these dimensions, bucketing every finding as
+**First, read the Build posture** recorded in `CLAUDE_CODE_HANDOFF.md` (and the draft header):
+`production-grade` | `MVP/prototype`. **The audit is judged against that posture** — under
+**production-grade**, dimensions 9 (testing) and 10 (deploy/rollback) are **required** (not nice-to-have) and
+dimension 8a applies; under **MVP/prototype**, deliberate deferrals are acceptable if flagged. Audit the
+draft + artifacts against the PRD across these dimensions, bucketing every finding as
 **critical / important / nice-to-have / proposed-edit / question-for-human**:
 
-1. Missing user/lifecycle **flows** (every MVP requirement maps to a flow).
+1. Missing user/lifecycle **flows** (every in-scope requirement maps to a flow).
 2. Missing **lifecycle states** / state-machine transitions.
 3. Unhandled **failure modes** / error paths.
 4. Underspecified **interfaces / schemas / data contracts**.
@@ -55,7 +59,12 @@ Audit the draft + artifacts against the PRD across these dimensions, bucketing e
 6. **Unresearched external deps** (pricing, limits, auth, legal) — anything `RESEARCH.md` left open.
 7. **Inconsistent or unlocked decisions** (a `DECISIONS.md` entry that contradicts the draft, or a
    load-bearing decision still tagged `open`).
-8. **Overbuilt scope** — anything beyond the MVP boundary that should be deferred.
+8. **Overbuilt scope (posture-relative)** — under **MVP/prototype**, flag anything beyond the agreed scope
+   that should be deferred. Under **production-grade**, judge "overbuilt" against the *agreed scope*, NOT
+   against an MVP yardstick — do not push to defer correctness/operability work.
+8a. **Under-built for the posture** (production-grade) — flag *missing production concerns* as **critical**
+    gaps: error paths, idempotency, observability/logging, authn/z, input validation, secrets handling,
+    deploy/rollback. A shortcut that's fine for an MVP is a gap for a production-grade build.
 9. Missing **testing strategy** / untestable designs.
 10. Missing **deployment / rollback path**.
 11. Missing **security / trust boundaries** (cross-check `THREAT_MODEL.md` if present).
@@ -109,10 +118,14 @@ Write the finalized **`ARCHITECTURE.md` at the repo root**, conforming to `refer
 
 - The canonical section structure with **stable `§<N>` anchors** + a **Spec Anchor Index**.
 - **Appendix A — model/contract inventory:** every typed model that is a cross-doc invariant (this is what
-  the area `CLAUDE.md` cross-doc-invariants table and `MVP_TASKS` anchors will mirror).
+  the area `CLAUDE.md` cross-doc-invariants table and `IMPLEMENTATION_PLAN` anchors will mirror).
 - Content drawn from the draft + planning artifacts + the confirmed gap-audit fixes. Decisions reflected
   as **locked** (with their `DECISIONS.md` rationale); remaining `open` items called out explicitly.
 - A `Build contract` line at the top: downstream skills treat this file as the source of truth.
+- A **`Build posture:` line** in the Executive summary (`production-grade` | `MVP/prototype`, carried from the
+  handoff) — `tasks-gen` and the `/tdd` engine read it to size the build order, the demo (optional), and how
+  aggressively to defer. Do not drop or silently change the posture; if the audit surfaced a reason to revisit
+  it, raise it at the §4 human gate.
 
 This file is the **binding contract** — it is owned by this skill; gstack/CE never author it.
 
@@ -120,7 +133,7 @@ This file is the **binding contract** — it is owned by this skill; gstack/CE n
 
 ## 6. Hard rules (forbidden)
 
-- **No application code; no `MVP_TASKS.md`.** Finalize the architecture only.
+- **No application code; no `IMPLEMENTATION_PLAN.md`.** Finalize the architecture only.
 - **Don't fabricate.** An unresolved gap is a `question-for-human`, never an invented answer.
 - **Don't let an external reviewer or generative planner become the contract.** Harvest findings; you
   author `ARCHITECTURE.md`.
@@ -132,7 +145,7 @@ This file is the **binding contract** — it is owned by this skill; gstack/CE n
 
 > **ARCHITECTURE.md finalized** (repo root). Resolved `<N>` critical / `<M>` important findings; `<K>`
 > items deferred (listed). Gap-audit detail in `docs/gap-audits/`. **Next:** run **`/tasks-gen`** to turn
-> this contract into the spec-anchored `MVP_TASKS.md`, then `/scaffold-generate` to personalize the
+> this contract into the spec-anchored `IMPLEMENTATION_PLAN.md`, then `/scaffold-generate` to personalize the
 > agent-team harness, then the `/tdd` engine builds it.
 
 Then stop.

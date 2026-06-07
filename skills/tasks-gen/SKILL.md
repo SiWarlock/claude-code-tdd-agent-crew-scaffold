@@ -1,19 +1,19 @@
 ---
 name: tasks-gen
 description: >-
-  Decompose the finalized ARCHITECTURE.md into an extremely prescriptive, spec-anchored MVP_TASKS.md that
+  Decompose the finalized ARCHITECTURE.md into an extremely prescriptive, spec-anchored IMPLEMENTATION_PLAN.md that
   the /tdd agent-team engine implements against. Every phase references the ARCHITECTURE.md anchors it
   implements; every task carries Files (NEW/extended), a cross-doc-invariant tag, and happy/edge/error/
   integration test scenarios. Runs on Claude Code. Flags (never invents) tasks that need absent
-  architecture. Invoke when the user says "generate the tasks", "make the MVP task list", "decompose the
+  architecture. Invoke when the user says "generate the tasks", "make the implementation plan", "decompose the
   architecture into tasks", or after /arch-finalize has produced the binding ARCHITECTURE.md.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Task
 ---
 
-# tasks-gen — ARCHITECTURE.md → spec-anchored MVP_TASKS.md (Brain 2)
+# tasks-gen — ARCHITECTURE.md → spec-anchored IMPLEMENTATION_PLAN.md (Brain 2)
 
 You are the **third** stage of the planning chain. The binding `ARCHITECTURE.md` contract exists (from
-`/arch-finalize`). Your job: produce the **prescriptive, spec-anchored `MVP_TASKS.md`** that the `/tdd`
+`/arch-finalize`). Your job: produce the **prescriptive, spec-anchored `IMPLEMENTATION_PLAN.md`** that the `/tdd`
 agent-team engine will implement against — prescriptive enough that an implementer never has to guess,
 and anchored so drift surfaces structurally at TDD Step 9.
 
@@ -24,8 +24,10 @@ and anchored so drift surfaces structurally at TDD Step 9.
 ## 1. Read the inputs
 
 1. **`ARCHITECTURE.md`** (repo root) — **PRIMARY.** This is the source you decompose; every task anchors
-   to its `§<N>` sections and Appendix A models. Read it fully, including the Spec Anchor Index.
-2. **`references/mvp-tasks-template.md`** — the canonical `MVP_TASKS.md` format + the **spec-anchor
+   to its `§<N>` sections and Appendix A models. Read it fully, including the **`Build posture:`** line in the
+   executive summary (`production-grade` | `MVP/prototype` — it sizes the build order, whether to emit the
+   optional Demo phase, and how aggressively to defer; see §2) and the Spec Anchor Index.
+2. **`references/implementation-plan-template.md`** — the canonical `IMPLEMENTATION_PLAN.md` format + the **spec-anchor
    convention** + living-state sections. The file you write MUST match this structure so the orchestrator,
    `/orchestrate-start`, and the cross-doc-invariants flow all work.
 3. **Supporting planning artifacts** (`docs/planning/*`, if present) for richer, more prescriptive tasks:
@@ -39,7 +41,7 @@ and anchored so drift surfaces structurally at TDD Step 9.
 
 ## 2. Decompose into phases + tasks
 
-Generate `MVP_TASKS.md` per the template. Rules:
+Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
 
 - **Phases.** Each `## Phase` block carries a `**Spec anchors:**` line listing the `ARCHITECTURE.md §`
   sections it implements, a one-line Goal, and per-phase Acceptance criteria.
@@ -49,11 +51,21 @@ Generate `MVP_TASKS.md` per the template. Rules:
   - a **`Cross-doc invariant:`** line — `NEW` / `extended` / `none` (a typed model that must mirror
     `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table);
   - **test scenarios** — happy / edge / error / integration (these become the Step-2.5 test designs).
-- **Build order = invariants → lifecycle correctness → tests → local demo → polish.** Order tasks so
-  load-bearing invariants and lifecycle correctness come first, polish last (per the playbook's handoff
-  rule). Safety-critical pins (from `RISKS.md` / `THREAT_MODEL.md`) get their own early tasks.
-- **Trace requirements → tasks.** Every MVP requirement (REQ-* / acceptance signal) should map to at
-  least one task; surface any requirement with no task.
+- **Build order (posture-aware) = invariants → lifecycle correctness → tests → [optional: walking-skeleton /
+  local demo — ONLY if a demo is in scope] → hardening/polish.** Order tasks so load-bearing invariants and
+  lifecycle correctness come first, polish last (per the playbook's handoff rule). Safety-critical pins (from
+  `RISKS.md` / `THREAT_MODEL.md`) get their own early tasks. Honor the **Build posture** recorded in the
+  `ARCHITECTURE.md` executive summary (§1):
+  - **production-grade** → promote production concerns (error paths, idempotency, observability, security
+    pins, deploy/rollback) to first-class **early** tasks, not deferred. **Do not** emit a demo phase unless
+    the architecture explicitly calls for one.
+  - **MVP / prototype** → IF a demo is in scope, a lean local-demo slice is the natural near-final step (still
+    the optional Demo phase, never folded into the spine); deeper hardening may be deferred (and flagged as a
+    deferral).
+  When a demo IS in scope, emit it as the clearly-labelled **optional Demo phase** from the template (the
+  `optional-demo-phase` block) — never fold it silently into the mandatory spine.
+- **Trace requirements → tasks.** Every **in-scope** requirement (REQ-* / acceptance signal — sized to the
+  chosen build posture) should map to at least one task; surface any requirement with no task.
 
 ### Workflow-or-serial
 
@@ -74,7 +86,7 @@ it. (`AskUserQuestion` to let the user choose: amend the contract, defer the tas
 
 ## 4. Optional review (tagged OPTIONAL)
 
-- **CE `ce-doc-review`** on the generated `MVP_TASKS.md` — catches self-contradiction + scope drift
+- **CE `ce-doc-review`** on the generated `IMPLEMENTATION_PLAN.md` — catches self-contradiction + scope drift
   pre-code. Harvest findings; you author the file.
 - **gstack `/spec`** (downstream, optional) — export individual tasks to backlog-ready GitHub issues. An
   export convenience, not a replacement for the living tracker.
@@ -94,14 +106,14 @@ if anything is ambiguous or you had to flag a gap.
 - **No application code; don't modify `ARCHITECTURE.md`.**
 - **Never invent architecture** to satisfy a task — flag it (§3).
 - **Every task anchors to the contract.** No orphan tasks; no phase without `Spec anchors:`.
-- **`MVP_TASKS.md` living-state sections start empty** (Currently-in-progress, Carry-forward, Log,
+- **`IMPLEMENTATION_PLAN.md` living-state sections start empty** (Currently-in-progress, Carry-forward, Log,
   Decisions-tabled) — they accrete through real `/tdd` work, not at generation.
 
 ---
 
 ## 7. Output & handoff
 
-> **MVP_TASKS.md generated** (repo root) — `<N>` phases, `<M>` tasks, every phase anchored to
+> **IMPLEMENTATION_PLAN.md generated** (repo root) — `<N>` phases, `<M>` tasks, every phase anchored to
 > `ARCHITECTURE.md`. `<K>` requirements with no task / `<J>` architecture gaps flagged (listed).
 > **Next:** run **`/scaffold-generate`** to personalize the agent-team harness into the project, then
 > `/team-start` (or `/orchestrate-start` solo) and the **`/tdd`** engine builds it slice by slice.
