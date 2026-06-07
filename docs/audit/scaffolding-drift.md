@@ -15,7 +15,7 @@
 
 3. **`Spec Anchor Index` prescribed but missing from the template.** `arch-finalize/SKILL.md §1/§5` require the finalized `ARCHITECTURE.md` to carry a "Spec Anchor Index," and `tasks-gen` reads it — but `arch-finalize/references/architecture-template.md` (and `templates/ARCHITECTURE.md`) have **no Spec Anchor Index section** in the skeleton (only `§<N>` anchors + Appendix A). **Fix:** add the section to both templates, or drop the requirement.
 
-4. **tasks-gen test-scenario drift.** `tasks-gen/SKILL.md §2` mandates every task carry happy/edge/error/integration **test scenarios** (which "become the Step-2.5 test designs"), but the `references/mvp-tasks-template.md` task `EXAMPLE BLOCK [id=task-entry-format]` shows only acceptance behaviors + `Files:` + `Cross-doc invariant:` — no test-scenario scaffold. An author following the template literally omits what the skill requires. **Fix:** add the test-scenario bullets to the template block (or reconcile the skill).
+4. **tasks-gen test-scenario drift.** `tasks-gen/SKILL.md §2` mandates every task carry happy/edge/error/integration **test scenarios** (which "become the Step-2.5 test designs"), but the `references/implementation-plan-template.md` task `EXAMPLE BLOCK [id=task-entry-format]` shows only acceptance behaviors + `Files:` + `Cross-doc invariant:` — no test-scenario scaffold. An author following the template literally omits what the skill requires. **Fix:** add the test-scenario bullets to the template block (or reconcile the skill).
 
 5. **Migration registry is empty + dormant.** `migrations/registry.json` `migrations[]` is `[]`; the entire structural-migration path (`scaffold_upgrade.sh migrations`, the 7 kinds, journaling) has **never executed**. First real migration exercises this code for the first time. **Action:** flag for a deliberate test/dry-run before relying on it.
 
@@ -47,7 +47,7 @@
 
 15. **Questioning cadence:** `arch-draft/SKILL.md §0` says "one topic per question"; kickoff prompt + playbook say "focused batches." Softer guidance in the human-paste artifact.
 
-16. **ROUTING.md stage numbers:** header prose calls `MVP_TASKS.md` "stage 5" but the happy-path table puts tasks-gen at stage 4, scaffold at stage 5. Footer says "16-stage" but there's an extra unnumbered sub-row.
+16. **ROUTING.md stage numbers:** header prose calls `IMPLEMENTATION_PLAN.md` "stage 5" but the happy-path table puts tasks-gen at stage 4, scaffold at stage 5. Footer says "16-stage" but there's an extra unnumbered sub-row.
 
 17. **Command-count framing:** `GENERATE-WITH-CLAUDE.md §1` / `scaffold-generate` say "12 team / 9 single-operator; +2 optional," but the ordered Step-10 list names 11 + context-check implicitly. Arithmetic is loose across §1/§4/Step-10.
 
@@ -108,3 +108,21 @@
 - Several of these (P1 #6–#12, #8 especially) overlap directly with the **context/token-optimization** effort: de-duplicating restated rules both removes drift risk *and* cuts tokens loaded into every session.
 - The "design doc tense" issues (#24) suggest a one-time pass to retire `upgrade-mechanism.md`/`upgrade-skill.md` into the spec now that the feature is built, leaving `upgrade-spec.md` + `SKILL.md` + the script as the canonical trio.
 - Nothing here is a correctness bug in shipped behavior; the bash scripts and the SKILL operational instructions are internally consistent — the drift is between **design/reference prose** and the **operational truth**.
+
+## Update 2026-06-07 — task-tracker rename + build-posture axis + optional demo
+
+- **`MVP_TASKS.md` → `IMPLEMENTATION_PLAN.md`** (the `{{TASK_TRACKER}}` default flipped). The rename swept the
+  **duplicated surface** flagged in P1 #7 (`GENERATE-WITH-CLAUDE.md` ≡ `generate-procedure.md`) and the
+  near-duplicate tracker templates (P1 / template pair) — both kept byte/structure-in-sync, **not de-duped**
+  (the de-dupe refactor in #7 is still open). A new **`renamed-template` migration `M-0003`** propagates the
+  rename to already-generated projects (`introducedAtSha` still **PENDING** — must be wired to the shipping
+  commit, the same two-step `a939bd0` used for M-0001/M-0002).
+- **Optional Demo phase** added one EXAMPLE BLOCK (`optional-demo-phase`) to the tracker template → the
+  authoritative §10 census in `GENERATE-WITH-CLAUDE.md` is now **25 regions** (was 24), and the present-tense
+  census in `upgrade-mechanism.md` was bumped to 25 / `IMPLEMENTATION_PLAN.md×3`. The **historical** "one-time
+  edit added `[id=]` slugs to **24** markers" statements (`upgrade-spec.md`, `upgrade-mechanism.md §change-summary`)
+  are intentionally **left at 24** — they describe a completed past action, not the current count. (New drift
+  surface; resolve when #24 retires those design docs.)
+- **Build posture** is a new, always-confirmed axis threaded arch-draft → handoff → `ARCHITECTURE.md` exec
+  summary → arch-finalize gap audit → tasks-gen. Recorded as a fill-in stub (`<production-grade | MVP/prototype>`),
+  **not** a `{{PLACEHOLDER}}` — so no manifest/§10 placeholder-manifest change was needed.

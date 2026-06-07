@@ -3,7 +3,7 @@
 > **What this designs.** The runtime flow of the `/scaffold-upgrade` SKILL: the prompt-driven procedure
 > a fresh Claude Code session executes to bring an already-customized project's scaffolding up to date
 > with the current `templates/` tree **without clobbering** its `{{PLACEHOLDER}}` substitutions, its
-> rewritten `EXAMPLE BLOCK` regions, or its accreted state (`LESSONS.md`, `MVP_TASKS.md` living sections,
+> rewritten `EXAMPLE BLOCK` regions, or its accreted state (`LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections,
 > the area-`CLAUDE.md` lookup + invariants tables).
 >
 > **What it assumes (designed elsewhere, not re-specified here).**
@@ -129,7 +129,7 @@ the diff facts. The script computes the *default* policy; the model overrides on
 | **`verbatim`** | `tdd.md` (the 10 steps, Step-2.5/7.5 checkpoints, Forbidden section, Step-10 commit rules), the Step-9 routing matrix + commit-cadence table in `orchestrator-briefing.md`, the escalation taxonomy + slice-atomicity rules in root `CLAUDE.md`. Comment headers literally say "keep VERBATIM." | **AUTO-APPLY** iff `baseEqualsTheirs` (project never hand-edited it) → take `ours` wholesale (it is the project's placeholders re-substituted into the new machinery). | If `!baseEqualsTheirs`: the project hand-edited machinery (rare, discouraged). Demote to **PROPOSE** with a loud "you diverged from VERBATIM machinery here" flag; show the project's edit vs. the new upstream so the human decides whether to keep their fork or adopt upstream. |
 | **`placeholder-only`** | `preflight.md`, single-area `run-tests.md`, `wired.md`, `check-arch.md`, `session-start.md` — substitution only, no EXAMPLE BLOCKs. | **AUTO-APPLY** if `mergeClean` (placeholder regions match base, so the upstream change applies cleanly with the project's values re-substituted). | If `!mergeClean`: a placeholder region drifted (e.g. the project hand-tuned a `{{TEST_CMD}}` away from the manifest value). Demote to **PROPOSE**; offer to also update the manifest's stored value if the project's on-disk value is the new truth. |
 | **`mixed`** | `CLAUDE.md`, `area-CLAUDE.md`, `orchestrator-briefing.md`, `tdd-brief-template.md`, `scaffolding-reference.md` — VERBATIM machinery **and** `{{PLACEHOLDER}}`s **and** `EXAMPLE BLOCK` regions in one file. | **Per-region split** (§3.1). Machinery + `illustrative` blocks → AUTO-APPLY-eligible; `customized` blocks → **PROPOSE-ONLY**. | The model owns the region split when the script can't cleanly delimit a region (markers moved/renamed upstream — see §3.1). |
-| **`accreted`** | `area-LESSONS.md` (empty-by-design, accretes via Step-9), `MVP_TASKS.md` living sections (Currently-in-progress, Carry-forward, Log, Decisions tabled, phase checkboxes), area-`CLAUDE.md` lookup + cross-doc-invariants tables. | **LEAVE ALONE.** Body is never touched. Only the **skeleton/format** regions (header blockquote, the lesson-format code block, fixed section *headings*) are merge candidates, and only as a **PROPOSE** suggestion — never auto-applied. | The model decides whether a skeleton change is cosmetic (skip) or a **structural format migration** that the accreted body must conform to → routes it to the **migration registry** (§6), which is the *only* path that may rewrite accreted content, and only via an explicit human-gated, idempotent migration. |
+| **`accreted`** | `area-LESSONS.md` (empty-by-design, accretes via Step-9), `IMPLEMENTATION_PLAN.md` living sections (Currently-in-progress, Carry-forward, Log, Decisions tabled, phase checkboxes), area-`CLAUDE.md` lookup + cross-doc-invariants tables. | **LEAVE ALONE.** Body is never touched. Only the **skeleton/format** regions (header blockquote, the lesson-format code block, fixed section *headings*) are merge candidates, and only as a **PROPOSE** suggestion — never auto-applied. | The model decides whether a skeleton change is cosmetic (skip) or a **structural format migration** that the accreted body must conform to → routes it to the **migration registry** (§6), which is the *only* path that may rewrite accreted content, and only via an explicit human-gated, idempotent migration. |
 | **`user-canonical`** | the user's `{{ARCH_DOC}}` (their own architecture doc). | **OUT OF SCOPE.** Never touched. Only the appended **Appendix A — Model/contract inventory** skeleton is a candidate, PROPOSE-ONLY. | The model never proposes a change to the user's prose; at most it suggests adding the Appendix A scaffold if absent. |
 
 ### §3.1 — `mixed`-file region split (the heart of "separate upstream change from project customization")
@@ -186,7 +186,7 @@ PROPOSE  (you customized this — review the upstream change; nothing applied wi
 
 LEAVE ALONE  (accreted state — body untouched)
   – app/LESSONS.md                     accreted       (12 lessons; skeleton unchanged)
-  – MVP_TASKS.md                       accreted       (living sections untouched; format unchanged)
+  – IMPLEMENTATION_PLAN.md                       accreted       (living sections untouched; format unchanged)
   – ARCHITECTURE.md                    user-canonical (not touched)
 
 MIGRATIONS  (structural changes a content-diff can't express — human-gated, §6)
@@ -287,7 +287,7 @@ templates/../migrations/                       # sibling to templates/, shipped 
   "appliesWhen": "base < introducedAtSha <= to",   // version-window gate (copier PEP440 analog, by SHA topology)
   "gate": "human",                   // human | auto   (structural/accreted-touching => human; pure-additive => auto-eligible)
   "idempotencyKey": "placeholder:TEST_RUNNER->TEST_FRAMEWORK",
-  "touches": ["manifest.placeholders", ".claude/commands/tdd.md", "app/CLAUDE.md", "MVP_TASKS.md"]
+  "touches": ["manifest.placeholders", ".claude/commands/tdd.md", "app/CLAUDE.md", "IMPLEMENTATION_PLAN.md"]
 }
 ```
 
@@ -365,7 +365,7 @@ chore(scaffolding): upgrade <base8> → <to8>
 Auto-applied: <list of verbatim/placeholder files>.
 Proposed+accepted: <list of customized files re-merged>.
 Migrations run: M-0007 (rename TEST_RUNNER), M-0011 (add Rollback protocol).
-Left untouched: accreted state (LESSONS.md, MVP_TASKS.md living sections), ARCHITECTURE.md.
+Left untouched: accreted state (LESSONS.md, IMPLEMENTATION_PLAN.md living sections), ARCHITECTURE.md.
 Skipped/deferred: <list>.
 
 {{AI_TRAILER}}

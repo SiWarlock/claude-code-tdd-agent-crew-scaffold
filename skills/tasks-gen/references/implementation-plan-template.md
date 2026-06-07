@@ -108,6 +108,31 @@ The project is "done" when:
 
 ---
 
+<!-- ▼ EXAMPLE BLOCK: OPTIONAL Demo phase — include ONLY if a demo / live walkthrough is an explicit deliverable (check the Build posture in {{ARCH_DOC}}: production-grade usually OMITS it; MVP/prototype makes it the natural near-final slice). Delete this block when no demo is in scope. ▼ -->
+
+## Phase D — Demo (OPTIONAL)
+
+> **Optional phase.** A demo never substitutes for the invariant → lifecycle → test → hardening work above — it sits *after* the system is correct. Under a production-grade posture, prefer a deployable/operable slice and omit this phase.
+
+**Goal:** <the narrowest end-to-end path the demo must prove>.
+
+**Spec anchors:** `{{ARCH_DOC}} §X`.
+
+### D.1 — <demo slice>
+
+- [ ] <demo happy-path behavior that runs end-to-end>
+- [ ] Files: <demo entrypoint / seed data / script — NEW vs. extended>
+- [ ] Cross-doc invariant: none
+
+### Acceptance criteria (D)
+
+- [ ] The in-scope demo path runs end-to-end against the real system (no mocks on the load-bearing path).
+- [ ] No invariant / test / hardening task was cut to make the demo work.
+
+<!-- ▲ END EXAMPLE BLOCK ▲ -->
+
+---
+
 ## Trims / Nice-to-Haves Catalog
 
 Deferred items with come-back guidance: why deferred, where it belongs, files to modify, tests to add, cross-doc invariant impact.

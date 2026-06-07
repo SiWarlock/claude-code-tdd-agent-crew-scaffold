@@ -111,6 +111,31 @@ The project is "done" when:
 
 ---
 
+<!-- ▼ EXAMPLE BLOCK [id=optional-demo-phase]: OPTIONAL Demo phase — include ONLY if a demo / live walkthrough is an explicit deliverable. Check the **Build posture** in {{ARCH_DOC}}: a production-grade build usually OMITS this phase (ship a deployable/operable slice instead); an MVP/prototype build makes it the natural near-final slice. Delete this whole block when no demo is in scope. ▼ -->
+
+## Phase D — Demo (OPTIONAL)
+
+> **Optional phase.** Included only when a demo / live walkthrough is an explicit deliverable. A demo is **never** a substitute for the invariant → lifecycle → test → hardening work above — it sits *after* the system is correct, not in place of it.
+
+**Goal:** <the narrowest end-to-end path the demo must prove>.
+
+**Spec anchors:** `{{ARCH_DOC}} §X` — the flows the demo exercises.
+
+### D.1 — <demo slice>
+
+- [ ] <demo acceptance behavior — the happy path that runs end-to-end>
+- [ ] Files: <demo entrypoint / seed data / script — NEW vs. extended>
+- [ ] Cross-doc invariant: none (a demo must not introduce new contract surface)
+
+### Acceptance criteria (D)
+
+- [ ] The in-scope demo path runs end-to-end against the real system (no mocks on the load-bearing path).
+- [ ] No invariant / test / hardening task was cut to make the demo work.
+
+<!-- ▲ END EXAMPLE BLOCK [id=optional-demo-phase] ▲ -->
+
+---
+
 ## Trims / Nice-to-Haves Catalog
 
 Deferred items with come-back guidance: why deferred, where it belongs, files to modify, tests to add, cross-doc invariant impact. **Prune at `/orchestrate-end`:** a Trim that ships moves to its phase as `[x]`; an obsoleted Trim is deleted with a one-line Log note.

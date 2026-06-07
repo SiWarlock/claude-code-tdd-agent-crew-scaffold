@@ -4,7 +4,7 @@ The thin routing layer: which skill owns each lifecycle stage, and where the **i
 (gstack, Compound Engineering) and **Ultracode** compose around your core. Pin this where you'll see it.
 
 **🔒 Owned by your skills, never ceded:** the binding `ARCHITECTURE.md` (stage 3), the spec-anchored
-`MVP_TASKS.md` (stage 5), and the hard `/tdd` ordering (stage 6). Plugins feed-into or review *around*
+`IMPLEMENTATION_PLAN.md` (stage 5), and the hard `/tdd` ordering (stage 6). Plugins feed-into or review *around*
 them — they never author them.
 
 ## Default happy-path (one tool per stage)
@@ -16,7 +16,7 @@ them — they never author them.
 | 2 Architecture draft | **you** | **`arch-draft`** (Codex/GPT-5.5) | the playbook interview → `docs/planning/` |
 | 3 **Architecture CONTRACT** | **🔒 you** | **`arch-finalize`** (Claude) | gap-audit + adversarial → binding `ARCHITECTURE.md` |
 | — arch review (during 3) | gstack/CE | `/plan-eng-review` + `/codex` (cross-model), CE `ce-doc-review` | READ-ONLY findings into the gap-audit; **never** `/autoplan` (it generates a plan) |
-| 4 **Task tracker** | **🔒 you** | **`tasks-gen`** (Claude) | → spec-anchored `MVP_TASKS.md` |
+| 4 **Task tracker** | **🔒 you** | **`tasks-gen`** (Claude) | → spec-anchored `IMPLEMENTATION_PLAN.md` |
 | 5 Scaffold | **you** | **`scaffold-generate`** (Claude) | personalize the harness + stamp manifest |
 | 6 **Implementation** | **🔒 you** | **`/tdd`** agent-team engine | forbid CE `ce-work` / gstack `/spec --execute` as the engine |
 | 7 Code review | you → escalate | your 3 subagents → CE `ce-code-review` (rubric) → gstack `/review`+`/codex` (high-stakes) | never 4 passes on a trivial diff |
@@ -58,7 +58,7 @@ edits an eval). Use it for eval-suite failures; use `bug-hunt` for general code 
 Run these **near the end of a build, from inside the finished project**, to understand and teach what was made:
 
 **`layer-docs`** (host-neutral) — deep end-to-end analysis of the **code + the planning/architecture docs**
-(`ARCHITECTURE.md`, the `/arch-draft` artifacts, `/office-hours` & `/plan-ceo-review` output, `MVP_TASKS.md`)
+(`ARCHITECTURE.md`, the `/arch-draft` artifacts, `/office-hours` & `/plan-ceo-review` output, `IMPLEMENTATION_PLAN.md`)
 → derive the project's real **layers** → write a full-scope `docs/layers/OVERVIEW.md` + one digestible doc
 per layer (executive summary first, depth below). Faithful (cites `file:line`, flags architecture-vs-code
 drift); prefers CodeGraph/Context7 when present; degrades to code-only when planning docs are absent. **Re-runnable + incremental** — run it again as the code evolves and it detects what changed and updates only the affected docs (preserving hand-edits) via a stamped `docs/layers/.layer-docs.json` state file; `/layer-docs --check` reports which docs are stale without writing — the signal a knowledge base / drift detector uses.

@@ -30,7 +30,7 @@ If a project is more than one session of work, these failure modes show up:
   improvements without clobbering their own customizations.
 
 cc-crew addresses each with concrete machinery: a two-brain planning chain, a binding `ARCHITECTURE.md`
-contract, a spec-anchored `MVP_TASKS.md`, a hard 10-step `/tdd` walker, hot-routed Step-9 categorization, a
+contract, a spec-anchored `IMPLEMENTATION_PLAN.md`, a hard 10-step `/tdd` walker, hot-routed Step-9 categorization, a
 4-category escalation taxonomy, per-slice context monitoring with auto-cycle, and a provenance-manifest
 3-way-merge upgrade path.
 
@@ -48,7 +48,7 @@ contract, a spec-anchored `MVP_TASKS.md`, a hard 10-step `/tdd` walker, hot-rout
  /arch-finalize ── ~13-dimension gap audit + adversarial scrutiny ──▶ 🔒 ARCHITECTURE.md   (binding contract)
   │
   ▼
- /tasks-gen ── decompose, anchor every task to a §  ──────────────────▶ 🔒 MVP_TASKS.md     (spec-anchored plan)
+ /tasks-gen ── decompose, anchor every task to a §  ──────────────────▶ 🔒 IMPLEMENTATION_PLAN.md     (spec-anchored plan)
   │
   ▼
  /scaffold-generate ── personalize the harness + stamp provenance ───▶ .claude/ + CLAUDE.md + docs/ + .scaffolding/manifest.json
@@ -71,7 +71,7 @@ file-based (`docs/planning/`). Claude then writes the task spec and runs the who
 an optional cross-model reviewer at finalize.
 
 **Three guardrails are owned by cc-crew's own skills and never delegated to a plugin:** the binding
-`ARCHITECTURE.md` contract, the spec-anchored `MVP_TASKS.md`, and the hard `/tdd` ordering (the 🔒 above).
+`ARCHITECTURE.md` contract, the spec-anchored `IMPLEMENTATION_PLAN.md`, and the hard `/tdd` ordering (the 🔒 above).
 Plugins feed-into or review *around* them — they never author them.
 
 ---
@@ -87,7 +87,7 @@ are host-neutral (Codex or Claude); the rest run on Claude Code.
 |---|---|---|
 | **`arch-draft`** | GPT-5.5 / Codex (host-neutral) | PRD → architecture **rough draft** + supporting artifacts, via the Deep Architecture-Planning Playbook (interview-gated; never codes) → `docs/planning/` |
 | **`arch-finalize`** | Claude Code | gap audit + adversarial scrutiny of the draft → the binding **`ARCHITECTURE.md`** |
-| **`tasks-gen`** | Claude Code | decompose the contract → spec-anchored **`MVP_TASKS.md`** (every task anchored to a `§`) |
+| **`tasks-gen`** | Claude Code | decompose the contract → spec-anchored **`IMPLEMENTATION_PLAN.md`** (every task anchored to a `§`) |
 | **`scaffold-generate`** | Claude Code | personalize the agent-team harness into the project + stamp `.scaffolding/manifest.json` |
 | **`scaffold-upgrade`** | Claude Code | keep an already-generated project's scaffolding current via a provenance-manifest **3-way merge** (propose-don't-clobber) |
 
@@ -170,7 +170,7 @@ the job of `skills/ROUTING.md`.**
    picks them up in **both** its Claude and Codex lanes; restart the host session to discover them.
 
 3. **Plan (optional but recommended):** in Codex/Conductor run **`/arch-draft`** from your PRD → in Claude
-   run **`/arch-finalize`** → **`/tasks-gen`**. This yields a binding `ARCHITECTURE.md` + `MVP_TASKS.md`.
+   run **`/arch-finalize`** → **`/tasks-gen`**. This yields a binding `ARCHITECTURE.md` + `IMPLEMENTATION_PLAN.md`.
 
 4. **Generate the harness:** run **`/scaffold-generate`** (or hand a fresh Claude Code session
    `GENERATE-WITH-CLAUDE.md` + your arch doc). It interviews you for anything it can't infer — it **never
@@ -202,7 +202,7 @@ cc-crew/
     ├── CLAUDE.md              ← root project conventions + shared comm rules
     ├── area-CLAUDE.md         ← per-code-area conventions
     ├── area-LESSONS.md        ← per-code-area lessons (empty at bootstrap)
-    ├── MVP_TASKS.md           ← state + phase plan skeleton
+    ├── IMPLEMENTATION_PLAN.md ← state + phase plan skeleton
     ├── ARCHITECTURE.md        ← design-contract skeleton (used only if the user has none)
     ├── .scaffolding/          ← generator-owned provenance (manifest.json + README) — enables clean upgrades
     ├── docs/                  ← team-protocol · orchestrator-briefing · tdd-brief-template · scaffolding-reference
