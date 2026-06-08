@@ -35,7 +35,7 @@
     {
       "id": "M-0004",
       "title": "Add the '## Parallelization plan' EXAMPLE BLOCK (phase/track DAG + critical path) to IMPLEMENTATION_PLAN.md (team mode only)",
-      "introducedAtSha": "PENDING-wire-to-shipping-commit",
+      "introducedAtSha": "a7d3cbbb86eef42976960edf0380edf6178ba181",
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",

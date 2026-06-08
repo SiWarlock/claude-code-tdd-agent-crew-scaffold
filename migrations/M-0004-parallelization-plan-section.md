@@ -5,12 +5,11 @@
 > migration at a later SHA. SHA-window-gated (fires once when `base < introducedAtSha <= to`),
 > idempotent, journaled (touchfile `.scaffolding/.migrations/M-0004.done`), per-migration failure non-fatal.
 
-> **⚠ `introducedAtSha` must be wired to the commit that ships the parallelization feature** (the commit that
-> adds the `[id=parallelization-plan]` block to `templates/IMPLEMENTATION_PLAN.md` and bumps the §10 region
-> count to 26). It currently holds the placeholder `"PENDING-wire-to-shipping-commit"`, which is unresolvable,
-> so the script SKIPS this migration with a warning (safe — it cannot fire before it ships). After committing,
-> set it to that commit's 40-char SHA — the same two-step pattern `a939bd0` used for M-0001/M-0002 and the
-> M-0003 wire-up commit used for M-0003.
+> **`introducedAtSha` is wired to the commit that ships the parallelization feature** —
+> `a7d3cbbb86eef42976960edf0380edf6178ba181` (the commit that added the `[id=parallelization-plan]` block to
+> `templates/IMPLEMENTATION_PLAN.md` and bumped the §10 region count to 26). It was set in a follow-up commit —
+> the two-step pattern `a939bd0` used for M-0001/M-0002 and the M-0003 wire-up — since the shipping SHA can't
+> be known until that commit exists.
 
 ## Registry entry (in `registry.json` `migrations[]`)
 
@@ -18,7 +17,7 @@
 {
   "id": "M-0004",
   "title": "Add the '## Parallelization plan' EXAMPLE BLOCK (phase/track DAG + critical path) to IMPLEMENTATION_PLAN.md (team mode only)",
-  "introducedAtSha": "PENDING-wire-to-shipping-commit",
+  "introducedAtSha": "a7d3cbbb86eef42976960edf0380edf6178ba181",
   "kind": "new-required-section",
   "appliesWhen": "base < introducedAtSha <= to",
   "gate": "human",
