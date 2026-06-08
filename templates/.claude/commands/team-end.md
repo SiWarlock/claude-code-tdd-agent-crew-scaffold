@@ -52,7 +52,7 @@ You already hold the rest of the coordination state (team composition, active ar
 ls docs/team-handoffs/ 2>/dev/null | head -20
 ```
 
-Take the highest numeric prefix + 1, zero-pad to 3 digits. If the `docs/team-handoffs/` directory doesn't exist yet, create it + start at `001`. Filename: `<NNN>-<YYYY-MM-DD>-<topic>.md` per `$ARGUMENTS`.
+Take the highest numeric prefix + 1, zero-pad to 3 digits. If the `docs/team-handoffs/` directory doesn't exist yet, create it + start at `001`. Filename: `<NNN>-<YYYY-MM-DD>-<topic>.md` per `$ARGUMENTS`. **Multi-track mode (this lead carries a `<track>`): prefix the filename with the track** — `<track>-<NNN>-<YYYY-MM-DD>-<topic>.md` — and compute `<NNN>` within the track (`ls docs/team-handoffs/<track>-*`), so parallel tracks' handoffs don't collide when the track branches merge (root `CLAUDE.md` "Naming + cross-bleed prevention"). Single-track / solo → plain `<NNN>-…`.
 
 ## Step 4 — Write the handoff doc
 
