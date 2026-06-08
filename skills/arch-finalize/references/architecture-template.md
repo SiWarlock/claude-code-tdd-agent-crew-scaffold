@@ -30,7 +30,8 @@
 ## Executive summary
 
 <~300-500 words: what the system is, the core design posture, the major
-subsystems and how they relate.>
+subsystems and how they relate (the import-direction DAG that defines the
+parallelization seams is detailed in §2.5).>
 
 > {{ARCHITECTURE_SENTENCE}}
 >
@@ -45,6 +46,22 @@ subsystems and how they relate.>
 ## §2 — System overview
 
 <High-level diagram + the end-to-end flow. One screen.>
+
+## §2.5 — Subsystem dependency DAG & parallelization seams
+
+**Import-direction rule:** <one sentence — dependencies point one way, e.g. `ui → service → domain → infra`; no upward or cross-sibling imports>.
+
+<A directed graph of the §3…§N subsystem boundaries — nodes = subsystems, edges = "depends on / imports from". A Mermaid `flowchart TD` renders on GitHub and degrades to readable text:>
+
+```mermaid
+flowchart TD
+  A[§3 Subsystem A] --> B[§4 Subsystem B]
+  %% edge A --> B means "B depends on / imports from A"; one node per §3…§N boundary
+```
+
+**Independent subsystems (parallelization seams):** <which subsystems share NO dependency path — the seams `/tasks-gen` derives parallel build TRACKS along (recorded in `{{TASK_TRACKER}}`'s Parallelization plan). If nothing is independent, say so explicitly: a single-track serial build is a valid answer, stated, not defaulted-into.>
+
+**Shared contracts across seams:** any **Appendix A** model whose `§` section is crossed by an edge above is a contract two subsystems both depend on — **freeze it before parallel tracks fork**; a change to it mid-build is a cross-track Finding (see `docs/team-protocol.md` "Working tree → tracks + worktrees").
 
 ## §3 — <Subsystem / boundary A>
 
@@ -71,7 +88,7 @@ new ones get added as they surface.>
 
 ## Appendix A — Model / contract inventory
 
-The canonical home for every typed model that is a **cross-doc invariant** — mirrored in the area `CLAUDE.md` cross-doc invariants table. A field change on any model here requires an edit to this appendix (and the model's `§` section) in the same round of commits.
+The canonical home for every typed model that is a **cross-doc invariant** — mirrored in the area `CLAUDE.md` cross-doc invariants table. A field change on any model here requires an edit to this appendix (and the model's `§` section) in the same round of commits. **A model whose `§` is crossed by a §2.5 dependency edge is a *shared contract across tracks*** — freeze it before parallel build tracks fork (the cross-worktree coordination rule in `docs/team-protocol.md`).
 
 | Model | Section | Fields (summary) |
 |---|---|---|

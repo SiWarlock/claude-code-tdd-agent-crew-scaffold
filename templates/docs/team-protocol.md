@@ -86,9 +86,9 @@ Explicit prohibitions. **Each violation costs context and risks correctness.**
 
 <!-- ▲ END EXAMPLE BLOCK [id=code-areas] ▲ -->
 
-The lead spawns an implementer for an area when that area's work begins. Build order is fixed by the architecture (typically serial — back-end before front-end, etc.); areas run in parallel only once dependencies clear.
+The lead spawns an implementer for an area when that area's work begins. **Build order is the explicit Phase/Track DAG in `{{TASK_TRACKER}}`'s Parallelization plan** — derived from `{{ARCH_DOC}}` §2.5 subsystem boundaries, refined by the per-task `Depends on:` graph. Tracks with no unsatisfied upstream-track dependency run **in parallel, each in its own worktree with its own team** (see "Working tree → tracks + worktrees" below); a track starts once its upstream tracks have merged. The **critical path** through the DAG is the lead's scheduling priority — staff it first. (Single-track plan → one serial spine in one working tree.)
 
-Naming: **`<track>-<area>-<role>`** when parallel teams run (e.g. `frontend-team-orchestrator`), else `<area>-<role>` (e.g. `{{CODE_AREA_BASENAME}}-orchestrator`) — full rule in root `CLAUDE.md` "Naming + cross-bleed prevention."
+Naming: **`<track>-<area>-<role>`** when parallel teams run (e.g. `frontend-team-orchestrator`), else `<area>-<role>` (e.g. `{{CODE_AREA_BASENAME}}-orchestrator`) — full rule in root `CLAUDE.md` "Naming + cross-bleed prevention." The `<track>` values come from the `{{TASK_TRACKER}}` Track map, not invented ad-hoc.
 
 ---
 
@@ -231,12 +231,20 @@ Between events the lead is silent. Visibility comes from the free idle-notificat
 
 ---
 
-## Working tree
+## Working tree → tracks + worktrees
 
-**Single working tree by default.** The build order usually means most slices don't overlap. Spawn a second implementer (and a git **worktree** via the `Agent` tool's `isolation: "worktree"`) **only** when two area slices are genuinely independent and in flight at once. Shared docs (`{{TASK_TRACKER}}`, `{{ARCH_DOC}}`, session docs) live at the repo root — keep their edits on the orchestrator to avoid worktree merge friction. "Explicit `git add <path>`, never `git add -A`" matters more with parallel agents.
+**The Parallelization plan's Track map drives worktrees proactively.** When the Phase/Track DAG has ≥2 parallel-eligible tracks, each track runs in its **own git worktree** (`git worktree add ../{{REPO_DIRNAME}}-<track> track/<track>`, provisioned by that track's `/team-start <track>` Step 2.5) with its **own team** (lead + orch + per-area implementer). Single-working-tree is the fallback for a single-track (serial) plan, or a DAG that never branches. ("Explicit `git add <path>`, never `git add -A`" matters more than ever with parallel worktrees.)
+
+**Cross-worktree coordination (multi-track only):**
+
+1. **Shared root docs have one owning checkout.** `{{TASK_TRACKER}}` + `{{ARCH_DOC}}` live in the **integration checkout** (the root tree), not in any track worktree. A track that needs to edit the plan or the contract (a Step-9 cross-doc-invariant change, a new phase) **routes the edit to the integration owner** rather than editing its own branch's copy — a per-worktree edit guarantees a merge conflict. (This is the multi-track extension of the orchestrator's normal ownership of those files.)
+2. **Merge order = DAG topological order.** A downstream track does **not** merge into the integration branch until its upstream tracks have merged. The lead owning the critical-path track coordinates the sequence; **one actor runs the merges** (no merge races between track leads).
+3. **Shared-contract changes propagate owner → integration → consumers.** A type / interface / schema two tracks both depend on (an `{{ARCH_DOC}}` Appendix-A model crossing a §2.5 edge) has a **single owning track**. A change to it is (a) made in the owning track, (b) merged to the integration branch, (c) pulled into consuming track worktrees (`git merge <integration>`) **before** they build against it. Consuming tracks treat the contract as **frozen** until the owner signals the change is merged. A shared-contract change mid-build is a **Finding** (escalation category #2) — it reaches the human via the lead.
+4. **Cross-worktree commit bleed = the filesystem analogue of channel-bleed.** A track team's commits land only on its own branch/worktree; a commit touching another track's area, or the root checkout, is cross-track contamination. The `git add <path>` discipline (never `git add -A`) is the primary guard.
+5. **Context monitoring is naturally per-track** — each track's team is a distinct `TeamCreate` team, so `/context-check <track-team>` is already scoped; the `team-register.sh` `track`/`branch` fields let tooling group + locate a track's teammates.
 
 ---
 
 ## Single-operator fallback
 
-You can run this **without** a team — one human driving an orchestrator session and an implementer session, acting as the bridge yourself (the original two-session model). The "direct teammate comms" become "you paste between the two sessions," and the escalation taxonomy collapses (everything is already in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. (If you generated this scaffolding in single-operator mode, this file shouldn't exist — the generator skips it.)
+You can run this **without** a team — one human driving an orchestrator session and an implementer session, acting as the bridge yourself (the original two-session model). The "direct teammate comms" become "you paste between the two sessions," and the escalation taxonomy collapses (everything is already in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. **The parallel-track / per-worktree machinery in "Working tree → tracks + worktrees" above is team-mode only** — a single human bridging two sessions is the serialization point and can't drive N parallel worktree-teams; solo mode walks the Phase/Track DAG **serially in one working tree** (the Track map is a sequencing hint, not a parallelization plan). (If you generated this scaffolding in single-operator mode, this file shouldn't exist — the generator skips it.)

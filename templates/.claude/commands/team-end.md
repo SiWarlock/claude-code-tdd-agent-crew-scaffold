@@ -61,6 +61,7 @@ Take the highest numeric prefix + 1, zero-pad to 3 digits. If the `docs/team-han
 
 **Date:** YYYY-MM-DD
 **Track:** <track from /team-start, or "solo">
+**Worktree:** <`../{{REPO_DIRNAME}}-<track>` (branch `track/<track>`), or "root checkout (single-track)">
 **Predecessor handoff:** <docs/team-handoffs/NNN-1-...md if any, else "first handoff">
 **Successor handoff:** _(filled in when the next /team-end runs)_
 **Round-seal commit at handoff:** `<commit hash from git log>`
@@ -163,12 +164,24 @@ done
 
 If a predecessor handoff is being resumed later, the next `/team-start` re-spawns teammates → fresh registry entries land via spawn prompts.
 
+## Step 6.6 — Track worktree teardown + merge gate (multi-track only; skip if single-track)
+
+If this team ran in a track worktree (provisioned by `/team-start <track>` Step 2.5):
+
+1. **Merge gate.** If the track's phases are **complete** AND its upstream tracks have already merged, merge the track branch into the integration branch **in DAG topological order** (per `docs/team-protocol.md` "Working tree → tracks + worktrees" — one actor runs the merges; never race track leads). If the track is only **pausing** (not done), do NOT merge — leave the branch for the next session. A merge that touches a **shared contract** is a **Finding** → surface to the human before merging.
+2. **Worktree teardown.** Once the branch is merged (or the team is fully done with the worktree), remove it:
+   ```bash
+   git worktree remove ../{{REPO_DIRNAME}}-<track>     # add --force ONLY after confirming no uncommitted work
+   ```
+   Leave the worktree in place if the team is merely pausing and will resume in it.
+
 ## Step 7 — Tell the user
 
 Report:
 - Handoff doc at `docs/team-handoffs/<NNN>-<date>-<topic>.md`.
 - Team is paused; teammates are idle (already `/session-end`-closed at Step 1).
 - Next `/team-start` resumes from this handoff doc.
+- (Multi-track) the track's worktree was torn down + merged, or left in place if the team only paused.
 - Any open decisions / blockers surfaced in the doc.
 
 ## Forbidden in this command

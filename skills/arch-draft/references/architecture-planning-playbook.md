@@ -1239,6 +1239,8 @@ For each section:
 - purpose
 - responsibilities
 - boundaries
+- depends-on / imports-from (which other sections this may import; the allowed import direction)
+- independent of (sections this shares no dependency path with — candidate parallel build tracks)
 - components/modules/services/contracts
 - data flow
 - state/lifecycle rules
@@ -1250,6 +1252,17 @@ For each section:
 - open questions
 ```
 
+### Dependency DAG & Parallelization Interview
+
+Capture the import DAG explicitly — it becomes `ARCHITECTURE.md §2.5` and is the seam `/tasks-gen` derives parallel build tracks along:
+
+```text
+1. Which subsystems could a second engineer build at the same time without blocking the first?
+2. What is the import direction — which layer/subsystem may import which? What import would be a violation?
+3. What are the shared contracts (types / APIs / schemas) two parallel subsystems both touch — the integration points that must be frozen first?
+4. Where do independent subsystems finally integrate, and who owns that merge?
+```
+
 ### Recommended Section Planning Order
 
 ```text
@@ -1257,23 +1270,24 @@ For each section:
 2. Product definition and scope (per Build posture)
 3. Locked decisions
 4. System overview
-5. Domain model
-6. Core modules/services/contracts
-7. Data/state model
-8. User-facing flows
-9. Background/automation flows
-10. External integrations
-11. Frontend architecture
-12. Backend/API/indexer strategy
-13. Shared package/config strategy
-14. Testing strategy
-15. Security/risk
-16. Deployment strategy (+ demo strategy only if a demo is in scope)
-17. Alternatives considered
-18. Scope boundaries / deferred work
-19. Diagrams
-20. Repo scaffold
-21. Build contract
+5. Subsystem dependency DAG & parallelization seams (import-direction rule + independent-subsystem callout)
+6. Domain model
+7. Core modules/services/contracts
+8. Data/state model
+9. User-facing flows
+10. Background/automation flows
+11. External integrations
+12. Frontend architecture
+13. Backend/API/indexer strategy
+14. Shared package/config strategy
+15. Testing strategy
+16. Security/risk
+17. Deployment strategy (+ demo strategy only if a demo is in scope)
+18. Alternatives considered
+19. Scope boundaries / deferred work
+20. Diagrams
+21. Repo scaffold
+22. Build contract
 ```
 
 ### Section Deepening Prompt
@@ -1413,6 +1427,7 @@ The architecture draft must be:
 ## 2. Product Definition and Scope
 ## 3. Locked Architecture Decisions
 ## 4. System Overview
+## 4A. Subsystem Dependency DAG & Parallelization Seams
 ## 5. Domain Model
 ## 6. Core Module / Service / Contract Architecture
 ## 7. Data and State Model
@@ -1753,6 +1768,7 @@ Before accepting the architecture package:
 | Overbuilt for the posture | Timebox explodes / gold-plating | Add constraints/non-goals/deferred work |
 | Under-built for production posture | Ships shortcuts; missing hardening/operability | Promote the missing production concern to a required task |
 | Architecture not buildable | Claude Code invents details | Add build-ready specs and handoff |
+| No parallelization seams | Build serializes; one engineer blocks all others | Capture the import DAG + independent-subsystem callout in §2.5 (Phase 13) |
 | Task plan invents architecture | IMPLEMENTATION_PLAN diverges | Require anchors and Claude Code gap audit |
 
 ---

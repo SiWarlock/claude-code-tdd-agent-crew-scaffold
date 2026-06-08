@@ -23,7 +23,7 @@
 > - <milestone 1 — date>
 > - <milestone 2 — date>
 
-> **Spec-anchor convention (architecture-as-contract).** Each phase header below carries a `**Spec anchors:**` block listing the `{{ARCH_DOC}}` sections the phase implements. Orchestrator + implementer re-read the listed anchors at session start. If a slice surfaces a behavior the anchors don't cover, that's a cross-doc invariant flag at Step 9 — either the anchor is missing or the implementation has drifted. Architecture is contract; drift surfaces structurally, not silently.
+> **Spec-anchor convention (architecture-as-contract).** Each phase header below carries a `**Spec anchors:**` block listing the `{{ARCH_DOC}}` sections the phase implements. Orchestrator + implementer re-read the listed anchors at session start. If a slice surfaces a behavior the anchors don't cover, that's a cross-doc invariant flag at Step 9 — either the anchor is missing or the implementation has drifted. Architecture is contract; drift surfaces structurally, not silently. In team mode, each phase header also carries a `**Track:**` tag + a `**Depends on (phases):**` edge — the source the `## Parallelization plan` (Track map) renders from.
 
 ---
 
@@ -57,6 +57,48 @@ _(Empty at project start; populated as Step-9 routing surfaces operational items
 
 ---
 
+<!-- ▼ EXAMPLE BLOCK [id=parallelization-plan]: Parallelization plan / Track map — TEAM MODE ONLY. /tasks-gen authors this from {{ARCH_DOC}} §2.5 (the subsystem dependency DAG) refined by the per-task `Depends on:` graph. It is the authority for valid `<track>` names; `/team-start <track>` reads it to scope a track's phases + provision its worktree. Delete this whole block for a single-track (serial) plan or a single-operator build. ▼ -->
+
+## Parallelization plan (Track map)
+
+> **Team mode only.** A *track* is a set of phases whose subsystems form a dependency-isolated region of the `{{ARCH_DOC}}` §2.5 DAG. Tracks with no unsatisfied upstream-track dependency run **in parallel — each in its own git worktree with its own agent team**. A single-track plan deletes this section.
+
+**Phase/track DAG** (nodes = phases, edges = `Depends on (phases)`, subgraphs = tracks):
+
+```mermaid
+flowchart TD
+  subgraph contract[Track: contract — forced-serial bottleneck]
+    P0[Phase 0 — shared schema / contracts]
+  end
+  subgraph trackA[Track: track-a]
+    P1[Phase 1] --> P2[Phase 2]
+  end
+  subgraph trackB[Track: track-b]
+    P3[Phase 3] --> P4[Phase 4]
+  end
+  P0 --> P1
+  P0 --> P3
+```
+
+> **Critical path:** <Phase 0 → Phase 1 → Phase 2> (the serial floor on build time — staff it first). **Forced-serial bottleneck:** <Phase 0 (shared contract) — every track waits on it>.
+
+**Track map** — the `<track>-<area>-<role>` names reuse the convention in root `CLAUDE.md` "Naming + cross-bleed prevention":
+
+| Track | Phases | Code area(s) | Worktree (branch) | Agent-team names |
+|---|---|---|---|---|
+| <track-a> | <phase IDs> | <area dir(s)> | `../{{REPO_DIRNAME}}-<track-a>` (`track/<track-a>`) | `<track-a>-<area>-orchestrator` / `-implementer` |
+| <track-b> | <phase IDs> | <area dir(s)> | `../{{REPO_DIRNAME}}-<track-b>` (`track/<track-b>`) | `<track-b>-<area>-orchestrator` / `-implementer` |
+
+**Integration / merge order** (DAG topological order — a downstream track merges only after its upstream tracks):
+1. <the contract track → the integration branch first (the shared contract is frozen here)>
+2. <then the remaining tracks in dependency order>
+
+**Shared contracts across tracks** (freeze before tracks fork — the `{{ARCH_DOC}}` Appendix A models crossing a §2.5 edge): <the models / files multiple tracks read>.
+
+<!-- ▲ END EXAMPLE BLOCK [id=parallelization-plan] ▲ -->
+
+---
+
 ## Phase exit checklist (template — applies to every phase)
 
 Before ticking a phase complete:
@@ -85,6 +127,8 @@ The project is "done" when:
 
 **Spec anchors:** `{{ARCH_DOC}} §X`, §Y.
 
+**Track:** <track-id, or `—` for a single-track build> · **Depends on (phases):** <upstream phase IDs, or `none`>.
+
 ### <phase-id>.1 — <task name>
 
 <!-- ▼ EXAMPLE BLOCK [id=task-entry-format]: task entry format — dense checkbox bullets, NOT a pre-written brief. The orchestrator authors the /tdd brief from this entry + carry-forward + recent context. ▼ -->
@@ -93,6 +137,7 @@ The project is "done" when:
 - [ ] <acceptance behavior 2>
 - [ ] Files: <concrete paths — NEW vs. extended>
 - [ ] Cross-doc invariant: <NEW / extended / none>
+- [ ] Depends on: <task IDs whose tests/impl this requires, or `none`>
 
 <!-- ▲ END EXAMPLE BLOCK [id=task-entry-format] ▲ -->
 
@@ -126,6 +171,7 @@ The project is "done" when:
 - [ ] <demo acceptance behavior — the happy path that runs end-to-end>
 - [ ] Files: <demo entrypoint / seed data / script — NEW vs. extended>
 - [ ] Cross-doc invariant: none (a demo must not introduce new contract surface)
+- [ ] Depends on: <the spine task(s) the demo exercises>
 
 ### Acceptance criteria (D)
 

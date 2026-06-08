@@ -72,7 +72,7 @@ SCAFFOLDING-GUIDE §11."
   already made). Build `generatedFiles[]`/`exampleBlocks[]` **incrementally** as each file is written.
 - **One-line bookkeeping hooks** in §6 (plan), §7 steps 1/2/6/7/8/9/10/11 (append a ledger row), §10 (placeholders
   == manifest values).
-- **One-time template edit:** add stable `[id=<slug>]` to all **25 EXAMPLE BLOCK markers across 12 files**, and
+- **One-time template edit:** add stable `[id=<slug>]` to all **26 EXAMPLE BLOCK markers across 12 files**, and
   normalize the single-line self-closing form to the paired open/close form so every region has a
   machine-detectable boundary. Non-breaking (slug lives inside the existing comment).
 
@@ -165,7 +165,7 @@ involved, and **lower base-confidence ⇒ more gating, never more auto-apply.** 
 Ship incrementally so you can dogfood the safe read-only parts first.
 
 **Phase 1 — Enablement (low-risk, unblocks everything).**
-1. `templates/**` — add stable `[id=<slug>]` to all 25 EXAMPLE BLOCK markers across the 12 files; normalize
+1. `templates/**` — add stable `[id=<slug>]` to all 26 EXAMPLE BLOCK markers across the 12 files; normalize
    single-line markers to paired open/close. *(One mechanical, non-breaking edit pass.)*
 2. `GENERATE-WITH-CLAUDE.md` — add **Step 12.5** (stamp manifest), the §6/§7/§10 bookkeeping hooks, add
    `.scaffolding/` to the documented generated structure, and document the manifest schema.

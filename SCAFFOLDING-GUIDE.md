@@ -130,7 +130,7 @@ When parallel team-lead sessions run in the same repo (e.g. a frontend track and
 - **Context separation.** Planning + scope decisions are a fundamentally different kind of context than per-slice TDD. Splitting them lets each role hold a smaller, sharper mental model.
 - **Durability across cycles.** Teammates cycle on context; the lead survives many cycles. Without a durable lead, every cycle re-derives coordination state.
 - **Escalation discipline.** A dedicated escalation conduit makes the 4-category taxonomy load-bearing — the human is interrupted only when it matters.
-- **Multi-track concurrency.** Track-prefix naming + the lead's awareness of topology makes parallel tracks in the same repo structurally safe.
+- **Multi-track concurrency.** The plan's **parallel track map** (in `{{TASK_TRACKER}}`, derived from the `{{ARCH_DOC}}` §2.5 dependency DAG) marks independent tracks; each runs in its **own git worktree with its own team** (`/team-start <track>`), with track-prefix naming + a DAG-topological merge order keeping them structurally safe. (Team mode only; single-operator walks the DAG serially.)
 
 ### Single-operator fallback
 
@@ -279,7 +279,7 @@ Lessons accrete through `/tdd` Step 9 → orchestrator hot-routing.
 
 ### `{{TASK_TRACKER}}` — state + phase plan
 
-The single source of truth for "what's done, what's next." Section order: phase note · session protocol · reference deadlines · Currently in progress · Carry-forward (triaged every `/orchestrate-end`) · deliverable map · phase exit checklist · phase sections with spec anchors and dense checkbox tasks · Trims/Nice-to-Haves Catalog · Decisions tabled · Log (append-only).
+The single source of truth for "what's done, what's next." Section order: phase note · session protocol · reference deadlines · Currently in progress · Carry-forward (triaged every `/orchestrate-end`) · deliverable map · **Parallelization plan (Track map)** · phase exit checklist · phase sections with spec anchors, a per-phase `Track:` / `Depends on (phases):`, and dense checkbox tasks (each with a `Depends on:` edge) · an **optional Demo phase** · Trims/Nice-to-Haves Catalog · Decisions tabled · Log (append-only). The plan is **sized by the build posture** (from `{{ARCH_DOC}}`): production-grade promotes hardening early; MVP/prototype stays lean. The **Parallelization plan** is the authority for the project's parallel tracks → worktrees → team names (team mode); a demo is an explicit *optional* phase, never in the mandatory spine.
 
 Task entries are **dense bullets, not pre-written briefs** — the orchestrator authors the brief from the task entry + carry-forward + recent context.
 
@@ -291,6 +291,7 @@ The project's architecture spec, treated by the scaffolding as a **contract**:
 - **The canonical contract; typed models are the executable enforcement.** The area `CLAUDE.md` carries a **Cross-doc invariants table**: each row pairs a typed data model with the `{{ARCH_DOC}}` section it mirrors. Field changes (added / removed / renamed) require an edit to the matching architecture section in the same round of commits. Drift is a *finding*, not a footnote.
 - **Orchestrator territory.** The implementer never edits it directly. When a slice changes an invariant model, the implementer **flags it at Step 9** as a "cross-doc invariant change"; the orchestrator writes the architecture edit + the table row hot during the same session.
 - **Spec anchors keep phases honest.** Every phase in `{{TASK_TRACKER}}` lists the `{{ARCH_DOC}}` sections it implements. Both roles re-read those anchors at session start.
+- **Build posture + parallelization seams.** The executive summary carries a **`Build posture:`** line (`production-grade` | `MVP/prototype`) that sizes the whole build, and **`§2.5`** states the subsystem **dependency DAG** + the independent-subsystem seams — the input `tasks-gen` reads to derive the parallel track map. A model crossing a §2.5 edge is a **shared contract** to freeze before parallel tracks fork.
 - **How it's seeded.** At bootstrap it's the **user's provided doc** — the generator reads it end-to-end and extracts content for personalization. If the user has only a skeleton, the generator extends it as a skeleton (section headings with 1-2 sentence stubs); architecture content accretes as decisions land.
 
 ### `docs/sessions/<NNN>-<date>-<topic>.md`
@@ -431,6 +432,15 @@ Teammates have finite context windows. Without a reliable monitor, sessions eith
 The template scaffolding ships reference implementations of `statusline-command.sh` and `check-team-context.sh` in `templates/scripts/`. `GENERATE-WITH-CLAUDE.md` includes install instructions (the user installs both scripts once; the registry + heartbeat files are populated automatically by team sessions).
 
 **ntfy alert (future hook):** if the lead's own context hits ACTION threshold, the lead initiates `/team-end` (which gates on all teammates being closed). A future enhancement: optional phone push notification via [ntfy.sh](https://ntfy.sh) when the lead cycles — set `CLAUDE_TEAM_NTFY_TOPIC=<your-topic>` and the lead `curl`s the webhook on `/team-end`. Hook point designed; integration deferred until needed.
+
+### Parallel tracks + per-track worktrees (team mode)
+
+The plan's **Parallelization plan (Track map)** turns the implicit "build order is serial" assumption into explicit, proactive parallelization:
+
+- **Where it comes from.** `tasks-gen` derives **phase-level tracks** from the `{{ARCH_DOC}}` **§2.5** subsystem dependency DAG, refined by each task's `Depends on:` edge. The independent tracks (no shared dependency path), the **critical path**, and any **forced-serial bottleneck** (typically the shared-contract phase) are recorded in `{{TASK_TRACKER}}`. The Track map is the **authority** for valid `<track>` names — they're never invented ad-hoc.
+- **One worktree + one team per track.** `/team-start <track>` looks the track up in the map, scopes the team to that track's phases, and provisions a git worktree (`git worktree add ../<repo>-<track> track/<track>`). Each track's lead + orchestrator + implementer(s) live in that worktree; their commits land on the track branch, never the root checkout.
+- **Cross-worktree coordination** (`docs/team-protocol.md` "Working tree → tracks + worktrees"): the **shared root docs** (`{{TASK_TRACKER}}`, `{{ARCH_DOC}}`) are owned by a single **integration checkout** — a track routes its cross-doc edits there, not to its own branch's copy. Tracks **merge in DAG topological order** (a downstream track waits for its upstream tracks), run by one actor to avoid merge races. A change to a **shared contract** (an Appendix-A model crossing a §2.5 seam) propagates owner → integration → consumers and is a **Finding**.
+- **Team mode only.** Parallel worktree-teams need a lead per track; the single-operator fallback is itself the serialization point, so solo builds walk the DAG **serially in one working tree** (the Track map becomes a sequencing hint).
 
 ---
 
