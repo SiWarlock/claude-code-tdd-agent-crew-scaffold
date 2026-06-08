@@ -61,9 +61,9 @@ For one brief at a time:
 
 5. **Read the active area `CLAUDE.md`** — lookup table + cross-doc invariants table + forbidden patterns + lessons index. Note any cross-doc invariants the slice might touch.
 
-6. **Read recent briefs for style** — `ls docs/briefs/` last 3 files. Match the orchestrator's voice: terse, default-vote rationale phrasing, Step-2.5 question patterns.
+6. **Read recent briefs for style** — `ls docs/briefs/` last 3 files (in multi-track mode, your track's: `ls docs/briefs/<track>-*`). Match the orchestrator's voice: terse, default-vote rationale phrasing, Step-2.5 question patterns.
 
-7. **Read the most recent session doc** — `ls docs/sessions/` last 1 file. Note what just landed + Carry-forward items the next brief should fold in.
+7. **Read the most recent session doc** — `ls docs/sessions/` last 1 file (your track's in multi-track: `ls docs/sessions/<track>-*`). Note what just landed + Carry-forward items the next brief should fold in.
 
 8. **Draft the brief** per the template format. Populate every required section:
    - `# /tdd brief — <feature_name>`

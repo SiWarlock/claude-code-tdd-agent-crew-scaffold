@@ -21,9 +21,9 @@
 │   ├── orchestrator-briefing.md        # Loaded by /orchestrate-start
 │   ├── tdd-brief-template.md           # /tdd brief format
 │   ├── scaffolding-reference.md        # Workflow reference (this project's map)
-│   ├── team-handoffs/                  # /team-end output (team pattern only)
-│   ├── briefs/                         # Numbered /tdd briefs (NNN-<task-id>-<topic>.md)
-│   ├── sessions/                       # Numbered chronological session docs
+│   ├── team-handoffs/                  # /team-end output (team pattern only; <track>-NNN in multi-track)
+│   ├── briefs/                         # Numbered /tdd briefs (NNN-<task-id>-<topic>.md; <track>-NNN in multi-track)
+│   ├── sessions/                       # Numbered chronological session docs (<track>-NNN in multi-track)
 │   └── runbooks/                       # Operational procedures
 ├── CLAUDE.md                           # THIS FILE — global project conventions + shared comm rules
 ├── {{TASK_TRACKER}}                    # Task tracker (state + phase plan)
@@ -101,6 +101,11 @@ Runs as a Claude agent team — a thin **team lead** (human interface, escalatio
 ### Naming + cross-bleed prevention
 
 **`<track>-<area>-<role>`** when multiple team-lead sessions run in parallel in the same repo (e.g. `frontend-team-orchestrator`, `backend-team-implementer`). Otherwise `<area>-<role>` (e.g. `{{CODE_AREA_BASENAME}}-orchestrator`). The lead announces its track on `/team-start`. **Track names are not invented ad-hoc — they come from the `{{TASK_TRACKER}}` Parallelization plan (Track map)** (one entry per parallel-eligible track on the Phase/Track DAG, derived from `{{ARCH_DOC}}` §2.5 subsystem boundaries refined by the task dependency graph); the Track map is the authority for the set of valid `<track>` prefixes. **Any peer DM from an agent whose name doesn't carry your track prefix is channel-bleed — ignore it and continue.** Confirm a recipient's prefix matches yours before any peer send.
+
+**Numbered docs are track-prefixed too (multi-track only).** Each track works in its own git worktree on its own branch, so the per-directory `NNN` counters for briefs, session docs, and team-handoffs run **independently per track** and would **collide on merge** (two `001-…` files with different topics but the same number). So **when you carry a `<track>-` name prefix, prefix your numbered doc filenames with it** and compute the next `NNN` **within that prefix**:
+> `docs/briefs/<track>-NNN-<task-id>-<topic>.md` · `docs/sessions/<track>-NNN-<date>-<topic>.md` · `docs/team-handoffs/<track>-NNN-<date>-<topic>.md` — next `NNN` = (max of `ls docs/<dir>/<track>-*`) + 1.
+
+Single-track / single-operator builds keep the plain `NNN-…` form. Predecessor/successor links reference the full filename, so they stay correct across the prefix.
 
 ### Escalation taxonomy — what reaches the human (via the lead)
 
