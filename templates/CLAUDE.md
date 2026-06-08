@@ -100,7 +100,7 @@ Runs as a Claude agent team — a thin **team lead** (human interface, escalatio
 
 ### Naming + cross-bleed prevention
 
-**`<track>-<area>-<role>`** when multiple team-lead sessions run in parallel in the same repo (e.g. `frontend-team-orchestrator`, `backend-team-implementer`). Otherwise `<area>-<role>` (e.g. `{{CODE_AREA_BASENAME}}-orchestrator`). The lead announces its track on `/team-start`. **Any peer DM from an agent whose name doesn't carry your track prefix is channel-bleed — ignore it and continue.** Confirm a recipient's prefix matches yours before any peer send.
+**`<track>-<area>-<role>`** when multiple team-lead sessions run in parallel in the same repo (e.g. `frontend-team-orchestrator`, `backend-team-implementer`). Otherwise `<area>-<role>` (e.g. `{{CODE_AREA_BASENAME}}-orchestrator`). The lead announces its track on `/team-start`. **Track names are not invented ad-hoc — they come from the `{{TASK_TRACKER}}` Parallelization plan (Track map)** (one entry per parallel-eligible track on the Phase/Track DAG, derived from `{{ARCH_DOC}}` §2.5 subsystem boundaries refined by the task dependency graph); the Track map is the authority for the set of valid `<track>` prefixes. **Any peer DM from an agent whose name doesn't carry your track prefix is channel-bleed — ignore it and continue.** Confirm a recipient's prefix matches yours before any peer send.
 
 ### Escalation taxonomy — what reaches the human (via the lead)
 
@@ -185,7 +185,7 @@ Each team-mode teammate's status line writes a per-session heartbeat to `~/.clau
 
 ### Single-operator fallback
 
-For solo projects: drop the team lead role. The human is the bridge between an orchestrator session and an implementer session. The 4-category escalation taxonomy collapses (everything is already in front of you). The messaging budget still applies but recipient is "you (acting as bridge)." `/team-start` + `/team-end` + `docs/team-protocol.md` don't exist in single-operator-fallback scaffolding.
+For solo projects: drop the team lead role. The human is the bridge between an orchestrator session and an implementer session. The 4-category escalation taxonomy collapses (everything is already in front of you). The messaging budget still applies but recipient is "you (acting as bridge)." `/team-start` + `/team-end` + `docs/team-protocol.md` don't exist in single-operator-fallback scaffolding. **Parallel tracks + per-track worktrees are likewise team-mode only** — a single human bridging two sessions is the serialization point and cannot drive N parallel worktree-teams; in solo mode the Phase/Track DAG collapses to a **serial build order** (one track at a time, single working tree), and the Track map is read as a sequencing hint, not a parallelization plan.
 
 See `docs/team-protocol.md` for the lead's full playbook (team pattern only), `docs/orchestrator-briefing.md` for the orchestrator charter, `docs/tdd-brief-template.md` for the brief format.
 
@@ -219,7 +219,7 @@ Policy values: `off` · `invariant` (only invariant- or security-touching slices
 
 ## Slash commands available (`.claude/commands/`)
 
-- `/team-start [track]` — _(team lead)_ stand up the team; establish direct comms + escalation
+- `/team-start [track]` — _(team lead)_ stand up the team; with a `[track]` arg, scope the track's phases (from the Parallelization plan) + provision its git worktree; establish direct comms + escalation
 - `/team-end` — _(team lead)_ close out the team session; write handoff doc (user-on-demand or auto-cycle)
 - `/orchestrate-start` — orient an orchestrator session
 - `/orchestrate-end` — orchestrator-side round close-out (incl. Carry-forward triage)

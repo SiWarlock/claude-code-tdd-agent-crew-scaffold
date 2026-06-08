@@ -31,6 +31,16 @@
       "gate": "human",
       "idempotencyKey": "rename:task-tracker:MVP_TASKS.md->IMPLEMENTATION_PLAN.md",
       "touches": ["MVP_TASKS.md", "manifest.placeholders", "manifest.generatedFiles", "manifest.exampleBlocks"]
+    },
+    {
+      "id": "M-0004",
+      "title": "Add the '## Parallelization plan' EXAMPLE BLOCK (phase/track DAG + critical path) to IMPLEMENTATION_PLAN.md (team mode only)",
+      "introducedAtSha": "PENDING-wire-to-shipping-commit",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:IMPLEMENTATION_PLAN:parallelization-plan",
+      "touches": ["IMPLEMENTATION_PLAN.md", "manifest.exampleBlocks"]
     }
   ]
 }

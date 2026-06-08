@@ -141,12 +141,12 @@ Before the substantive interview, ask the user via `AskUserQuestion`:
 **Question:** Which mode do you want for this project?
 
 **Options:**
-- **Team pattern** — 3 roles (team lead + orchestrator + implementer-per-area), direct teammate comms, escalation taxonomy. Recommended for: multi-week projects, multi-area projects, projects with safety/correctness criticality, parallel work streams. Generates `/team-start`, `/team-end`, `docs/team-protocol.md`, `docs/team-handoffs/`.
+- **Team pattern** — 3 roles (team lead + orchestrator + implementer-per-area), direct teammate comms, escalation taxonomy. Recommended for: multi-week projects, multi-area projects, projects with safety/correctness criticality, parallel work streams — **each parallel TRACK runs in its own git worktree with its own agent team; the Parallelization plan in `{{TASK_TRACKER}}` records the phase/track DAG + critical path**. Generates `/team-start [track]` (track-scoping + worktree setup), `/team-end`, `docs/team-protocol.md`, `docs/team-handoffs/`.
 - **Single-operator fallback** — 2 sessions, the human is the bridge. Recommended for: solo dev, one-week project, single code area, no parallel tracks. Skips `/team-start`, `/team-end`, `docs/team-protocol.md` — those concepts collapse into the human.
 
 The user's answer determines several downstream generation choices (which slash commands to write, whether to write `team-protocol.md`, how to phrase comm rules in root `CLAUDE.md`).
 
-If the user picks team pattern, follow up with: "Is this a solo team-lead session, or will parallel team-lead sessions run in this repo (e.g. a frontend track + a backend track)?" If parallel, get the **track name** for the lead's spawn (e.g. `frontend`, `backend`).
+If the user picks team pattern, follow up with: "Is this a single-track build, or will parallel **tracks** run (e.g. a frontend track + a backend track)?" If parallel, capture the **track list** — each track becomes a `/team-start <track>` worktree + its phase scope, derived from `{{ARCH_DOC}}` §2.5 subsystem boundaries refined by the task dependency graph and recorded in the `{{TASK_TRACKER}}` **Parallelization plan**. Record the track set in the manifest (`tracks`).
 
 ---
 
@@ -265,7 +265,7 @@ From `templates/area-LESSONS.md`, written to `<code-area>/LESSONS.md`. This is j
 
 ### Step 4 — `{{TASK_TRACKER}}`
 
-From `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**.
+From `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**. **In team mode, also fill the `[id=parallelization-plan]` block** (Track map): derive phase-level **tracks** from `{{ARCH_DOC}}` §2.5 (the subsystem dependency DAG) refined by the per-task `Depends on:` graph, and record the phase/track DAG + critical path + the `track → worktree → team-name` table; each task entry carries a `Depends on:` line. **In single-operator mode, delete the `parallelization-plan` block** (like `optional-demo-phase` when out of scope) — solo builds walk the DAG serially in one tree.
 
 ### Step 5 — `{{ARCH_DOC}}`
 
@@ -304,7 +304,7 @@ From `templates/.claude/commands/`. Generation order:
 - Skip: `team-start`, `team-end`
 
 For each:
-- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim.
+- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim. (`team-start`'s track argument now scopes a track's phases — reading the `Parallelization plan` — and provisions the track's git worktree; keep those steps verbatim, fill only the area-basename / path placeholders in the spawn templates.)
 - **`preflight`, `run-tests`** are cwd-aware in the template. **If the project has one code area, delete the mode-detection and any second-mode block** — leave a single linear gate. If 2 areas, fill both modes. If 3+ areas, expand the case statement to cover each area, repeating the per-area block.
 - **`context-check`** — generate ONLY in team-pattern mode. Skip for single-operator-fallback.
 - **`eval`, `trace`** — include only if the user opted in (Batch E). Otherwise don't write them.
@@ -345,7 +345,8 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "lastUpgradedAt": null,
 
   "mode": "team | single-operator",
-  "track": "<track name, or null>",
+  "track": "<the lead session's track name, or null>",
+  "tracks": ["<parallel track names from the Parallelization plan, or [] for a single-track build>"],
   "optionalCommands": ["eval", "trace"],
   "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "brief-drafter"],
 
@@ -580,14 +581,14 @@ For 3+ areas, expand placeholders by suffix: `{{CODE_AREA_2}}` / `{{CODE_AREA_3}
 
 ### EXAMPLE BLOCKs (rewrite wholesale, don't substitute a value)
 
-Each `EXAMPLE BLOCK` region carries a stable **`[id=<slug>]`** in both its opening (`<!-- ▼ EXAMPLE BLOCK [id=<slug>]: … ▼ -->`) and closing (`<!-- ▲ END EXAMPLE BLOCK [id=<slug>] ▲ -->`) marker. The slug is the manifest's `exampleBlocks[].id`. Rewrite each block's **content** for the project (or leave the illustrative default and record it as `illustrative`); **never alter the marker line or its `[id=`** — `/scaffold-upgrade` keys per-region merges on it. The 25 regions across 12 files (`optional-demo-phase` is emitted only when a demo is in scope):
+Each `EXAMPLE BLOCK` region carries a stable **`[id=<slug>]`** in both its opening (`<!-- ▼ EXAMPLE BLOCK [id=<slug>]: … ▼ -->`) and closing (`<!-- ▲ END EXAMPLE BLOCK [id=<slug>] ▲ -->`) marker. The slug is the manifest's `exampleBlocks[].id`. Rewrite each block's **content** for the project (or leave the illustrative default and record it as `illustrative`); **never alter the marker line or its `[id=`** — `/scaffold-upgrade` keys per-region merges on it. The 26 regions across 12 files (`parallelization-plan` is emitted only in team mode; `optional-demo-phase` only when a demo is in scope):
 
 | File | EXAMPLE BLOCK ids |
 |---|---|
 | `CLAUDE.md` | `project-structure` · `tech-stack` · `strict-typing-posture` · `tdd-scope` · `key-safety-rules` |
 | `<code-area>/CLAUDE.md` (`area-CLAUDE.md`) | `area-stack` · `forbidden-patterns` · `module-layout` · `area-subagent-candidates` |
 | `docs/orchestrator-briefing.md` | `who-the-user-is` · `project-context` · `project-conventions` |
-| `{{TASK_TRACKER}}` (`IMPLEMENTATION_PLAN.md`) | `deliverable-map` · `task-entry-format` · `optional-demo-phase` |
+| `{{TASK_TRACKER}}` (`IMPLEMENTATION_PLAN.md`) | `deliverable-map` · `parallelization-plan` · `task-entry-format` · `optional-demo-phase` |
 | `docs/tdd-brief-template.md` | `tdd-brief-worked-example` · `project-specific-pitfalls` |
 | `docs/scaffolding-reference.md` | `inventory-extension` · `instance-conventions` |
 | `docs/team-protocol.md` | `code-areas` |

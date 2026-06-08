@@ -26,7 +26,9 @@ and anchored so drift surfaces structurally at TDD Step 9.
 1. **`ARCHITECTURE.md`** (repo root) — **PRIMARY.** This is the source you decompose; every task anchors
    to its `§<N>` sections and Appendix A models. Read it fully, including the **`Build posture:`** line in the
    executive summary (`production-grade` | `MVP/prototype` — it sizes the build order, whether to emit the
-   optional Demo phase, and how aggressively to defer; see §2) and the Spec Anchor Index.
+   optional Demo phase, and how aggressively to defer; see §2), **`§2.5` — the subsystem dependency DAG /
+   parallelization seams** (the input you derive parallel build **tracks** from; see §2), and the Spec Anchor
+   Index.
 2. **`references/implementation-plan-template.md`** — the canonical `IMPLEMENTATION_PLAN.md` format + the **spec-anchor
    convention** + living-state sections. The file you write MUST match this structure so the orchestrator,
    `/orchestrate-start`, and the cross-doc-invariants flow all work.
@@ -66,12 +68,34 @@ Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
   `optional-demo-phase` block) — never fold it silently into the mandatory spine.
 - **Trace requirements → tasks.** Every **in-scope** requirement (REQ-* / acceptance signal — sized to the
   chosen build posture) should map to at least one task; surface any requirement with no task.
+- **Dependency graph + parallel tracks (proactive).** The build-order bullet above gives the *default serial
+  spine*; this makes the **true partial order** explicit so independent work can be unstacked into parallel
+  tracks (each runnable in its own git worktree + agent team — see `/team-start <track>`):
+  1. **Per-task deps.** Every task carries a **`Depends on:`** line (task IDs, or `none`) — derived from
+     data/contract flow (a task consuming an Appendix-A model depends on the task that defines it), NOT from
+     sequential-by-habit ordering. The dependency graph is the build-order spine *minus* edges that are merely
+     sequential rather than sequential-by-contract.
+  2. **Tracks from the architecture, refined by the graph.** Tracks are **phase-level**, derived from
+     `ARCHITECTURE.md` **§2.5** (the subsystem dependency-DAG + independent-subsystem callout), then refined by
+     the task dep graph — a "seam" the graph shows is actually serially coupled collapses into one track; a
+     phase that splits cleanly along a contract seam can become two. Tag each phase with `**Track:**` + a
+     phase-level `**Depends on (phases):**` edge.
+  3. **Phase/track DAG + critical path.** Build the phase/track DAG, mark the **critical path** (the longest
+     dependency chain — the serial floor on build time) and any **forced-serial bottleneck** (a phase every
+     track waits on — typically the shared-contract / schema phase).
+  4. **Posture-aware sizing.** Under **production-grade**, tracks are real (e.g. a security/observability track
+     parallel to feature tracks); under **MVP/prototype**, keep it lean — a **single track is a valid answer**,
+     recorded as such (don't over-parallelize a small build).
+  Encode the result in the template's **`## Parallelization plan`** (Track map) section: the DAG, the critical
+  path, and the `track → phases → area(s) → worktree → team-name (<track>-<area>-<role>)` table that
+  `/team-start <track>` consumes. **Team mode only** — single-operator builds walk the DAG serially in one tree.
 
 ### Workflow-or-serial
 
 If Ultracode / the Workflow tool is available, you may fan out per-phase decomposition + a
-requirement-coverage check in parallel and merge; otherwise do it serially (via `Task` or inline). Same
-result either way.
+requirement-coverage check **+ the dependency-graph / track derivation (run after the per-phase fan-out
+merges, since it reads every phase's deps)** in parallel and merge; otherwise do it serially (via `Task` or
+inline). Same result either way.
 
 ---
 
@@ -95,9 +119,13 @@ it. (`AskUserQuestion` to let the user choose: amend the contract, defer the tas
 
 ## 5. Human gate
 
-Present a compact summary (phases, task counts, any requirements with no task, any architecture gaps you
-hit) and confirm scope before finalizing — Path A auto-proceed for a clean decomposition, Path B confirm
-if anything is ambiguous or you had to flag a gap.
+Present a compact summary (phases, task counts, **the Track map: N tracks, the critical path, and any
+forced-serial bottleneck phase**, any requirements with no task, any architecture gaps you hit) and confirm
+scope before finalizing — Path A auto-proceed for a clean decomposition, Path B confirm if anything is
+ambiguous or you had to flag a gap. **If the plan yields >1 track** (parallel worktrees/teams are
+recommended), surface the `track → worktree → team-name` map + the critical path explicitly and **confirm the
+parallel build strategy (Path B)** — spinning up N worktrees + N teams is an operational decision, not a
+silent default. A single-track plan stays Path A.
 
 ---
 
@@ -107,15 +135,21 @@ if anything is ambiguous or you had to flag a gap.
 - **Never invent architecture** to satisfy a task — flag it (§3).
 - **Every task anchors to the contract.** No orphan tasks; no phase without `Spec anchors:`.
 - **`IMPLEMENTATION_PLAN.md` living-state sections start empty** (Currently-in-progress, Carry-forward, Log,
-  Decisions-tabled) — they accrete through real `/tdd` work, not at generation.
+  Decisions-tabled) — they accrete through real `/tdd` work, not at generation. **The `Parallelization plan`
+  (Track map) is the exception among new sections: it IS authored at generation** (it's plan structure, like
+  the Deliverable map + phase blocks), not accreted living state.
 
 ---
 
 ## 7. Output & handoff
 
 > **IMPLEMENTATION_PLAN.md generated** (repo root) — `<N>` phases, `<M>` tasks, every phase anchored to
-> `ARCHITECTURE.md`. `<K>` requirements with no task / `<J>` architecture gaps flagged (listed).
+> `ARCHITECTURE.md`. `<K>` requirements with no task / `<J>` architecture gaps flagged (listed). `<T>` parallel
+> tracks identified (critical path: `<phase chain>`; `<B>` forced-serial bottleneck phase(s)) — recorded in the
+> **Parallelization plan** (Track map).
 > **Next:** run **`/scaffold-generate`** to personalize the agent-team harness into the project, then
-> `/team-start` (or `/orchestrate-start` solo) and the **`/tdd`** engine builds it slice by slice.
+> **`/team-start <track>` per parallel track** (each scopes that track's phases + sets up its worktree) — or a
+> single `/team-start` / `/orchestrate-start` solo for a single-track plan — and the **`/tdd`** engine builds
+> it slice by slice.
 
 Then stop.

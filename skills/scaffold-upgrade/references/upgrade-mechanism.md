@@ -238,10 +238,10 @@ project's customized block to the corresponding upstream block. Today the marker
 ```
 
 This is a non-breaking template edit (the slug is inside the existing comment). **Verified against the
-current templates: there are exactly 25 EXAMPLE BLOCK regions across 12 template files** — CLAUDE.md×5,
-area-CLAUDE.md×4, orchestrator-briefing.md×3, IMPLEMENTATION_PLAN.md×3, tdd-brief-template.md×2,
+current templates: there are exactly 26 EXAMPLE BLOCK regions across 12 template files** — CLAUDE.md×5,
+area-CLAUDE.md×4, orchestrator-briefing.md×3, IMPLEMENTATION_PLAN.md×4, tdd-brief-template.md×2,
 scaffolding-reference.md×2, and one each in security-reviewer.md, README.md, run-tests.md, eval.md,
-trace.md, team-protocol.md. Slugging all 25 once gives every region a durable identity. Add a note to
+trace.md, team-protocol.md. Slugging all 26 once gives every region a durable identity. Add a note to
 `GENERATE-WITH-CLAUDE.md §10` EXAMPLE-BLOCK list that the slug is the manifest `id`.
 
 **Two marker forms exist in the templates today — slug both.** Some regions are *paired* (an opening
@@ -351,5 +351,5 @@ Not requested as a deliverable, but stated so the manifest fields are justified 
 | Manifest path | `.scaffolding/manifest.json` (committed) + `.scaffolding/README.md` (do-not-edit note) |
 | Format | JSON with `schemaVersion`, written via `jq`/direct, validated with `jq .` |
 | Fields | provenance (SHA/ref/repo/timestamps) · mode+track+optional commands/subagents · resolved `placeholders` + per-area `codeAreas[]` · `generatedFiles[]` (dest←template, `kind`) · `exampleBlocks[]` (file, id, customized/illustrative) |
-| Generator change | New **Step 12.5** writes it; one-line bookkeeping hooks added to §6, §7 Steps 1/2/6/7/8/9/10/11, §10; one-time stable-slug edit to the 25 EXAMPLE BLOCK markers across 12 template files |
+| Generator change | New **Step 12.5** writes it; one-line bookkeeping hooks added to §6, §7 Steps 1/2/6/7/8/9/10/11, §10; one-time stable-slug edit to the 26 EXAMPLE BLOCK markers across 12 template files |
 | Retro-stamping | R1 reverse placeholders+mode from generated files · R2 recover SHA via ask → git-history-date → verbatim-fingerprint (priority order, with confidence markers) · R3 write + commit `retroStamped: true` manifest |

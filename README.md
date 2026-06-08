@@ -45,10 +45,10 @@ contract, a spec-anchored `IMPLEMENTATION_PLAN.md`, a hard 10-step `/tdd` walker
  /arch-draft ── deep architecture-planning interview ──▶ docs/planning/*   │  rough draft + artifacts
   │            (PRESEARCH, RESEARCH, DECISIONS, DIAGRAM_PLAN, … by mode)    │
   ▼  ┌─ Brain 2: Claude Code (Opus 4.8 + Ultracode) ─────────────────────┐
- /arch-finalize ── ~13-dimension gap audit + adversarial scrutiny ──▶ 🔒 ARCHITECTURE.md   (binding contract)
+ /arch-finalize ── ~14-dimension gap audit + adversarial scrutiny ──▶ 🔒 ARCHITECTURE.md   (binding contract)
   │
   ▼
- /tasks-gen ── decompose, anchor every task to a §  ──────────────────▶ 🔒 IMPLEMENTATION_PLAN.md     (spec-anchored plan)
+ /tasks-gen ── decompose, anchor every task to a §  ──────────────────▶ 🔒 IMPLEMENTATION_PLAN.md     (spec-anchored plan + parallel track map)
   │
   ▼
  /scaffold-generate ── personalize the harness + stamp provenance ───▶ .claude/ + CLAUDE.md + docs/ + .scaffolding/manifest.json
@@ -74,6 +74,15 @@ an optional cross-model reviewer at finalize.
 `ARCHITECTURE.md` contract, the spec-anchored `IMPLEMENTATION_PLAN.md`, and the hard `/tdd` ordering (the 🔒 above).
 Plugins feed-into or review *around* them — they never author them.
 
+**Posture, demo, and parallelism are decided up front, not improvised.** Planning opens with an explicit
+**build posture** gate — **production-grade** (the default: architecturally-correct, best-practice, with
+auth / validation / observability / rollback *in scope*) or **MVP / prototype** (lean, with flagged
+deferrals) — which steers the whole build; it's always asked, never silently assumed. A **demo** is an
+explicit **optional** phase, never wired into the mandatory build order. And `tasks-gen` records the task
+**dependency graph** + a **parallel track map** (derived from the architecture's `§2.5` subsystem dependency
+DAG) — so independent tracks can each run in their **own git worktree with their own agent team**, collapsing
+a serial build onto its critical path.
+
 ---
 
 ## The skills (the planning chain)
@@ -85,9 +94,9 @@ are host-neutral (Codex or Claude); the rest run on Claude Code.
 
 | Skill | Runs on | What it does |
 |---|---|---|
-| **`arch-draft`** | GPT-5.5 / Codex (host-neutral) | PRD → architecture **rough draft** + supporting artifacts, via the Deep Architecture-Planning Playbook (interview-gated; never codes) → `docs/planning/` |
-| **`arch-finalize`** | Claude Code | gap audit + adversarial scrutiny of the draft → the binding **`ARCHITECTURE.md`** |
-| **`tasks-gen`** | Claude Code | decompose the contract → spec-anchored **`IMPLEMENTATION_PLAN.md`** (every task anchored to a `§`) |
+| **`arch-draft`** | GPT-5.5 / Codex (host-neutral) | PRD → architecture **rough draft** + supporting artifacts, via the Deep Architecture-Planning Playbook (interview-gated; **sets the always-confirmed build posture** — production-grade vs MVP; captures the §2.5 dependency DAG; never codes) → `docs/planning/` |
+| **`arch-finalize`** | Claude Code | gap audit + adversarial scrutiny of the draft → the binding **`ARCHITECTURE.md`** (incl. the `§2.5` parallelization seams the tasks layer reads) |
+| **`tasks-gen`** | Claude Code | decompose the contract → spec-anchored **`IMPLEMENTATION_PLAN.md`** (every task anchored to a `§`; **+ a dependency graph + a parallel track map** for worktree-per-track builds) |
 | **`scaffold-generate`** | Claude Code | personalize the agent-team harness into the project + stamp `.scaffolding/manifest.json` |
 | **`scaffold-upgrade`** | Claude Code | keep an already-generated project's scaffolding current via a provenance-manifest **3-way merge** (propose-don't-clobber) |
 
@@ -130,7 +139,10 @@ files + bounded direct messages:
 **Four escalation categories** reach the human via the lead (critical/safety design questions, findings,
 deferment approvals, load-bearing architectural decisions); everything else the orchestrator and implementer
 settle directly. **Per-slice context monitoring + auto-cycle** (team mode) cleanly cycles teammates at a
-threshold, never mid-slice. **Single-operator fallback** drops the lead and the human bridges two sessions.
+threshold, never mid-slice. **Parallel tracks** (team mode): when the plan's track map marks independent
+tracks, each runs in its **own git worktree with its own team** — `/team-start <track>` scopes the track's
+phases + provisions the worktree, and merges follow a DAG-topological order; single-track plans run in one
+working tree. **Single-operator fallback** drops the lead and the human bridges two sessions (serial build).
 
 Full detail: **`SCAFFOLDING-GUIDE.md`**. The generator procedure: **`GENERATE-WITH-CLAUDE.md`**.
 

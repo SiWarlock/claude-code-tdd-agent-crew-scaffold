@@ -42,7 +42,7 @@ will bind to. Two independent brains over the doc — that's the point.
 
 ---
 
-## 2. The gap audit (~13 dimensions)
+## 2. The gap audit (~14 dimensions)
 
 **First, read the Build posture** recorded in `CLAUDE_CODE_HANDOFF.md` (and the draft header):
 `production-grade` | `MVP/prototype`. **The audit is judged against that posture** — under
@@ -71,6 +71,11 @@ draft + artifacts against the PRD across these dimensions, bucketing every findi
 12. Missing **diagrams** the design needs (cross-check `DIAGRAM_PLAN.md`).
 13. **Missing or unstable task-planning anchors** — every load-bearing section needs a stable `§<N>`
     anchor so `tasks-gen` and the cross-doc-invariants table can reference it.
+14. **Missing or unclear parallelization seams** — the architecture must expose clean subsystem boundaries
+    with an explicit import-direction DAG (the **§2.5** anchor), so `tasks-gen` can derive independent build
+    **tracks**. Flag: subsystems with no stated dependency direction, hidden cross-edges that collapse two
+    "independent" subsystems into one, or a missing/implicit DAG. A design with no clean seams is a finding
+    (single-track is a valid answer — but it must be stated, not defaulted-into).
 
 ### Run it as a workflow when you can, serial otherwise
 
@@ -119,6 +124,11 @@ Write the finalized **`ARCHITECTURE.md` at the repo root**, conforming to `refer
 - The canonical section structure with **stable `§<N>` anchors** + a **Spec Anchor Index**.
 - **Appendix A — model/contract inventory:** every typed model that is a cross-doc invariant (this is what
   the area `CLAUDE.md` cross-doc-invariants table and `IMPLEMENTATION_PLAN` anchors will mirror).
+- **`§2.5 — Subsystem dependency DAG & parallelization seams`** (between §2 and §3): the import-direction rule
+  + a directed/Mermaid DAG of the subsystem boundaries + an explicit *independent-subsystems* callout. This is
+  the input `tasks-gen` reads to derive parallel build **tracks** (the Track map); mark Appendix-A models
+  crossed by a DAG edge as shared contracts. (If no clean seams exist, state single-track explicitly — never
+  default into it.)
 - Content drawn from the draft + planning artifacts + the confirmed gap-audit fixes. Decisions reflected
   as **locked** (with their `DECISIONS.md` rationale); remaining `open` items called out explicitly.
 - A `Build contract` line at the top: downstream skills treat this file as the source of truth.
