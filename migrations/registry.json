@@ -95,7 +95,7 @@
     {
       "id": "M-0010",
       "title": "Root CLAUDE.md restructure: close-out/monitoring pointers, role-pairing command note, de-hardcoded thresholds",
-      "introducedAtSha": "PENDING-W3-1-COMMIT",
+      "introducedAtSha": "ed12615673bef76c5e6c78ed70dc048d0c9b651b",
       "kind": "moved-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
