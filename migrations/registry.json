@@ -55,7 +55,7 @@
     {
       "id": "M-0006",
       "title": "Add the posture field to .scaffolding/manifest.json (schema v2)",
-      "introducedAtSha": "PENDING-W1-10-COMMIT",
+      "introducedAtSha": "fc1cad2ecd8436201884bd67789cc64c1b744925",
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
