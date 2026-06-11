@@ -23,7 +23,7 @@
 
 ## P1 — Duplication (token cost + drift risk)
 
-6. **The 1831-line playbook + 86-line kickoff prompt are byte-identical in two places.** `docs/archive/DEEP_AGENTIC_ARCHITECTURE_PLANNING_PLAYBOOK.md` == `skills/arch-draft/references/architecture-planning-playbook.md`; `docs/archive/START_..._PROMPT.md` == `skills/arch-draft/references/session-kickoff-prompt.md` (confirmed via `diff`). The archive copies are reference-only, but editing one without the other silently diverges. **Fix:** delete the archive copies (the `archive/README.md` already records provenance), or add a "this is a frozen snapshot; live copy at …" banner.
+6. **The 1831-line playbook + 86-line kickoff prompt are byte-identical in two places.** `docs/archive/DEEP_AGENTIC_ARCHITECTURE_PLANNING_PLAYBOOK.md` == `skills/arch-draft/references/architecture-planning-playbook.md`; `docs/archive/START_..._PROMPT.md` == `skills/arch-draft/references/session-kickoff-prompt.md` (confirmed via `diff`). The archive copies are reference-only, but editing one without the other silently diverges. **Fix:** delete the archive copies (the `archive/README.md` already records provenance), or add a "this is a frozen snapshot; live copy at …" banner. **RESOLVED 2026-06 (W1-7):** both archive files now open with a FROZEN SNAPSHOT banner naming the live copy; they are deliberately no longer byte-identical to the live files and are never edited.
 
 7. **`GENERATE-WITH-CLAUDE.md` (root) vs `skills/scaffold-generate/references/generate-procedure.md`.** The skill says its reference "IS GENERATE-WITH-CLAUDE.md." Two near-identical ~596-line generation procedures. **Action:** confirm whether they are duplicates and, if so, make one canonical and have the other point to it (or symlink).
 
