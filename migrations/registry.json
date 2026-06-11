@@ -75,7 +75,7 @@
     {
       "id": "M-0008",
       "title": "Brief template format block: Wiring/entry-point section + REQ derivation note + seam-snapshot rule",
-      "introducedAtSha": "PENDING-W2-2-COMMIT",
+      "introducedAtSha": "bdd46bdad119cffb460194dcc0b4ce88a85d24fa",
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
