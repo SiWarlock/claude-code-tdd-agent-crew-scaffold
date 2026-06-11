@@ -49,6 +49,13 @@ The 2026-06 wave added four generated artifacts that close the drift spine:
 4. Tick each item's name into the journal dir as it lands (`.scaffolding/.migrations/M-0007/<item>`);
    journal `M-0007.done` when all applicable items are present.
 
+## Related (no separate migration)
+
+The `[id=forbidden-patterns]` region in area `CLAUDE.md` gained a machine-readable
+` ```forbidden-patterns ` sub-block (W2-7) that `/preflight` warn-greps. It rides the existing
+per-region merge machinery — illustrative blocks auto-eligible, customized blocks PROPOSE — so no
+migration entry is needed; this note exists so upgraders know the sub-block is expected.
+
 ## Idempotency & journal
 
 Per-item presence checks + the per-item journal make re-entry resume mid-set. Re-running with everything

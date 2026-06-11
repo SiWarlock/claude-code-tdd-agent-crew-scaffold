@@ -117,6 +117,15 @@ Do not:
 2. **<Pattern>** — <reason>; use <alternative> instead.
 3. **<Pattern>** — <reason>; use <alternative> instead.
 
+**Enforcement patterns (machine-readable — `/preflight` warn-greps the staged diff against these).**
+One `grep -E` (or `ast-grep`) expression per line, each tied to a numbered rule above. Rules that can't
+be expressed as a pattern carry a `pin:` (test ref) or `accepted:` note on the rule itself instead.
+
+```forbidden-patterns
+# <rule 2>: <pattern — e.g.>  datetime\.now\(\)
+# <rule 3>: <pattern>
+```
+
 <!-- ▲ END EXAMPLE BLOCK [id=forbidden-patterns] ▲ -->
 
 ## Cross-doc invariants — schema/docs mirroring
