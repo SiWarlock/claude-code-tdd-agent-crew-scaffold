@@ -826,11 +826,20 @@ Classify each requirement as:
 
 For each requirement:
 - assign a stable ID
-- identify source: explicit / inferred / user-confirmed
+- identify source: explicit / inferred / user-confirmed — an `explicit` requirement MUST carry a
+  PRD citation in the Source column (section heading or short quote, e.g. `explicit — PRD §3
+  "exports must be idempotent"`); `inferred` and `user-confirmed` are tagged as such (with the
+  interview answer that confirmed them, when applicable). A requirement you cannot cite or tag
+  is not extractable — ask, don't mint it.
 - priority: must-ship / stretch / deferred (sized to the chosen Build posture)
 - acceptance signal
 - related user flow
 ```
+
+> **Why the citation matters:** the PRD→REQ hop is the head of the whole traceability spine
+> (REQ → §-anchor → task → test). `/arch-finalize` audits this table against the PRD and persists
+> a PRD→REQ coverage table; a dropped or re-interpreted PRD requirement with no REQ row is
+> invisible to every downstream check, so the citation is what makes the audit mechanical.
 
 ### Requirement IDs
 

@@ -51,7 +51,13 @@ dimension 8a applies; under **MVP/prototype**, deliberate deferrals are acceptab
 draft + artifacts against the PRD across these dimensions, bucketing every finding as
 **critical / important / nice-to-have / proposed-edit / question-for-human**:
 
-1. Missing user/lifecycle **flows** (every in-scope requirement maps to a flow).
+1. Missing user/lifecycle **flows** (every in-scope requirement maps to a flow) — **and the PRD→REQ
+   head-end**: walk the PRD itself and emit a **persisted PRD→REQ coverage table** to
+   `docs/gap-audits/prd-req-coverage.md` — one row per PRD must-have → the REQ ID covering it, or an
+   explicit `out-of-scope (…)` tag; never a blank. Cross-check each `explicit` REQ's PRD citation
+   (the playbook's Phase-6 Source rule). **Uncovered rows are presented at the §4 human gate as a
+   list the human reviews** — not summarized as "audit ran." This table is the head of the
+   traceability spine; `spec-lint reqs` (generated projects) reads it when present.
 2. Missing **lifecycle states** / state-machine transitions.
 3. Unhandled **failure modes** / error paths.
 4. Underspecified **interfaces / schemas / data contracts**.
@@ -111,9 +117,11 @@ route the binding contract *through* a generative planner** (e.g. gstack `/autop
 
 Mirror the scaffolding's two-PAUSE discipline. Present the bucketed findings to the user (critical first),
 and **`AskUserQuestion` on every load-bearing change** (one decision at a time, with a recommendation +
-why). Apply confirmed edits; record any the user defers. Do **not** silently resolve a load-bearing gap or
-fabricate a missing value — surface it. (A "work without stopping" instruction does not override this
-gate; it scopes to clarifying questions.)
+why). **Also present the PRD→REQ coverage table's uncovered rows** (dimension 1) as an explicit list —
+each row resolves to a new REQ, an `out-of-scope` tag the user confirms, or a question; "the audit ran"
+is not a resolution. Apply confirmed edits; record any the user defers. Do **not** silently resolve a
+load-bearing gap or fabricate a missing value — surface it. (A "work without stopping" instruction does
+not override this gate; it scopes to clarifying questions.)
 
 ---
 
