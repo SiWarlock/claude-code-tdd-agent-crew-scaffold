@@ -30,9 +30,12 @@ If a project is more than one session of work, these failure modes show up:
   improvements without clobbering their own customizations.
 
 cc-crew addresses each with concrete machinery: a two-brain planning chain, a binding `ARCHITECTURE.md`
-contract, a spec-anchored `IMPLEMENTATION_PLAN.md`, a hard 10-step `/tdd` walker, hot-routed Step-9 categorization, a
-4-category escalation taxonomy, per-slice context monitoring with auto-cycle, and a provenance-manifest
-3-way-merge upgrade path.
+contract, a spec-anchored `IMPLEMENTATION_PLAN.md` with end-to-end traceability (PRD→REQ→§→task→`spec(§X)`-tagged
+test, linted by `spec-lint`), a hard 10-step `/tdd` walker, hot-routed Step-9 categorization, PreToolUse
+guard hooks that mechanically enforce the git/territory/secrets rules, an **executed** phase-exit gate
+(`/phase-exit` runs the checklist: reachability + arch-drift + spec-coverage, plus posture-gated
+audit/security/perf rows), a 4-category escalation taxonomy, per-slice context monitoring with auto-cycle,
+and a provenance-manifest 3-way-merge upgrade path.
 
 ---
 
@@ -45,7 +48,7 @@ contract, a spec-anchored `IMPLEMENTATION_PLAN.md`, a hard 10-step `/tdd` walker
  /arch-draft ── deep architecture-planning interview ──▶ docs/planning/*   │  rough draft + artifacts
   │            (PRESEARCH, RESEARCH, DECISIONS, DIAGRAM_PLAN, … by mode)    │
   ▼  ┌─ Brain 2: Claude Code (Opus 4.8 + Ultracode) ─────────────────────┐
- /arch-finalize ── ~14-dimension gap audit + adversarial scrutiny ──▶ 🔒 ARCHITECTURE.md   (binding contract)
+ /arch-finalize ── ~15-dimension gap audit + adversarial scrutiny ──▶ 🔒 ARCHITECTURE.md   (binding contract + PRD→REQ coverage table)
   │
   ▼
  /tasks-gen ── decompose, anchor every task to a §  ──────────────────▶ 🔒 IMPLEMENTATION_PLAN.md     (spec-anchored plan + parallel track map)
@@ -55,7 +58,8 @@ contract, a spec-anchored `IMPLEMENTATION_PLAN.md`, a hard 10-step `/tdd` walker
   │
   ▼
  the 🔒 /tdd agent-team engine builds it slice by slice
-  │      (team lead · orchestrator · implementer-per-area · 10-step TDD walker)
+  │      (team lead · orchestrator · implementer-per-area · 10-step TDD walker
+  │       · guard hooks · /phase-exit gate per phase: audits + spec coverage + posture-gated rows)
   ▼
  review · ship · deploy · compound        ← composed plugins (gstack / CE), see ROUTING.md
   │
@@ -136,6 +140,11 @@ files + bounded direct messages:
   2.5 ⏸ test-design review → 3 confirm-RED → 4 GREEN → 5 confirm-GREEN → 6 refactor → 7 full suite →
   7.5 reachability → 8 type+lint → 9 hot-route → 10 atomic commit`.
 
+**Mechanical guardrails:** PreToolUse hooks block `git add -A`, implementer pushes, orchestrator-territory
+writes, and staged secrets (gitleaks); `scripts/spec-lint.sh` gates every brief pre-dispatch; **`/phase-exit`**
+executes the phase-exit checklist (auditor fan-outs + spec coverage + the posture-gated audit/security/perf
+trio) and a phase closes only on its CLEAR verdict.
+
 **Four escalation categories** reach the human via the lead (critical/safety design questions, findings,
 deferment approvals, load-bearing architectural decisions); everything else the orchestrator and implementer
 settle directly. **Per-slice context monitoring + auto-cycle** (team mode) cleanly cycles teammates at a
@@ -159,7 +168,8 @@ when present and are a silent no-op when absent.
 | **This repo** — the TDD agent-crew scaffolding + the 5 cc-crew skills | The methodology spine: planning chain → binding contract → spec-anchored tasks → 3-role TDD engine → upgrade path | **Required** (the core) |
 | **Opus 4.8 Ultracode / Workflows** | In-session deterministic multi-agent execution substrate — speeds up fan-out-heavy steps (the gap-audit, multi-persona review, migrations). Serial fallback always exists. | Optional (amplifier) |
 | **Compound Engineering** (`compound-engineering-plugin/`, everyinc) | Compounding-knowledge loop + a review-rubric panel + a skill/agent library. Composes at review + ship + compound stages. | Optional plugin |
-| **gstack** (`gstack/`, Garry Tan) | Product discovery (`/office-hours`) on the left; cross-model arch review (`/plan-eng-review`, `/codex`) at finalize; and the only path reaching production (`/ship` → `/land-and-deploy` → `/canary`) + cross-project memory. | Optional plugin |
+| **gstack** (`gstack/`, Garry Tan) | Product discovery (`/office-hours`) on the left; cross-model arch review (`/plan-eng-review`, `/codex`) at finalize; the only path reaching production (`/ship` → `/land-and-deploy` → `/canary`) + cross-project memory; `/cso` as the heavier security escalation at phase gates. | Optional plugin |
+| **Claude Code built-ins** | `/security-review` is the default whole-system security tool at phase-exit gates (the branch's pending changes); gitleaks (if installed) makes the secrets hook blocking. | Built-in / optional |
 | **Conductor** | A host that runs Claude Code **and** Codex side by side — the natural home for the cross-model planning lane (GPT drafts, Claude finalizes) and for parallel sprints. | Optional host |
 | **CodeGraph** (code-intelligence MCP) | An indexed code graph. When present, agents prefer it for "where is X", callers/callees, call-path traces, and impact-of-change over `grep`+read loops. | Optional MCP (conditional) |
 | **Context7** (docs MCP) | Up-to-date library/framework documentation, API references, setup/config steps, version-correct examples. When present, agents prefer it over memory — without being asked. | Optional MCP (conditional) |
@@ -190,8 +200,9 @@ the job of `skills/ROUTING.md`.**
    fabricates** — pauses for plan approval, writes the scaffolding, pauses again before any commit. You
    commit yourself.
 
-5. **Build:** `/team-start <track>` (team) or `/orchestrate-start` + `/session-start` (single-operator), then
-   the `/tdd` walker builds each slice against the contract + the task plan.
+5. **Build:** `/team-start` — the team pattern is the default for all projects; a solo dev runs **team mode
+   (single track)** (`/orchestrate-start` + `/session-start` only in the no-agent-teams fallback) — then the
+   `/tdd` walker builds each slice against the contract + the task plan, and `/phase-exit` closes each phase.
 
 6. **Stay current:** as this repo evolves, run **`/scaffold-upgrade --check`** in your project to see drift,
    then `/scaffold-upgrade` to merge improvements without clobbering your customizations.
@@ -209,8 +220,11 @@ cc-crew/
 │   ├── arch-draft/  arch-finalize/  tasks-gen/  scaffold-generate/  scaffold-upgrade/   ← planning chain
 │   ├── bug-hunt/  eval-triage/                                                          ← standalone debugging
 │   └── layer-docs/  learn-site/                                                         ← end-of-project comprehension
-├── migrations/                ← structural-migration registry for /scaffold-upgrade (registry.json + _TEMPLATE.md)
-├── docs/archive/              ← superseded docs kept for reference (e.g. the playbook, now bundled into arch-draft)
+├── migrations/                ← structural-migration registry for /scaffold-upgrade (registry.json + M-NNNN docs)
+├── scripts/release-check.sh   ← the repo's fail-loud release gate (pairs · census · migrations · upgrade-dryrun · playbook)
+├── tests/                     ← frozen upgrade dry-run fixture + harness (runs the real scaffold_upgrade.sh end-to-end)
+├── docs/plans/                ← committed implementation plans (e.g. the 2026-06 optimization wave)
+├── docs/archive/              ← frozen snapshots kept for provenance (banner-marked; live copies in skills/)
 └── templates/                 ← every scaffolding file as a project-agnostic template
     ├── CLAUDE.md              ← root project conventions + shared comm rules
     ├── area-CLAUDE.md         ← per-code-area conventions
@@ -219,10 +233,11 @@ cc-crew/
     ├── ARCHITECTURE.md        ← design-contract skeleton (used only if the user has none)
     ├── .scaffolding/          ← generator-owned provenance (manifest.json + README) — enables clean upgrades
     ├── docs/                  ← team-protocol · orchestrator-briefing · tdd-brief-template · scaffolding-reference
-    ├── scripts/               ← user-global helpers (statusline + context-check; install to ~/.claude/ once per machine)
+    ├── scripts/               ← user-global helpers (statusline + context-check) + project-local spec-lint.sh + guards/
     └── .claude/
-        ├── commands/          ← slash commands (12 team / 9 single-operator + 2 optional)
-        └── agents/            ← README + 4 optional starter subagents
+        ├── settings.json      ← PreToolUse guard-hook wiring (generated project-local)
+        ├── commands/          ← slash commands (13 team / 10 single-operator + 2 optional; incl. /phase-exit)
+        └── agents/            ← README + 5 optional starter subagents (incl. arch-drift-auditor)
 ```
 
 Each template uses two substitution mechanisms:
@@ -232,6 +247,9 @@ Each template uses two substitution mechanisms:
   block replacement for project-specific sections (forbidden patterns, safety rules, layer DAG, worked
   examples). The `[id=<slug>]` is stable across versions so `/scaffold-upgrade` can merge each block
   independently. The full placeholder manifest + the id map are in `GENERATE-WITH-CLAUDE.md §10`.
+- **`<!-- ▼ MODE […] … ▼ -->` regions** (template-only) — mode-specific prose pruned at generation per the
+  project's derived state (solo / team-single-track / team-multi-track), so each generated file carries only
+  its own mode's text; `/scaffold-upgrade` replays the pruning when rebuilding its merge trees.
 
 A **provenance manifest** (`.scaffolding/manifest.json`) is stamped at generation (Step 12.5): the
 scaffolding commit, your resolved placeholder values, and a ledger of every generated file + EXAMPLE-BLOCK
