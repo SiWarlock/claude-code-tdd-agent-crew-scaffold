@@ -134,7 +134,7 @@ When parallel team-lead sessions run in the same repo (e.g. a frontend track and
 
 ### Single-operator fallback
 
-For projects that don't need the team pattern's overhead — a solo developer, a one-week project, a single code area with no parallel tracks — drop the team lead and run the original two-session model: you sit in for the lead, paste between an orchestrator session and an implementer session, and the escalation taxonomy collapses (everything is in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. The generator (§13) asks at bootstrap which mode you want.
+Reserved for **environments where the agent-teams feature is unavailable** — it is NOT the solo-developer default (a solo dev runs **team mode (single track)**: the full 3-role team, one worktree). In the fallback you drop the team lead and run the original two-session model: you sit in for the lead, paste between an orchestrator session and an implementer session, and the escalation taxonomy collapses (everything is in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. Its two concrete losses: (1) the human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode. The generator (§13) asks at bootstrap which mode you want.
 
 ---
 
@@ -574,7 +574,7 @@ The package has three parts:
 
 ### The handoff
 
-1. **Read this guide** (§1–§12) so you understand what you're about to generate. Decide whether the team pattern or the single-operator fallback fits your project.
+1. **Read this guide** (§1–§12) so you understand what you're about to generate. The **team pattern is the default for all projects — a solo dev runs team mode (single track)**; pick the single-operator fallback only where the agent-teams feature is unavailable.
 2. **Open a fresh Claude Code session** at your new project's repo root.
 3. **Give it the package** — `GENERATE-WITH-CLAUDE.md` + the `templates/` tree — and the prompt below.
 4. **Be ready for interview-style back-and-forth.** The generator will read your architecture doc, then ask clarification questions on anything ambiguous. **It does not fabricate values.** If you can't answer a question, that's a real gap to resolve before scaffolding lands.

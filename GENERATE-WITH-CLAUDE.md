@@ -141,8 +141,8 @@ Before the substantive interview, ask the user via `AskUserQuestion`:
 **Question:** Which mode do you want for this project?
 
 **Options:**
-- **Team pattern** — 3 roles (team lead + orchestrator + implementer-per-area), direct teammate comms, escalation taxonomy. Recommended for: multi-week projects, multi-area projects, projects with safety/correctness criticality, parallel work streams — **each parallel TRACK runs in its own git worktree with its own agent team; the Parallelization plan in `{{TASK_TRACKER}}` records the phase/track DAG + critical path**. Generates `/team-start [track]` (track-scoping + worktree setup), `/team-end`, `docs/team-protocol.md`, `docs/team-handoffs/`.
-- **Single-operator fallback** — 2 sessions, the human is the bridge. Recommended for: solo dev, one-week project, single code area, no parallel tracks. Skips `/team-start`, `/team-end`, `docs/team-protocol.md` — those concepts collapse into the human.
+- **Team pattern (RECOMMENDED for ALL projects — including solo developers)** — 3 roles (team lead + orchestrator + implementer-per-area), direct teammate comms, escalation taxonomy. A solo dev runs **team mode (single track)**: the full 3-role team in one worktree — "track" is a parallelization unit, not a staffing mode. Parallel work scales it: **each parallel TRACK runs in its own git worktree with its own agent team; the Parallelization plan in `{{TASK_TRACKER}}` records the phase/track DAG + critical path**. Generates `/team-start [track]` (track-scoping + worktree setup), `/team-end`, `docs/team-protocol.md`, `docs/team-handoffs/`.
+- **Single-operator fallback** — 2 sessions, the human is the bridge. Reserved for **environments where the agent-teams feature is unavailable** — it is not the solo-developer default. Its two concrete losses: (1) the human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode. Skips `/team-start`, `/team-end`, `docs/team-protocol.md` — those concepts collapse into the human.
 
 The user's answer determines several downstream generation choices (which slash commands to write, whether to write `team-protocol.md`, how to phrase comm rules in root `CLAUDE.md`).
 
@@ -185,6 +185,7 @@ For each code area:
 - **Type checker** (mypy --strict, tsc --noEmit, …)
 - **Test runner** (pytest, vitest, go test, …)
 - **Standard commands** — install deps, run dev server, run tests, lint, format-check, type-check.
+- **Dependency-audit command** (`{{AUDIT_CMD}}`, production-grade) — e.g. `npm audit --omit=dev`, `pip-audit`, `cargo audit`; `null` when N/A. Runs ONCE per phase at the `/phase-exit` gate (new-vs-baseline), deliberately NOT in `/preflight` (time-varying, network-dependent, unbounded output).
 - **Test classes/markers** for `/run-tests` (e.g. `unit`, `integration`, `e2e`).
 
 Most of this should be inferrable from package manifests. Confirm rather than ask cold.
@@ -212,8 +213,15 @@ Most of this should be inferrable from package manifests. Confirm rather than as
   - `code-quality-reviewer` — Step-8 review. **Default yes** for any non-trivial project (runs `sonnet`, diff-only — cheap).
   - `security-reviewer` — Step-8 review, mandatory on invariant-touching slices. **Default yes** for projects with safety invariants; default no otherwise.
   - `reachability-auditor` — phase-exit gate audit. **Default yes** — universal value.
+  - `arch-drift-auditor` — phase-exit spec-vs-code audit over the phase's anchors. **Default yes** — it executes a standard checklist row.
   - `brief-drafter` — orchestrator's brief-skeleton tool. **Default yes for definition file; integration deferred until quality trial.** (See `agents/README.md` for the trial protocol.)
 - **Reviewer policy** — sets `{{SECURITY_REVIEW_POLICY}}` + `{{CODE_QUALITY_REVIEW_POLICY}}` in root `CLAUDE.md` (the Step-8 fan-out cadence; reviewers run on the slice diff). Each is one of `off` · `invariant` · `every-slice` · `phase-boundary`. **Defaults: `security-reviewer = invariant`, `code-quality-reviewer = every-slice`.** Confirm or override with the user — it trades review depth for per-slice tokens. (If the user opted out of a reviewer above, set its policy `off`.) **Let the Build posture inform the default:** a `production-grade` posture leans toward tighter review (e.g. `security-reviewer = every-slice` on security-touching areas); an `MVP/prototype` posture is fine with the lighter defaults.
+- **Production-gate pack — ONE grouped `AskUserQuestion` (multiSelect), never four serial gates.** Present the posture-derived recommended defaults with per-item opt-out, pre-marked per the chosen Build posture (production-grade ⇒ all pre-selected; MVP/prototype ⇒ none pre-selected). The items:
+  1. **gitleaks secrets hook** — `secrets-guard.sh` blocking mode (warn-only regex fallback ships regardless).
+  2. **Dependency-audit checklist row** (+ `{{AUDIT_CMD}}` from Batch C).
+  3. **Whole-system security row** + the `{{SECURITY_REVIEW_POLICY}}` value it resolves against.
+  4. **Perf-budget checklist row** (only meaningful when the architecture states budgets).
+  Record each answer **individually** in the manifest (the upgrade path filters posture-gated content by them). The always-ask rule is satisfied in one round-trip — explicit and per-decision, just not four interruptions.
 
 ---
 
@@ -313,6 +321,7 @@ For each:
 - **`preflight`, `run-tests`** are cwd-aware in the template. **If the project has one code area, delete the mode-detection and any second-mode block** — leave a single linear gate. If 2 areas, fill both modes. If 3+ areas, expand the case statement to cover each area, repeating the per-area block.
 - **`context-check`** — generate ONLY in team-pattern mode. Skip for single-operator-fallback.
 - **`eval`, `trace`** — include only if the user opted in (Batch E). Otherwise don't write them.
+- **`/perf` is deliberately NOT shipped** — benchmark tasks run via `/run-tests`/Bash at their own cadence; add a dedicated command reactively if benchmark invocations recur enough to earn one.
 
 ### Step 11 — `.claude/agents/`
 
@@ -369,7 +378,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "codeAreas": [
     { "CODE_AREA": "app/", "CODE_AREA_NAME": "backend", "CODE_AREA_BASENAME": "app",
       "RUNTIME": "Python 3.12", "PKG_MANAGER": "uv", "TEST_CMD": "uv run pytest",
-      "TYPECHECK_CMD": "uv run mypy app", "BUILD_CMD": null }
+      "TYPECHECK_CMD": "uv run mypy app", "BUILD_CMD": null, "AUDIT_CMD": "pip-audit" }
   ],
 
   "generatedFiles": [
@@ -587,6 +596,7 @@ Each is one of `off` · `invariant` (invariant-/security-touching slices only) �
 | `{{FORMAT_CHECK_CMD}}` | Check formatting | `uv run ruff format --check .`, `pnpm format --check` |
 | `{{TYPECHECK_CMD}}` | Run the type checker | `uv run mypy app`, `pnpm typecheck` |
 | `{{BUILD_CMD}}` | Build (if applicable — e.g. frontend production build) | `pnpm build`, `cargo build --release` |
+| `{{AUDIT_CMD}}` | Dependency/supply-chain audit — run at the `/phase-exit` gate, never in `/preflight` (`null` when N/A) | `npm audit --omit=dev`, `pip-audit`, `cargo audit` |
 | `{{TEST_CLASSES}}` | `/run-tests` argument values (the `argument-hint`) | `unit\|integration\|all` |
 
 > `{{CODE_AREA}}` **includes its trailing slash** — templates use it as a path prefix (`{{CODE_AREA}}CLAUDE.md` → `app/CLAUDE.md`). `{{CODE_AREA_BASENAME}}` is the bare name for `cwd` matching.

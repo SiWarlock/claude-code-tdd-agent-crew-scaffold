@@ -142,6 +142,7 @@ Assemble the close-out summary:
 - Whether an orchestrator-side session doc was created
 - Round commit hash + mechanical push verification
 - Suggested next slice — reference `{{TASK_TRACKER}}` "Currently in progress" + "Carry-forward" (now triaged)
+- _(production-grade, optional)_ a report-only `{{AUDIT_CMD}}` one-liner (new-vs-baseline) if run this round — the blocking run stays at `/phase-exit`
 
 Then route it three ways (this is the **canonical close-out spec** — root `CLAUDE.md` "Close-out gating" points here):
 

@@ -42,7 +42,7 @@ will bind to. Two independent brains over the doc — that's the point.
 
 ---
 
-## 2. The gap audit (~14 dimensions)
+## 2. The gap audit (~15 dimensions)
 
 **First, read the Build posture** recorded in `CLAUDE_CODE_HANDOFF.md` (and the draft header):
 `production-grade` | `MVP/prototype`. **The audit is judged against that posture** — under
@@ -82,6 +82,10 @@ draft + artifacts against the PRD across these dimensions, bucketing every findi
     **tracks**. Flag: subsystems with no stated dependency direction, hidden cross-edges that collapse two
     "independent" subsystems into one, or a missing/implicit DAG. A design with no clean seams is a finding
     (single-track is a valid answer — but it must be stated, not defaulted-into).
+15. **Missing performance budgets / unidentified hot paths** — the PRD/interview implied hot paths or
+    scale targets but the draft states no budgets (latency/throughput/availability/cost), or names no
+    hot paths at all. Absences bucket as **question-for-human** — "no budgets — deliberate deferral" is
+    a recordable answer; never invent a number.
 
 ### Run it as a workflow when you can, serial otherwise
 

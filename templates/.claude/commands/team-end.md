@@ -174,7 +174,7 @@ If a predecessor handoff is being resumed later, the next `/team-start` re-spawn
 
 If this team ran in a track worktree (provisioned by `/team-start <track>` Step 2.5):
 
-1. **Merge gate.** If the track's phases are **complete** AND its upstream tracks have already merged, merge the track branch into the integration branch **in DAG topological order** (per `docs/team-protocol.md` "Working tree → tracks + worktrees" — one actor runs the merges; never race track leads). If the track is only **pausing** (not done), do NOT merge — leave the branch for the next session. A merge that touches a **shared contract** is a **Finding** → surface to the human before merging.
+1. **Merge gate.** If the track's phases are **complete** AND its upstream tracks have already merged, merge the track branch into the integration branch **in DAG topological order**, then run the **integration preflight** — `/preflight` per touched code area from the integration checkout — per `docs/team-protocol.md` "Working tree → tracks + worktrees" rule 2 (one actor runs the merges; never race track leads; a failing preflight blocks downstream merges and escalates as a Finding). If the track is only **pausing** (not done), do NOT merge — leave the branch for the next session. A merge that touches a **shared contract** is a **Finding** → surface to the human before merging.
 2. **Worktree teardown.** Once the branch is merged (or the team is fully done with the worktree), remove it:
    ```bash
    git worktree remove ../{{REPO_DIRNAME}}-<track>     # add --force ONLY after confirming no uncommitted work

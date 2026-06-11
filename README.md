@@ -142,7 +142,8 @@ settle directly. **Per-slice context monitoring + auto-cycle** (team mode) clean
 threshold, never mid-slice. **Parallel tracks** (team mode): when the plan's track map marks independent
 tracks, each runs in its **own git worktree with its own team** — `/team-start <track>` scopes the track's
 phases + provisions the worktree, and merges follow a DAG-topological order; single-track plans run in one
-working tree. **Single-operator fallback** drops the lead and the human bridges two sessions (serial build).
+working tree. **Single-operator fallback** (no agent-teams feature available) drops the lead and the human
+bridges two sessions (serial build).
 
 Full detail: **`SCAFFOLDING-GUIDE.md`**. The generator procedure: **`GENERATE-WITH-CLAUDE.md`**.
 
@@ -240,9 +241,11 @@ region. It's what makes `/scaffold-upgrade` a clean 3-way merge instead of a han
 
 ## When to use this — and when not
 
-**Team pattern:** multi-session/multi-week projects, architectural invariants that matter (safety, security,
-correctness), multiple code areas, parallel work streams, bisectable atomic commits.
-**Single-operator fallback:** solo dev, fits in a sprint, one code area, no parallel tracks.
+**Team pattern (the default — for ALL projects, including solo developers):** a solo dev runs **team mode
+(single track)** — the full 3-role team in one worktree; parallel work adds tracks. Strongest where
+architectural invariants matter (safety, security, correctness), across multiple code areas and work streams.
+**Single-operator fallback:** environments without the agent-teams feature. Its two concrete losses: (1) the
+human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode.
 **Skip it entirely:** a one-session script or throwaway spike — just write the code.
 
 ---

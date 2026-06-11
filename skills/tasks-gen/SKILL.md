@@ -71,7 +71,10 @@ Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
   `RISKS.md` / `THREAT_MODEL.md`) get their own early tasks. Honor the **Build posture** recorded in the
   `ARCHITECTURE.md` executive summary (§1):
   - **production-grade** → promote production concerns (error paths, idempotency, observability, security
-    pins, deploy/rollback) to first-class **early** tasks, not deferred. **Do not** emit a demo phase unless
+    pins, deploy/rollback) to first-class **early** tasks, not deferred. **Each budgeted hot path** (a
+    perf budget the architecture states) **emits ONE discrete benchmark task** — never a per-task
+    scenario class; timing assertions stay OUT of the per-slice RED/GREEN loop (they're flaky), and the
+    benchmark task runs at its own cadence against the `spec-lint` `benchmark` waiver class. **Do not** emit a demo phase unless
     the architecture explicitly calls for one.
   - **MVP / prototype** → IF a demo is in scope, a lean local-demo slice is the natural near-final step (still
     the optional Demo phase, never folded into the spine); deeper hardening may be deferred (and flagged as a
