@@ -92,7 +92,7 @@ assertion.
 - Is it OK to add temporary logging/instrumentation?
 - Should I avoid changing eval expectations unless I find evidence they're wrong?
 - Smallest targeted fix, or is refactoring acceptable if the root cause is structural?
-- Is the goal the single failing eval, or correct behavior across the whole suite (no regressions)?
+- Is the goal a single failing eval, or correct behavior across the whole suite (no regressions)?
 
 ---
 
