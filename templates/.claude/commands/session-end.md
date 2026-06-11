@@ -20,7 +20,10 @@ Procedure:
    - If a test was written *after* the implementation: flag it. Note in the session doc: *"TDD violation: <file> implemented before tests existed."*
    - If TDD was skipped on something safety-critical: surface it as a blocker, not just a note.
 
-2.5. **Cross-doc invariant audit.** Read the "Cross-doc invariants" table in `{{CODE_AREA}}CLAUDE.md`. For each model listed, check whether its field list (added/removed/renamed fields) changed this session. If yes, verify the corresponding `{{ARCH_DOC}}` section was updated in the same set of commits. If a model field changed without a doc edit:
+2.5. **Cross-doc invariant audit.** Read the "Cross-doc invariants" table in `{{CODE_AREA}}CLAUDE.md`. For each model listed, check whether its field list (added/removed/renamed fields) changed this session. If yes, verify the paired `{{ARCH_DOC}}` edit exists — **where to look depends on mode** (commits stagger by design: your Step-10 commit lands code+tests; the orchestrator's doc edits ride its `/orchestrate-end` round commit — so never demand a doc edit "in the same commits"):
+   - **Single-track (orchestrator shares this checkout):** the orchestrator wrote the doc row **hot, uncommitted** — check the working tree: `git diff -- {{ARCH_DOC}}` (plus the committed history this session). The edit being uncommitted is the documented happy path, not a violation.
+   - **Multi-track (you carry a `<track>-` prefix):** the orchestrator's doc edit may live in another checkout and is invisible here — do a **memory check only**: confirm every model field change this session was flagged at Step 9 (the orchestrator confirmed receipt); list any that were not.
+   If a model field changed and (single-track) no doc edit exists anywhere, or (multi-track) it was never flagged at Step 9:
    - Flag it as a discipline violation.
    - List the affected model + section + the specific fields that changed.
    - Surface to the user with a recommendation: update the doc now, or accept the drift with an explicit ADR-style note.

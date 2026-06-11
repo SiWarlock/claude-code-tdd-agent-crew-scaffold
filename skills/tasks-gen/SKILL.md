@@ -53,7 +53,12 @@ Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
   Each task carries:
   - a **`Files:`** line — which files are NEW vs extended;
   - a **`Cross-doc invariant:`** line — `NEW` / `extended` / `none` (a typed model that must mirror
-    `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table);
+    `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table). **§2.5-seam models:** when the
+    tagged model's `§` is crossed by a `§2.5` dependency edge (a shared contract across tracks), note on
+    the task that its brief's RED outline must include the **schema-snapshot test** (field-name set ==
+    checked-in snapshot, `spec(§X)`-tagged) — and, once per plan when any seam model exists, seed exactly
+    ONE `Decisions tabled` entry: *"full snapshot coverage (all Appendix-A models) — revisit off
+    accumulated /phase-exit verdicts"* (deliberate, user-approved exception to start-empty);
   - **acceptance bullets that pin behaviors, not tests** — when the architecture names an edge/error/
     integration behavior for the task's anchors (rejection rules, idempotency, boundary conditions,
     failure modes), pin it as an acceptance bullet so it can't be silently dropped at brief time.
