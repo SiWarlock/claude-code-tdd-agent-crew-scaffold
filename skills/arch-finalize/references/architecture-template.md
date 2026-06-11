@@ -86,6 +86,22 @@ new ones get added as they surface.>
 
 ---
 
+## Spec Anchor Index
+
+<!-- Orchestrator-owned, like Appendix A: maintained in the SAME round of commits as the §-section
+     edits it indexes. SCALE-DOWN: if planning produced no REQ-* IDs, delete this section entirely.
+     NOTE: when a topic later earns an area CLAUDE.md lookup-table row, this index is what you copy
+     FROM — do NOT seed that lookup table at generation (it stays near-empty by rule; pre-filling
+     invents state). -->
+
+Requirement → contract traceability: every REQ-* row from planning maps to the `§` anchor(s) that
+implement it. `tasks-gen` derives REQ→task coverage from this index plus each phase's `Spec anchors:`
+line — tasks do not restate REQ IDs.
+
+| REQ ID | Implemented by § | Summary |
+|---|---|---|
+| REQ-<id> | §X[, §Y] | <one line> |
+
 ## Appendix A — Model / contract inventory
 
 The canonical home for every typed model that is a **cross-doc invariant** — mirrored in the area `CLAUDE.md` cross-doc invariants table. A field change on any model here requires an edit to this appendix (and the model's `§` section) in the same round of commits. **A model whose `§` is crossed by a §2.5 dependency edge is a *shared contract across tracks*** — freeze it before parallel build tracks fork (the cross-worktree coordination rule in `docs/team-protocol.md`).

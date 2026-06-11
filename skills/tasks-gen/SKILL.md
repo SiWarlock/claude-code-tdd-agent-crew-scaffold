@@ -3,9 +3,9 @@ name: tasks-gen
 description: >-
   Decompose the finalized ARCHITECTURE.md into an extremely prescriptive, spec-anchored IMPLEMENTATION_PLAN.md that
   the /tdd agent-team engine implements against. Every phase references the ARCHITECTURE.md anchors it
-  implements; every task carries Files (NEW/extended), a cross-doc-invariant tag, and happy/edge/error/
-  integration test scenarios. Runs on Claude Code. Flags (never invents) tasks that need absent
-  architecture. Invoke when the user says "generate the tasks", "make the implementation plan", "decompose the
+  implements; every task carries Files (NEW/extended), a cross-doc-invariant tag, and acceptance bullets
+  pinning the spec-implied edge/error behaviors the architecture names. Runs on Claude Code. Flags (never
+  invents) tasks that need absent architecture. Invoke when the user says "generate the tasks", "make the implementation plan", "decompose the
   architecture into tasks", or after /arch-finalize has produced the binding ARCHITECTURE.md.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Task
 ---
@@ -31,13 +31,15 @@ and anchored so drift surfaces structurally at TDD Step 9.
    Index.
 2. **`references/implementation-plan-template.md`** — the canonical `IMPLEMENTATION_PLAN.md` format + the **spec-anchor
    convention** + living-state sections. The file you write MUST match this structure so the orchestrator,
-   `/orchestrate-start`, and the cross-doc-invariants flow all work.
+   `/orchestrate-start`, and the cross-doc-invariants flow all work. (This bundled copy is synced verbatim
+   from canonical `templates/IMPLEMENTATION_PLAN.md` — `scripts/release-check.sh pairs` enforces identity;
+   never edit it independently.)
 3. **Supporting planning artifacts** (`docs/planning/*`, if present) for richer, more prescriptive tasks:
    `REQUIREMENTS.md` / `PRESEARCH.md` (acceptance criteria + req IDs), `DECISIONS.md` (locked choices),
    `RISKS.md` / `THREAT_MODEL.md` (safety-critical ordering), `DIAGRAM_PLAN.md` / `DATA_MODEL.md` (flows +
    models for scenario detail).
 
-**Tools (use when available):** if a docs MCP (e.g. Context7) is present, use it to confirm library/API specifics when writing test scenarios; prefer a code-intelligence MCP (e.g. CodeGraph) over `grep` when tracing existing code. Optional — no-op if absent.
+**Tools (use when available):** if a docs MCP (e.g. Context7) is present, use it to confirm library/API specifics when pinning library/API behaviors in acceptance bullets; prefer a code-intelligence MCP (e.g. CodeGraph) over `grep` when tracing existing code. Optional — no-op if absent.
 
 ---
 
@@ -51,15 +53,28 @@ Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
   Each task carries:
   - a **`Files:`** line — which files are NEW vs extended;
   - a **`Cross-doc invariant:`** line — `NEW` / `extended` / `none` (a typed model that must mirror
-    `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table);
-  - **test scenarios** — happy / edge / error / integration (these become the Step-2.5 test designs).
+    `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table). **§2.5-seam models:** when the
+    tagged model's `§` is crossed by a `§2.5` dependency edge (a shared contract across tracks), note on
+    the task that its brief's RED outline must include the **schema-snapshot test** (field-name set ==
+    checked-in snapshot, `spec(§X)`-tagged) — and, once per plan when any seam model exists, seed exactly
+    ONE `Decisions tabled` entry: *"full snapshot coverage (all Appendix-A models) — revisit off
+    accumulated /phase-exit verdicts"* (deliberate, user-approved exception to start-empty);
+  - **acceptance bullets that pin behaviors, not tests** — when the architecture names an edge/error/
+    integration behavior for the task's anchors (rejection rules, idempotency, boundary conditions,
+    failure modes), pin it as an acceptance bullet so it can't be silently dropped at brief time.
+  - **Layering note — do NOT pre-write test designs in the plan.** Test design is authored by the
+    **orchestrator at brief time** (the RED outline in the `/tdd` brief) and reviewed at Step 2.5; the
+    plan's acceptance bullets are the behavior contract those tests must cover, not the tests themselves.
 - **Build order (posture-aware) = invariants → lifecycle correctness → tests → [optional: walking-skeleton /
   local demo — ONLY if a demo is in scope] → hardening/polish.** Order tasks so load-bearing invariants and
   lifecycle correctness come first, polish last (per the playbook's handoff rule). Safety-critical pins (from
   `RISKS.md` / `THREAT_MODEL.md`) get their own early tasks. Honor the **Build posture** recorded in the
   `ARCHITECTURE.md` executive summary (§1):
   - **production-grade** → promote production concerns (error paths, idempotency, observability, security
-    pins, deploy/rollback) to first-class **early** tasks, not deferred. **Do not** emit a demo phase unless
+    pins, deploy/rollback) to first-class **early** tasks, not deferred. **Each budgeted hot path** (a
+    perf budget the architecture states) **emits ONE discrete benchmark task** — never a per-task
+    scenario class; timing assertions stay OUT of the per-slice RED/GREEN loop (they're flaky), and the
+    benchmark task runs at its own cadence against the `spec-lint` `benchmark` waiver class. **Do not** emit a demo phase unless
     the architecture explicitly calls for one.
   - **MVP / prototype** → IF a demo is in scope, a lean local-demo slice is the natural near-final step (still
     the optional Demo phase, never folded into the spine); deeper hardening may be deferred (and flagged as a

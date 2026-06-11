@@ -15,7 +15,9 @@
 > - The **prior-art canon** (copier/cruft 3-way merge; projen marker; gstack migrations + journal/done-markers)
 >   is distilled in `upgrade-priorart.md`. This doc applies that canon as a *Claude SKILL* flow.
 >
-> **The one-sentence shape.** `base` = old templates @ `generatedFromSha`, re-substituted with the manifest's
+> **The one-sentence shape.** `base` = old templates @ `lastUpgradedFromSha ?? generatedFromSha` (the most
+> recent upgrade anchor, falling back to the generation anchor — so a SECOND upgrade never re-offers what the
+> first already applied), re-substituted with the manifest's
 > stored values → `ours` = new templates @ HEAD, re-substituted with the *same* values → `theirs` = the
 > project's files on disk. A deterministic bundled **script** rebuilds `base`/`ours`, runs the per-file
 > 3-way merge governed by `kind`, and emits a machine-readable plan; the **model** classifies anything the
@@ -312,7 +314,7 @@ is not in the window, so it never re-fires.
 
 - Every migration is **re-runnable**. The `idempotencyKey` is checked first; if the change is already present
   (placeholder already renamed, section already inserted, format line already added), the migration is a no-op.
-- Multi-step migrations write a **journal + done-markers** under `.scaffolding/.migrations/<id>/`: each step
+- The script's idempotency probe is the **`.scaffolding/.migrations/<id>.done` touchfile**; multi-step migrations additionally write per-step **journal + done-markers** under `.scaffolding/.migrations/<id>/`: each step
   appends its name on success; re-entry resumes from the first un-done step; a `<id>.done` touchfile
   short-circuits the whole migration. This makes an *interrupted upgrade* (model ran out of context, human
   closed the session) resume cleanly instead of double-applying.

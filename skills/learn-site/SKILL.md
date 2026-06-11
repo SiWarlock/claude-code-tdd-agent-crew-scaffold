@@ -1,19 +1,12 @@
 ---
 name: learn-site
 description: >-
-  Build an interactive educational WEBSITE that teaches how a project works — sourced from docs/layers/ (the
-  /layer-docs output) plus the real code. The site explains the whole system and each layer and how they fit
-  together, and every topic offers a PLAIN-ENGLISH view and a DEEPER-DIVE view you can toggle. Interactivity
-  and depth scale to the project (a CLI library and a web platform get different sites). Defaults to plain,
-  ZERO-BUILD static HTML/JS/CSS (double-click index.html to open); escalates to a zero-build React-via-CDN
-  page, or a full React app, only when richer interactivity genuinely aids learning — with your sign-off.
-  At the full-React-app tier it also builds interactive, trace-able diagrams (React Flow): always a
-  full-scope Architecture/runtime-data-flow diagram and an Infrastructure diagram, plus any extras you opt
-  into. Content is generated data-first (a content model derived from the layer docs) so it stays faithful and
-  maintainable. Writes to docs/learn-site/ and serves it locally to verify. Runs on Claude Code, from inside
-  the target project, AFTER /layer-docs. Invoke when the user says "learn-site", "build the learning site",
-  "make the educational website", "turn the layer docs into a site", or wants an interactive explainer of the
-  project.
+  Build an interactive educational WEBSITE that teaches how a project works, sourced from docs/layers/
+  plus the real code — run AFTER /layer-docs (it writes the docs; this builds the site from them). Whole-system + per-layer explanations; every topic toggles
+  PLAIN-ENGLISH vs DEEPER-DIVE; interactivity scales to the project. Defaults to zero-build static
+  HTML; escalates to React-via-CDN or a full React app (adds trace-able React Flow diagrams) only with your sign-off. Writes docs/learn-site/, serves it locally. Runs on
+  Claude Code, inside the target project. Invoke on "learn-site", "build the learning site", "make the
+  educational website", "turn the layer docs into a site".
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 ---
 

@@ -75,14 +75,14 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 ## Your responsibilities
 
 1. **Plan + scope** — maintain `{{TASK_TRACKER}}`; decide where new work fits in the {{PHASE_IDS}} phase plan.
-2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5). **Prefer bundled slices** — when 2-4 related tasks share context and none touches a safety invariant, author one bundled brief instead of multiple atomic briefs. Default posture: bundle when safe; atomize only when required. See `docs/tdd-brief-template.md` "Estimated commit count" for the bundle/atomize criteria.
+2. **Author `/tdd` briefs** per `docs/tdd-brief-template.md` → `docs/briefs/NNN-<task-id>-<topic>.md` (permanent design-decision audit trail). Always name the **entry point** (Step 7.5). **Pre-dispatch lint (mandatory gate):** run `scripts/spec-lint.sh brief <path>` — cited anchors exist in `{{ARCH_DOC}}`, the task is unticked, anchors sit within the phase's scope (or the brief declares it widens scope), the Wiring section is present — and include its one-line PASS stamp (`@<hash8>`) in the dispatch message so `/tdd` Step 0 can skip re-linting. **Prefer bundled slices** — when 2-4 related tasks share context and none touches a safety invariant, author one bundled brief instead of multiple atomic briefs. Default posture: bundle when safe; atomize only when required. See `docs/tdd-brief-template.md` "Estimated commit count" for the bundle/atomize criteria.
 3. **Update `{{ARCH_DOC}}`** with atomic edits when implementation surfaces architectural detail; cite anchors.
 4. **Manage cross-doc invariants** — area `CLAUDE.md` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
-5. **Step-2.5 review** — the implementer sends a tight write-up (one `Asserts: <invariant> (§anchor)` line per test). Review the *asserted invariant* against the spec — that's what catches a conceptually-wrong test; open the test file only if an assertion looks off. Reply with a magic-words header (`APPROVED.` / `TWEAK: <what>` / `ADD: <test>` — see root `CLAUDE.md`), questions in the body. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
+5. **Step-2.5 review** — the implementer sends a tight write-up (one `Asserts: <invariant> (§anchor)` line per test, plus the **coverage map**: each brief acceptance bullet → its covering test or a `not-tested-because:` note). Review the *asserted invariant* against the spec — that's what catches a conceptually-wrong test; open the test file only if an assertion looks off. **`APPROVED.` asserts per-acceptance-bullet coverage was confirmed** — an unmapped bullet means `ADD:` or an accepted not-tested-because, never a silent pass. Reply with a magic-words header (`APPROVED.` / `TWEAK: <what>` / `ADD: <test>` — see root `CLAUDE.md`), questions in the body. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
 6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
 7. **Per-slice context check** (team mode only) — after Step-10 + hot-routing, run `/context-check <team>` locally, and **ping the lead only when a tier ≥ WARN is crossed**. OK slices → no ping (the lead sees progress via the task list + idle-notifications). See "Per-slice context check" below.
 8. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
-9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress."
+9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress." **Phase boundaries:** dispatch **`/phase-exit <phase>`** at the START of the round that should close a phase — it executes the tracker's checklist rows (auditor fan-outs, spec coverage, verify-only push row) and a phase checkbox is ticked only on its CLEAR verdict (or human-waived rows).
 10. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
 11. **Heavyweight ops** (deploys, env config) — HITL / escalation.
 
@@ -101,7 +101,9 @@ The full two-channel budget — **task list for status; `SendMessage` only for i
 
 Do NOT extend it: no "ready for review" / "holding" / "FYI"; no Step-0 acknowledgement; no re-quoting a teammate's message; no status pings (status lives on the task list). Every extra message is a crossed-in-flight risk between async agents.
 
+<!-- ▼ MODE [solo] pointer: delete ▼ -->
 _(Single-operator fallback: no lead and no team task list — you and the implementer are two sessions the human bridges; the human is the recipient and carries status. Keep the same terseness.)_
+<!-- ▲ END MODE ▲ -->
 
 ---
 
@@ -121,7 +123,7 @@ Messages auto-deliver and wake the recipient, so a "still waiting?" almost alway
 
 **Idle only when:** the active phase has no queued slices and the user hasn't said what's next; a blocking dependency needs user direction; or the lead instructed `/orchestrate-end`. Otherwise the default is "next slice now."
 
-**Why:** the lead can't see `ctx_pct` without a ping, but it doesn't *need* one per slice — the auto-cycle gate fires at ACTION (75%), and a WARN-gated send catches it with margin while removing one `SendMessage` + one lead wake on every OK slice (the common case). The local `--snapshot` keeps the trajectory data fresh regardless.
+**Why:** the lead can't see `ctx_pct` without a ping, but it doesn't *need* one per slice — the auto-cycle gate fires at ACTION (tier table: `docs/team-protocol.md`), and a WARN-gated send catches it with margin while removing one `SendMessage` + one lead wake on every OK slice (the common case). The local `--snapshot` keeps the trajectory data fresh regardless.
 
 ---
 
@@ -133,9 +135,9 @@ When the implementer sends you a Step 9 summary, route each item **immediately**
 
 | Step 9 category | Action | When | Sign-off |
 |---|---|---|---|
-| **Convention candidate** | Write the full lesson prose to `{{CODE_AREA}}LESSONS.md` (next anchor `<a id="N"></a>`) AND add **one index row** to the `{{CODE_AREA}}CLAUDE.md` lessons index: `\| N \| date \| [topic](LESSONS.md#N) \| one-line rule \|`. The row is an **index entry with an anchor link — never the lesson prose**. | Hot — same session | Orchestrator writes; escalate only if it encodes a safety rule |
+| **Convention candidate** | Write the full lesson prose to `{{CODE_AREA}}LESSONS.md` (next anchor `<a id="N"></a>`) AND add **one index row** to the `{{CODE_AREA}}CLAUDE.md` lessons index: `\| N \| date \| [topic](LESSONS.md#N) \| one-line rule \|`. The row is an **index entry with an anchor link — never the lesson prose**. **Every routed lesson also records an enforcement line** — `pin: <test ref>` \| `pattern: <grep/ast-grep expr>` (added to the `[id=forbidden-patterns]` machine-readable block, where `/preflight` warn-greps it) \| `accepted: not mechanically enforceable` — so a week-4 session that never loaded the prose still hits the mechanical check. | Hot — same session | Orchestrator writes; escalate only if it encodes a safety rule |
 | **Architecture doc note** | Edit `{{ARCH_DOC}} §X` atomic with the implementation commit | Hot — same commit | Orchestrator writes |
-| **Future TODO — belongs to a phase** | Add it as a **normal task checkbox in the correct phase/subphase** of `{{TASK_TRACKER}}` (reference the origin slice). Same destination whether acceptance-blocking or "operational" — if it's in-scope for a phase, it's a task there, not an annotation. | Hot | Orchestrator writes |
+| **Future TODO — belongs to a phase** | Add it as a **normal task checkbox in the correct phase/subphase** of `{{TASK_TRACKER}}` (reference the origin slice). Same destination whether acceptance-blocking or "operational" — if it's in-scope for a phase, it's a task there, not an annotation. **Anchor-or-escalate:** the new `###` heading carries `(implements §X; origin: <slice>)` or `(ops — no contract anchor)`; if no phase's anchors cover §X, that's a **contract gap** → Architecture-doc note + escalate as a Finding, never a silent task add. | Hot | Orchestrator writes |
 | **Future TODO — next-brief working set** | Add to `{{TASK_TRACKER}}` "Carry-forward" with an origin marker `(origin: YYYY-MM-DD <slice-id>)`. Only items the next 1–2 briefs need. Triaged every `/orchestrate-end`. | Hot | Orchestrator writes |
 | **Future TODO — out of scope** | This is a **deferment** → **escalate to the human**. On approval, move to the deferred phase or Trims with come-back guidance. | Hot | **Escalate (deferment)** |
 | **Cross-doc invariant change** | **Orchestrator writes the row in the `{{CODE_AREA}}CLAUDE.md` cross-doc table + the `{{ARCH_DOC}}` Appendix A row** hot. Implementer does NOT touch these files. Commits stagger — implementer's Step 10 commit lands code+tests; your `/orchestrate-end` round commit lands the doc rows. | Hot — same session (orchestrator-write) | Orchestrator writes; **escalate if a safety invariant changed** |

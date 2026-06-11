@@ -25,9 +25,14 @@ Argument: `$ARGUMENTS` — short topic for the handoff doc filename (e.g. `eod-Y
 - Per slice / per task / per phase / per round — the close-out gate is `/session-end` + `/orchestrate-end`, not this.
 - Mid-arc — `/team-end` is for **pausing**, not for natural work boundaries.
 
-## Step 0 — Confirm user-explicit go
+## Step 0 — Confirm the trigger (two legitimate goes)
 
-`/team-end` runs **only on user-explicit go**, just like `/session-end` and `/orchestrate-end`. If you reached this command without the user signaling it, stop and surface the question instead — don't auto-end the team at a natural boundary.
+`/team-end` runs on **either** close-out trigger (root `CLAUDE.md` "Close-out gating"):
+
+1. **User-on-demand** — the user explicitly signaled the pause. Keep the explicit-go gate: if the user didn't signal it and trigger 2 doesn't hold, stop and surface the question instead.
+2. **Auto-cycle** — the mechanical trigger **is** the go: your own (the lead's) `ctx_pct` ≥ ACTION on canonical `/context-check` output, or a full-team cycle that requires lead teardown. Verify the tier from the script output (never self-reported), proceed, and **notify the user** with one line (trigger + handoff-doc path) — a notification, not a blocking question. Waiting for a confirmation here deadlocks the close-out at exactly the moment the lead's context is scarcest.
+
+Reaching this command at a natural work boundary (end of phase / arc / round) with **neither** trigger present is NOT a go — that's the auto-pause the Forbidden section bans. Step 1's all-teammates-closed gate applies on both triggers, unchanged.
 
 ## Step 1 — Gate: all teammates at closed state
 
@@ -164,16 +169,19 @@ done
 
 If a predecessor handoff is being resumed later, the next `/team-start` re-spawns teammates → fresh registry entries land via spawn prompts.
 
+<!-- ▼ MODE [team-multi-track] pointer: _(Step 6.6 — worktree teardown/merge gate: multi-track only; not part of this single-track copy.)_ ▼ -->
 ## Step 6.6 — Track worktree teardown + merge gate (multi-track only; skip if single-track)
 
 If this team ran in a track worktree (provisioned by `/team-start <track>` Step 2.5):
 
-1. **Merge gate.** If the track's phases are **complete** AND its upstream tracks have already merged, merge the track branch into the integration branch **in DAG topological order** (per `docs/team-protocol.md` "Working tree → tracks + worktrees" — one actor runs the merges; never race track leads). If the track is only **pausing** (not done), do NOT merge — leave the branch for the next session. A merge that touches a **shared contract** is a **Finding** → surface to the human before merging.
+1. **Merge gate.** If the track's phases are **complete** AND its upstream tracks have already merged, merge the track branch into the integration branch **in DAG topological order**, then run the **integration preflight** — `/preflight` per touched code area from the integration checkout — per `docs/team-protocol.md` "Working tree → tracks + worktrees" rule 2 (one actor runs the merges; never race track leads; a failing preflight blocks downstream merges and escalates as a Finding). If the track is only **pausing** (not done), do NOT merge — leave the branch for the next session. A merge that touches a **shared contract** is a **Finding** → surface to the human before merging.
 2. **Worktree teardown.** Once the branch is merged (or the team is fully done with the worktree), remove it:
    ```bash
    git worktree remove ../{{REPO_DIRNAME}}-<track>     # add --force ONLY after confirming no uncommitted work
    ```
    Leave the worktree in place if the team is merely pausing and will resume in it.
+
+<!-- ▲ END MODE ▲ -->
 
 ## Step 7 — Tell the user
 
@@ -186,8 +194,9 @@ Report:
 
 ## Forbidden in this command
 
-- **Running this without explicit user go.** It's a close-out command — same gate as `/session-end` + `/orchestrate-end`.
-- **Tearing down mid-work.** Step 1's gate is non-negotiable.
-- **Auto-pausing at a natural boundary** (end of phase, end of arc, end of round). User signals; you act.
+- **Running this without one of the two triggers** — user-explicit go, or the mechanical auto-cycle trigger verified from canonical `/context-check` output (root `CLAUDE.md` "Close-out gating"). A natural work boundary alone is neither.
+- **Tearing down mid-work.** Step 1's gate is non-negotiable — on both triggers.
+- **Auto-pausing at a natural boundary** (end of phase, end of arc, end of round) with neither trigger present. The user signals, or the context trigger fires; you act.
+- **Blocking an auto-cycle close-out on a user confirmation.** Trigger 2 notifies; it does not ask.
 - **Pushing without explicit approval.** Round-seal commits aren't pushed silently.
 - **Skipping the spawn-prompt section** of the handoff doc. The prompts are the load-bearing handoff content — without them, the next `/team-start` has to re-derive coordination state from scratch.

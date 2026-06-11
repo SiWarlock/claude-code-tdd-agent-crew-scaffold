@@ -1,16 +1,14 @@
 ---
 name: eval-triage
 description: >-
-  Guided, PARTICIPATORY walkthrough for diagnosing one or more failing evals in an agentic / LLM
-  application — reproduce → understand the eval's contract → compare against a passing eval → bisect the
-  agent pipeline to the first divergence → categorize (eval/judge · prompt · retrieval · tool-use · state ·
-  nondeterminism / model-drift · parsing) → propose a minimal fix + verification plan. It is a COACH, not an
-  autopilot: at each phase it spells out, step by step, exactly what it is doing and why — so you can follow
-  along and explain it in your own words — runs/suggests the smallest diagnostic, ranks hypotheses by
-  likelihood × cost-to-test, and PAUSES for you to inspect and decide. Diagnostic-first — it proposes; it
-  does NOT auto-fix the app or silently edit an eval. Standalone, on-demand; host-neutral (Codex or Claude),
-  any repo. Invoke when the user says "eval-triage", "triage this failing eval", "debug this eval", "an LLM
-  eval is failing", or is working an agentic-eval debugging task.
+  Guided, PARTICIPATORY walkthrough for diagnosing failing evals in an agentic/LLM app:
+  reproduce → compare a passing eval → bisect the pipeline to the first divergence →
+  categorize (eval/judge · prompt · retrieval · tool-use ·
+  state · nondeterminism · parsing) → propose a minimal fix + verification plan. A COACH, not an autopilot:
+  smallest diagnostic first, ranked hypotheses, a PAUSE at every phase; proposes, never auto-fixes or silently edits an eval. For deterministic code bugs use
+  /bug-hunt; this is for eval/LLM-behavior failures. Standalone; host-neutral (Codex or Claude), any
+  repo. Invoke on "eval-triage", "triage this failing eval", "debug this eval", "an LLM eval is
+  failing".
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 ---
 

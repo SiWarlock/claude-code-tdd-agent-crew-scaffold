@@ -1,3 +1,7 @@
+> **FROZEN SNAPSHOT — do not edit.** This is the pre-build-posture archive copy of the kickoff
+> prompt, kept for provenance only (see `docs/archive/README.md`). The LIVE, maintained copy is
+> `skills/arch-draft/references/session-kickoff-prompt.md` — all edits go there.
+
 # Start Deep Architecture Planning Session Prompt
 
 Use this prompt to start a fresh ChatGPT, Claude, or Claude Code planning session with a new PRD or product idea.

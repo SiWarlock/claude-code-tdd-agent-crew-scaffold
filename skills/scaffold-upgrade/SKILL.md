@@ -1,14 +1,13 @@
 ---
 name: scaffold-upgrade
 description: >-
-  Bring an already-generated, already-customized project's agent-team scaffolding up to date with the
+  Bring an already-generated project's agent-team scaffolding up to date with the
   current templates via a provenance-manifest 3-way merge — WITHOUT clobbering placeholder values,
-  customized EXAMPLE BLOCK regions, or accreted state (LESSONS.md, IMPLEMENTATION_PLAN.md living sections). Runs on
-  Claude Code from a scaffolding-repo checkout pointed at the target project; never vendored into projects.
-  A bundled bash+jq script does the deterministic git/substitution/merge work; this skill adjudicates
-  classification edges, drafts the conflicts git can't, runs structural migrations, and drives two human
-  gates. Invoke when the user says "upgrade the scaffolding", "update this project's scaffolding",
-  "scaffold-upgrade", "check the scaffolding for drift", or after pulling new scaffolding templates.
+  customized EXAMPLE BLOCK regions, or accreted state. Unlike /scaffold-generate (first-time
+  generation), this UPDATES an existing install. Runs on Claude Code from a scaffolding-repo
+  checkout pointed at the target project; never vendored. A bundled script does the deterministic merge
+  work; the skill adjudicates edges, drafts conflicts, runs migrations, drives two human gates. Invoke
+  on "upgrade the scaffolding", "scaffold-upgrade", "check the scaffolding for drift", or after pulling new templates.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Task
 ---
 
@@ -121,7 +120,7 @@ never run on the default branch. Short-circuit "already up to date" if `base == 
 | `placeholder-only` | `preflight.md`, `wired.md`, single-area `run-tests.md` | **AUTO-APPLY iff `theirs == base`** (provably untouched). A clean-but-diverged 3-way ⇒ **PROPOSE** (low risk, `propose-clean`); a conflict ⇒ PROPOSE (resolve). |
 | `mixed` | `CLAUDE.md`, `area-CLAUDE.md`, `orchestrator-briefing.md` | **Per-region split** (§5): machinery + `illustrative` blocks → auto-eligible; `customized` blocks → PROPOSE-ONLY, never clobber. |
 | `accreted` | `LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, area tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
-| `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only an appended Appendix A skeleton is a PROPOSE candidate. |
+| `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only an appended **Appendix A** or **Spec Anchor Index** skeleton (both additive + project-state-free) is a PROPOSE candidate. |
 
 > **The prime directive governs.** Where a bundled reference phrases a per-kind rule more permissively (e.g.
 > "placeholder-only auto-applies on any clean 3-way"), the stricter rule here wins: **nothing customized is

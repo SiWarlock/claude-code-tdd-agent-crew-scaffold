@@ -41,6 +41,76 @@
       "gate": "human",
       "idempotencyKey": "section:IMPLEMENTATION_PLAN:parallelization-plan",
       "touches": ["IMPLEMENTATION_PLAN.md", "manifest.exampleBlocks"]
+    },
+    {
+      "id": "M-0005",
+      "title": "Retrofit [id=] EXAMPLE-BLOCK slugs + bounded living-section rules into the task tracker",
+      "introducedAtSha": "7ec3bfcba9b5b8decfd317ed2a9777bb232869f1",
+      "kind": "accreted-format",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "tracker-structure:id-slugs+bounded-sections@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md", "manifest.exampleBlocks"]
+    },
+    {
+      "id": "M-0006",
+      "title": "Add the posture field to .scaffolding/manifest.json (schema v2)",
+      "introducedAtSha": "fc1cad2ecd8436201884bd67789cc64c1b744925",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "manifest:posture-field+schema-v2",
+      "touches": [".scaffolding/manifest.json"]
+    },
+    {
+      "id": "M-0007",
+      "title": "Install the wave-2 generated-file set: scripts/spec-lint.sh, .claude/settings.json + scripts/guards/, /phase-exit, arch-drift-auditor",
+      "introducedAtSha": "744b87bfe6e89237a53e8b9338f53aec7cabb0eb",
+      "kind": "added-template",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "added:wave2-drift-spine-set@v1",
+      "touches": ["scripts/spec-lint.sh", ".claude/settings.json", "scripts/guards/", ".claude/commands/phase-exit.md", ".claude/agents/arch-drift-auditor.md", "manifest.generatedFiles"]
+    },
+    {
+      "id": "M-0008",
+      "title": "Brief template format block: Wiring/entry-point section + REQ derivation note + seam-snapshot rule",
+      "introducedAtSha": "bdd46bdad119cffb460194dcc0b4ce88a85d24fa",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:tdd-brief-template:wiring-entry-point",
+      "touches": ["docs/tdd-brief-template.md"]
+    },
+    {
+      "id": "M-0009",
+      "title": "Phase-exit checklist: add reachability-audit, arch-drift-audit, and spec-coverage rows (+ executed-by-/phase-exit note)",
+      "introducedAtSha": "744b87bfe6e89237a53e8b9338f53aec7cabb0eb",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:IMPLEMENTATION_PLAN:phase-exit-machinery-rows@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md"]
+    },
+    {
+      "id": "M-0010",
+      "title": "Root CLAUDE.md restructure: close-out/monitoring pointers, role-pairing command note, de-hardcoded thresholds",
+      "introducedAtSha": "ed12615673bef76c5e6c78ed70dc048d0c9b651b",
+      "kind": "moved-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "root-claude:closeout+monitoring-pointers@v1",
+      "touches": ["CLAUDE.md", "docs/team-protocol.md", "docs/scaffolding-reference.md", "docs/orchestrator-briefing.md", ".claude/commands/session-end.md", ".claude/commands/tdd.md", ".claude/commands/team-end.md"]
+    },
+    {
+      "id": "M-0011",
+      "title": "Phase-exit checklist v2: posture-gated dependency-audit, whole-system-security, and perf-budget rows",
+      "introducedAtSha": "185393e6f44baedb2ba86b28453a250447309139",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:IMPLEMENTATION_PLAN:phase-exit-v2-trio@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md", "manifest.placeholders"]
     }
   ]
 }

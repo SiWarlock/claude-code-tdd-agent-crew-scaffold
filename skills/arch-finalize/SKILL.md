@@ -42,7 +42,7 @@ will bind to. Two independent brains over the doc — that's the point.
 
 ---
 
-## 2. The gap audit (~14 dimensions)
+## 2. The gap audit (~15 dimensions)
 
 **First, read the Build posture** recorded in `CLAUDE_CODE_HANDOFF.md` (and the draft header):
 `production-grade` | `MVP/prototype`. **The audit is judged against that posture** — under
@@ -51,7 +51,13 @@ dimension 8a applies; under **MVP/prototype**, deliberate deferrals are acceptab
 draft + artifacts against the PRD across these dimensions, bucketing every finding as
 **critical / important / nice-to-have / proposed-edit / question-for-human**:
 
-1. Missing user/lifecycle **flows** (every in-scope requirement maps to a flow).
+1. Missing user/lifecycle **flows** (every in-scope requirement maps to a flow) — **and the PRD→REQ
+   head-end**: walk the PRD itself and emit a **persisted PRD→REQ coverage table** to
+   `docs/gap-audits/prd-req-coverage.md` — one row per PRD must-have → the REQ ID covering it, or an
+   explicit `out-of-scope (…)` tag; never a blank. Cross-check each `explicit` REQ's PRD citation
+   (the playbook's Phase-6 Source rule). **Uncovered rows are presented at the §4 human gate as a
+   list the human reviews** — not summarized as "audit ran." This table is the head of the
+   traceability spine; `spec-lint reqs` (generated projects) reads it when present.
 2. Missing **lifecycle states** / state-machine transitions.
 3. Unhandled **failure modes** / error paths.
 4. Underspecified **interfaces / schemas / data contracts**.
@@ -76,6 +82,10 @@ draft + artifacts against the PRD across these dimensions, bucketing every findi
     **tracks**. Flag: subsystems with no stated dependency direction, hidden cross-edges that collapse two
     "independent" subsystems into one, or a missing/implicit DAG. A design with no clean seams is a finding
     (single-track is a valid answer — but it must be stated, not defaulted-into).
+15. **Missing performance budgets / unidentified hot paths** — the PRD/interview implied hot paths or
+    scale targets but the draft states no budgets (latency/throughput/availability/cost), or names no
+    hot paths at all. Absences bucket as **question-for-human** — "no budgets — deliberate deferral" is
+    a recordable answer; never invent a number.
 
 ### Run it as a workflow when you can, serial otherwise
 
@@ -111,9 +121,11 @@ route the binding contract *through* a generative planner** (e.g. gstack `/autop
 
 Mirror the scaffolding's two-PAUSE discipline. Present the bucketed findings to the user (critical first),
 and **`AskUserQuestion` on every load-bearing change** (one decision at a time, with a recommendation +
-why). Apply confirmed edits; record any the user defers. Do **not** silently resolve a load-bearing gap or
-fabricate a missing value — surface it. (A "work without stopping" instruction does not override this
-gate; it scopes to clarifying questions.)
+why). **Also present the PRD→REQ coverage table's uncovered rows** (dimension 1) as an explicit list —
+each row resolves to a new REQ, an `out-of-scope` tag the user confirms, or a question; "the audit ran"
+is not a resolution. Apply confirmed edits; record any the user defers. Do **not** silently resolve a
+load-bearing gap or fabricate a missing value — surface it. (A "work without stopping" instruction does
+not override this gate; it scopes to clarifying questions.)
 
 ---
 
@@ -121,7 +133,9 @@ gate; it scopes to clarifying questions.)
 
 Write the finalized **`ARCHITECTURE.md` at the repo root**, conforming to `references/architecture-template.md`:
 
-- The canonical section structure with **stable `§<N>` anchors** + a **Spec Anchor Index**.
+- The canonical section structure with **stable `§<N>` anchors** + a **Spec Anchor Index** (the
+  `| REQ ID | Implemented by § | Summary |` table adjacent to Appendix A; orchestrator-maintained
+  same-round like Appendix A; **omit it entirely if planning produced no REQ-* IDs**).
 - **Appendix A — model/contract inventory:** every typed model that is a cross-doc invariant (this is what
   the area `CLAUDE.md` cross-doc-invariants table and `IMPLEMENTATION_PLAN` anchors will mirror).
 - **`§2.5 — Subsystem dependency DAG & parallelization seams`** (between §2 and §3): the import-direction rule
@@ -129,6 +143,10 @@ Write the finalized **`ARCHITECTURE.md` at the repo root**, conforming to `refer
   the input `tasks-gen` reads to derive parallel build **tracks** (the Track map); mark Appendix-A models
   crossed by a DAG edge as shared contracts. (If no clean seams exist, state single-track explicitly — never
   default into it.)
+- An explicit **draft→final anchor remap**: emit a one-table map (e.g. draft `## 4A` → final `§2.5`)
+  to `docs/gap-audits/anchor-remap.md`, and in the same pass update every `DIAGRAM_PLAN.md`
+  "Spec anchors" entry and `DECISIONS.md` "Related Architecture Anchors" entry to the final `§`
+  anchors — left at the draft numbering, those references dangle silently the moment this file lands.
 - Content drawn from the draft + planning artifacts + the confirmed gap-audit fixes. Decisions reflected
   as **locked** (with their `DECISIONS.md` rationale); remaining `open` items called out explicitly.
 - A `Build contract` line at the top: downstream skills treat this file as the source of truth.

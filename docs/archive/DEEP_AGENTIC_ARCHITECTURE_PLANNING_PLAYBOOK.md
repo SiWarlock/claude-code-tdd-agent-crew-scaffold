@@ -1,3 +1,7 @@
+> **FROZEN SNAPSHOT — do not edit.** This is the pre-build-posture archive copy of the playbook,
+> kept for provenance only (see `docs/archive/README.md`). The LIVE, maintained copy is
+> `skills/arch-draft/references/architecture-planning-playbook.md` — all edits go there.
+
 # Deep Agentic Architecture Planning Playbook
 
 > **Status:** Project-agnostic, deep-planning operating procedure for turning any PRD, product idea, or lightweight prompt into a build-ready first-draft `ARCHITECTURE.md`.

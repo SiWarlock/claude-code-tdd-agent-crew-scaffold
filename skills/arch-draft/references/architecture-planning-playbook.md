@@ -1,3 +1,12 @@
+<!--
+  GENERATED FILE — DO NOT EDIT. Rebuilt by skills/arch-draft/scripts/build-playbook.sh from:
+    references/playbook-spine.md + references/stages/stage-{1..6}-*.md
+  Edit those sources, then re-run the build script (release-check.sh playbook fails on a stale concat).
+  This concatenated artifact keeps the original filename so session-kickoff-prompt.md's attach path
+  stays valid: attach THIS file to the Brain-1 session; inside the skill, read the spine end-to-end
+  and each stage just-in-time.
+-->
+
 # Deep Agentic Architecture Planning Playbook
 
 > **Status:** Project-agnostic, deep-planning operating procedure for turning any PRD, product idea, or lightweight prompt into a build-ready first-draft `ARCHITECTURE.md`.
@@ -255,6 +264,80 @@ Do NOT proceed until I confirm — then record the chosen posture in PRESEARCH.m
 
 ---
 
+## Phase Index — goals, stop conditions, stage files
+
+The 18 phases run IN ORDER in every mode (compact mode compresses outputs, never skips phases).
+Read the stage file **just-in-time** as the interview enters its phases; the stop condition for every
+phase is its **Required Output captured + the user's confirmation of the synthesis** — never the
+agent's own satisfaction. After Phase 17 comes the optional IMPLEMENTATION_PLAN handoff note, the
+Quality Review Checklist, and the Final Success Condition (all in stage 6).
+
+| Phase | Title | Goal | Stage file |
+|---|---|---|---|
+| 0 | Intake and Initial Read | Understand the PRD without proposing architecture yet | `stages/stage-1-intake-and-mechanics.md` |
+| 1 | Product Mechanics Clarification | Understand how the product works at the level of mechanics, not stack | `stages/stage-1-intake-and-mechanics.md` |
+| 2 | Users, Actors, and Permissions | Identify who uses the system, who operates it, who reviews it, and what each actor can/cannot do | `stages/stage-2-users-stakeholders-flows.md` |
+| 3 | Stakeholders and Reviewers | Understand who will judge the architecture and what evidence they need | `stages/stage-2-users-stakeholders-flows.md` |
+| 4 | User Flows and Lifecycle Flows | Define all critical workflows before architecture | `stages/stage-2-users-stakeholders-flows.md` |
+| 5 | Domain Model and State Machines | Define the nouns, relationships, state machines, and invariants | `stages/stage-3-domain-requirements-constraints-scope.md` |
+| 6 | Requirements Extraction | Turn PRD + interview outputs into testable requirements | `stages/stage-3-domain-requirements-constraints-scope.md` |
+| 7 | Constraints, Evaluation, and Timebox | Constrain the architecture to what is buildable and what will be judged | `stages/stage-3-domain-requirements-constraints-scope.md` |
+| 8 | Scope Inference (posture-aware) | Infer hidden requirements — sized to the chosen **Build posture** (§3.3): neither overbuilding nor under-building | `stages/stage-3-domain-requirements-constraints-scope.md` |
+| 9 | Assumptions and Open Questions | Track uncertainty explicitly | `stages/stage-4-assumptions-research-decisions.md` |
+| 10 | Research Plan and Research Execution | Validate unstable/current/external facts before locking architecture | `stages/stage-4-assumptions-research-decisions.md` |
+| 11 | Architecture Decision Discovery | Compare options before locking decisions | `stages/stage-4-assumptions-research-decisions.md` |
+| 12 | Decision Locking | Create a stable baseline before architecture drafting | `stages/stage-4-assumptions-research-decisions.md` |
+| 13 | Section-by-Section Architecture Planning | Plan the architecture in sections before drafting | `stages/stage-5-section-planning-security-drafting.md` |
+| 14 | Security, Risk, and Failure Modes | Ensure architecture covers failure modes and reviewer concerns | `stages/stage-5-section-planning-security-drafting.md` |
+| 15 | Architecture Drafting | Create the first build-ready `ARCHITECTURE.md` | `stages/stage-5-section-planning-security-drafting.md` |
+| 16 | Claude Code Review Instructions | Tell Claude Code what to do with the draft architecture before building | `stages/stage-6-handoff-review-diagrams.md` |
+| 17 | Diagram Plan | Plan diagrams after architecture, not before | `stages/stage-6-handoff-review-diagrams.md` |
+
+---
+
+## 25. Reusable Micro-Prompts
+
+These two are **cross-cutting** — usable from ANY phase. The phase-bound micro-prompts (Product
+Mechanics, Posture-Scoped Inference, Decision Matrix, Architecture Gap Audit) live in their owning
+stage files.
+
+### Interview the User
+
+```text
+The PRD is too light to proceed.
+
+Interview me in a focused batch of 8–12 questions.
+Prioritize questions that affect architecture decisions.
+After I answer, synthesize what changed and identify remaining gaps.
+Do not ask low-value questions.
+```
+
+### Deepen a Thin Section
+
+```text
+This section is too thin.
+
+Rewrite it as a build-ready planning section:
+- exact responsibilities
+- boundaries
+- source of truth
+- inputs/outputs
+- data types/schemas
+- lifecycle rules
+- validation rules
+- failure modes
+- tests
+- scope simplifications (posture-gated cuts) + any production-hardening requirements
+- deferred work
+```
+
+
+<!--
+  Part of the arch-draft playbook — stage file, read JUST-IN-TIME as the interview enters its phases
+  (the spine's phase index points here). Sources are concatenated into the full playbook artifact by
+  scripts/build-playbook.sh; edit HERE, never in the generated concat.
+-->
+
 ## 4. Phase 0 — Intake and Initial Read
 
 ### Goal
@@ -447,6 +530,31 @@ A user starts at X, performs Y, the system creates Z, then A happens, then B res
 ```
 
 ---
+
+## Phase-bound micro-prompts (stage 1)
+
+### Product Mechanics
+
+```text
+Before architecture, explain the product mechanics in plain English.
+
+What is the user trying to do?
+What changes state?
+What is the unit of work?
+What is the unit of value?
+What starts the workflow?
+What ends the workflow?
+What are the success/failure states?
+What hidden lifecycle rules exist?
+What is unclear?
+```
+
+
+<!--
+  Part of the arch-draft playbook — stage file, read JUST-IN-TIME as the interview enters its phases
+  (the spine's phase index points here). Sources are concatenated into the full playbook artifact by
+  scripts/build-playbook.sh; edit HERE, never in the generated concat.
+-->
 
 ## 6. Phase 2 — Users, Actors, and Permissions
 
@@ -680,6 +788,13 @@ If a requirement has no flow, either:
 
 ---
 
+
+<!--
+  Part of the arch-draft playbook — stage file, read JUST-IN-TIME as the interview enters its phases
+  (the spine's phase index points here). Sources are concatenated into the full playbook artifact by
+  scripts/build-playbook.sh; edit HERE, never in the generated concat.
+-->
+
 ## 9. Phase 5 — Domain Model and State Machines
 
 ### Goal
@@ -826,11 +941,20 @@ Classify each requirement as:
 
 For each requirement:
 - assign a stable ID
-- identify source: explicit / inferred / user-confirmed
+- identify source: explicit / inferred / user-confirmed — an `explicit` requirement MUST carry a
+  PRD citation in the Source column (section heading or short quote, e.g. `explicit — PRD §3
+  "exports must be idempotent"`); `inferred` and `user-confirmed` are tagged as such (with the
+  interview answer that confirmed them, when applicable). A requirement you cannot cite or tag
+  is not extractable — ask, don't mint it.
 - priority: must-ship / stretch / deferred (sized to the chosen Build posture)
 - acceptance signal
 - related user flow
 ```
+
+> **Why the citation matters:** the PRD→REQ hop is the head of the whole traceability spine
+> (REQ → §-anchor → task → test). `/arch-finalize` audits this table against the PRD and persists
+> a PRD→REQ coverage table; a dropped or re-interpreted PRD requirement with no REQ row is
+> invisible to every downstream check, so the citation is what makes the audit mechanical.
 
 ### Requirement IDs
 
@@ -845,6 +969,11 @@ REQ-I-001   Integration
 REQ-T-001   Testing
 REQ-E-001   Evaluation/demo
 ```
+
+> **REQ-NF seeds (production-grade):** elicit explicit numbers for latency/throughput budgets on the
+> hot paths the PRD implies, availability target, data durability, and cost ceiling — from the PRD or
+> the user ONLY (Phase 7 captures the same budgets as constraints). A budget nobody stated is a
+> question, never an invented number; "no budgets — deliberate deferral" is a recordable answer.
 
 ---
 
@@ -874,6 +1003,8 @@ Capture:
 - preferred technologies
 - deployment constraints
 - data/security/compliance constraints
+- performance budgets for the hot paths the PRD implies — numbers from the PRD or the user ONLY,
+  never model-invented; "no budgets — deliberate deferral" is a recordable answer
 - demo constraints
 - reviewer/evaluator expectations
 - what technical depth will be rewarded
@@ -962,6 +1093,31 @@ fallbacks for external dependency failure
 ```
 
 ---
+
+## Phase-bound micro-prompts (stage 3)
+
+### Posture-Scoped Inference
+
+```text
+Infer missing requirements a CORRECT build at the chosen Build posture must handle.
+
+Classify each as:
+- must-handle (in-scope correctness / lifecycle)
+- production-hardening (in-scope under production-grade; a flagged deferral under MVP/prototype)
+- simplification (a justified, recorded scope cut)
+- deferred
+- research required
+
+Production-grade → do not under-build (hardening is in-scope). MVP/prototype → stay within the timebox and
+flag deferrals. Never cut a load-bearing safety / security / correctness invariant.
+```
+
+
+<!--
+  Part of the arch-draft playbook — stage file, read JUST-IN-TIME as the interview enters its phases
+  (the spine's phase index points here). Sources are concatenated into the full playbook artifact by
+  scripts/build-playbook.sh; edit HERE, never in the generated concat.
+-->
 
 ## 13. Phase 9 — Assumptions and Open Questions
 
@@ -1220,6 +1376,32 @@ Do not draft `ARCHITECTURE.md` until the major load-bearing decisions are locked
 
 ---
 
+## Phase-bound micro-prompts (stage 4)
+
+### Decision Matrix
+
+```text
+For this decision, produce a decision matrix.
+
+Columns:
+- option
+- pros
+- cons
+- build risk
+- demo risk
+- security/data risk
+- PRD alignment
+- recommendation
+- fallback
+```
+
+
+<!--
+  Part of the arch-draft playbook — stage file, read JUST-IN-TIME as the interview enters its phases
+  (the spine's phase index points here). Sources are concatenated into the full playbook artifact by
+  scripts/build-playbook.sh; edit HERE, never in the generated concat.
+-->
+
 ## 17. Phase 13 — Section-by-Section Architecture Planning
 
 ### Goal
@@ -1368,6 +1550,8 @@ PII/PHI
 payment failure
 race conditions
 idempotency
+supply chain (dependency provenance, lockfile discipline, audit cadence)
+performance/scale failure modes (hot-path saturation, unbounded growth)
 background job failure
 deployment misconfiguration
 user confusion
@@ -1479,6 +1663,13 @@ Do not include implementation tasks. Those come later after Claude Code reviews 
 ```
 
 ---
+
+
+<!--
+  Part of the arch-draft playbook — stage file, read JUST-IN-TIME as the interview enters its phases
+  (the spine's phase index points here). Sources are concatenated into the full playbook artifact by
+  scripts/build-playbook.sh; edit HERE, never in the generated concat.
+-->
 
 ## 20. Phase 16 — Claude Code Review Instructions
 
@@ -1773,86 +1964,7 @@ Before accepting the architecture package:
 
 ---
 
-## 25. Reusable Micro-Prompts
-
-### Product Mechanics
-
-```text
-Before architecture, explain the product mechanics in plain English.
-
-What is the user trying to do?
-What changes state?
-What is the unit of work?
-What is the unit of value?
-What starts the workflow?
-What ends the workflow?
-What are the success/failure states?
-What hidden lifecycle rules exist?
-What is unclear?
-```
-
-### Interview the User
-
-```text
-The PRD is too light to proceed.
-
-Interview me in a focused batch of 8–12 questions.
-Prioritize questions that affect architecture decisions.
-After I answer, synthesize what changed and identify remaining gaps.
-Do not ask low-value questions.
-```
-
-### Posture-Scoped Inference
-
-```text
-Infer missing requirements a CORRECT build at the chosen Build posture must handle.
-
-Classify each as:
-- must-handle (in-scope correctness / lifecycle)
-- production-hardening (in-scope under production-grade; a flagged deferral under MVP/prototype)
-- simplification (a justified, recorded scope cut)
-- deferred
-- research required
-
-Production-grade → do not under-build (hardening is in-scope). MVP/prototype → stay within the timebox and
-flag deferrals. Never cut a load-bearing safety / security / correctness invariant.
-```
-
-### Decision Matrix
-
-```text
-For this decision, produce a decision matrix.
-
-Columns:
-- option
-- pros
-- cons
-- build risk
-- demo risk
-- security/data risk
-- PRD alignment
-- recommendation
-- fallback
-```
-
-### Deepen a Thin Section
-
-```text
-This section is too thin.
-
-Rewrite it as a build-ready planning section:
-- exact responsibilities
-- boundaries
-- source of truth
-- inputs/outputs
-- data types/schemas
-- lifecycle rules
-- validation rules
-- failure modes
-- tests
-- scope simplifications (posture-gated cuts) + any production-hardening requirements
-- deferred work
-```
+## Phase-bound micro-prompts (stage 6)
 
 ### Architecture Gap Audit
 

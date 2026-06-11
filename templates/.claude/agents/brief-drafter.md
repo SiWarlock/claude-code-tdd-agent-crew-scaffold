@@ -7,7 +7,7 @@ description: |
   **Before relying on this subagent in standard workflow, run the quality trial** in
   `.claude/agents/README.md`: generate drafts in parallel with orchestrator-authored briefs for
   2-3 real briefs, compare delta. Adopt as standard tool only if rewrite delta < ~30%.
-tools: Read, Grep, Bash
+tools: Read, Grep, Bash, mcp__codegraph__codegraph_context, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_trace, mcp__codegraph__codegraph_impact, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_files, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: opus
 effort: xhigh
 ---
@@ -42,6 +42,10 @@ For one brief at a time:
 - **Omit Step-2.5 questions.** If the slice feels already-decided, surface `[uncertain — no Step-2.5 questions surfaced; verify scope or add at least one boundary Q]`.
 - **Load whole `{{ARCH_DOC}}`.** Use `/check-arch <topic>` or `Read offset/limit` for cited anchors.
 - **Fabricate files-expected-to-touch.** If a file doesn't exist, mark it `[new — to create]`; if it does, mark `[verified existing]`.
+
+## External MCP tools (use when available)
+
+If the workspace has a **code-intelligence MCP** (e.g. CodeGraph), prefer `codegraph_context` to orient on the slice's modules and `codegraph_callers`/`codegraph_callees` for the integration points the brief must name, over `grep`+read loops. If a **docs MCP** (e.g. Context7) is present, pull version-correct library facts for any API the brief pins. Optional — both no-op when absent; fall back to `Grep`/`Read`.
 
 ## Mandatory protocol
 

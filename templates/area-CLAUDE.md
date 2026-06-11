@@ -39,7 +39,10 @@ If you find yourself fighting the wrong conventions, check your cwd.
    - dependency manifest / lockfile (deps the slice adds)
    - `docs/sessions/<NNN>-<date>-<topic>.md` (session doc, created at `/session-end` Step 5)
 
-   **Implementer must NOT touch (all orchestrator territory):**
+   **Implementer must NOT touch (all orchestrator territory).** *This list is the canonical statement
+   of the territory rule — `/session-end`, the brief template, and the generated
+   `scripts/guards/territory-guard.sh` PreToolUse hook (which mechanically enforces it in team mode)
+   all point here.*
    - `{{TASK_TRACKER}}`
    - `{{CODE_AREA}}LESSONS.md`
    - `{{CODE_AREA}}CLAUDE.md` (entire file — both the Cross-doc invariants table AND the Lessons logged index)
@@ -113,6 +116,15 @@ Do not:
 1. **Write code without a failing test first** (for deterministic code). Even one-line functions.
 2. **<Pattern>** — <reason>; use <alternative> instead.
 3. **<Pattern>** — <reason>; use <alternative> instead.
+
+**Enforcement patterns (machine-readable — `/preflight` warn-greps the staged diff against these).**
+One `grep -E` (or `ast-grep`) expression per line, each tied to a numbered rule above. Rules that can't
+be expressed as a pattern carry a `pin:` (test ref) or `accepted:` note on the rule itself instead.
+
+```forbidden-patterns
+# <rule 2>: <pattern — e.g.>  datetime\.now\(\)
+# <rule 3>: <pattern>
+```
 
 <!-- ▲ END EXAMPLE BLOCK [id=forbidden-patterns] ▲ -->
 

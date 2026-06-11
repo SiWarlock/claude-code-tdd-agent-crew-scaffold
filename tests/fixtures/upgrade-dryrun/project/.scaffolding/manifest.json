@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "scaffoldingRepo": "local-fixture",
+  "generatedFromSha": "1d995d4b8c2ce11995f5174ecb69aa9ac93b40b8",
+  "generatedFromRef": "main",
+  "generatorModel": "fixture-authoring (W1-9)",
+  "generatedAt": "2026-06-01T00:00:00Z",
+  "lastUpgradedFromSha": null,
+  "lastUpgradedAt": null,
+
+  "mode": "team",
+  "track": null,
+  "tracks": [],
+  "optionalCommands": [],
+  "optionalSubagents": [],
+
+  "placeholders": {
+    "PROJECT_NAME": "FixtureTracker",
+    "PROJECT_TAGLINE": "a tiny generated project used to dry-run /scaffold-upgrade",
+    "REPO_DIRNAME": "fixture-tracker",
+    "ARCH_DOC": "ARCHITECTURE.md",
+    "TASK_TRACKER": "MVP_TASKS.md",
+    "AI_TRAILER": "Co-Authored-By: Claude <noreply@anthropic.com>",
+    "GIT_REMOTE": "origin",
+    "ARCHITECTURE_SENTENCE": "A FastAPI service with a typed core and thin IO edges.",
+    "PHASE_IDS": "P0, P1",
+    "RUNTIME": "Python 3.12",
+    "FRAMEWORK": "FastAPI",
+    "VALIDATION_LIB": "Pydantic v2",
+    "LINT": "ruff",
+    "TYPECHECKER": "mypy",
+    "TEST_RUNNER": "pytest",
+    "PKG_MANAGER": "uv",
+    "CODE_AREA": "app/",
+    "CODE_AREA_NAME": "backend",
+    "CODE_AREA_BASENAME": "app",
+    "INSTALL_CMD": "uv sync",
+    "TEST_CMD": "uv run pytest",
+    "TEST_CMD_SINGLE_FILE": "uv run pytest {file}",
+    "TYPECHECK_CMD": "uv run mypy app",
+    "LINT_CMD": "uv run ruff check app",
+    "FORMAT_CHECK_CMD": "uv run ruff format --check app",
+    "DEV_CMD": "uv run uvicorn app.main:app --reload"
+  },
+  "codeAreas": [
+    {
+      "CODE_AREA": "app/",
+      "CODE_AREA_NAME": "backend",
+      "CODE_AREA_BASENAME": "app",
+      "RUNTIME": "Python 3.12",
+      "PKG_MANAGER": "uv",
+      "INSTALL_CMD": "uv sync",
+      "TEST_CMD": "uv run pytest",
+      "TEST_CMD_SINGLE_FILE": "uv run pytest {file}",
+      "TYPECHECK_CMD": "uv run mypy app",
+      "LINT_CMD": "uv run ruff check app",
+      "FORMAT_CHECK_CMD": "uv run ruff format --check app",
+      "DEV_CMD": "uv run uvicorn app.main:app --reload",
+      "BUILD_CMD": null
+    }
+  ],
+
+  "generatedFiles": [
+    { "dest": "CLAUDE.md", "template": "templates/CLAUDE.md", "kind": "mixed" },
+    { "dest": "app/CLAUDE.md", "template": "templates/area-CLAUDE.md", "kind": "mixed", "area": "app/" },
+    { "dest": "app/LESSONS.md", "template": "templates/area-LESSONS.md", "kind": "accreted", "area": "app/" },
+    { "dest": "MVP_TASKS.md", "template": "templates/MVP_TASKS.md", "kind": "accreted" },
+    { "dest": ".claude/commands/tdd.md", "template": "templates/.claude/commands/tdd.md", "kind": "placeholder-only", "area": "app/" },
+    { "dest": ".claude/commands/check-arch.md", "template": "templates/.claude/commands/check-arch.md", "kind": "placeholder-only", "area": "app/" }
+  ],
+  "exampleBlocks": [
+    { "file": "CLAUDE.md", "id": "project-structure", "status": "illustrative" },
+    { "file": "CLAUDE.md", "id": "tech-stack", "status": "customized" },
+    { "file": "CLAUDE.md", "id": "strict-typing-posture", "status": "illustrative" },
+    { "file": "CLAUDE.md", "id": "tdd-scope", "status": "illustrative" },
+    { "file": "CLAUDE.md", "id": "key-safety-rules", "status": "customized" },
+    { "file": "app/CLAUDE.md", "id": "area-stack", "status": "customized" },
+    { "file": "app/CLAUDE.md", "id": "forbidden-patterns", "status": "illustrative" },
+    { "file": "app/CLAUDE.md", "id": "module-layout", "status": "illustrative" },
+    { "file": "app/CLAUDE.md", "id": "area-subagent-candidates", "status": "illustrative" }
+  ]
+}

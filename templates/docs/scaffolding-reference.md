@@ -77,7 +77,7 @@ Orchestrator ↔ implementer communicate **directly** (`SendMessage` for checkpo
 
 ## Slash commands
 
-The full command list + descriptions is **canonical in root `CLAUDE.md` "Slash commands available."** Pairs: lead `/team-start`+`/team-end`; orchestrator `/orchestrate-start`+`/orchestrate-end`; implementer `/session-start`+`/session-end`; plus `/tdd`, `/wired`, `/context-check`, `/preflight`, `/run-tests`, `/check-arch` (+ optional `/eval`, `/trace`). _(Single-operator: no `/team-start`/`/team-end`.)_
+Command descriptions are injected by the harness per command; root `CLAUDE.md` "Slash commands" keeps only the role pairing. Pairs: lead `/team-start`+`/team-end`; orchestrator `/orchestrate-start`+`/orchestrate-end`; implementer `/session-start`+`/session-end`; plus `/tdd`, `/wired`, `/context-check`, `/preflight`, `/run-tests`, `/check-arch` (+ optional `/eval`, `/trace`). _(Single-operator: no `/team-start`/`/team-end`.)_
 
 ---
 
@@ -100,7 +100,7 @@ The full command list + descriptions is **canonical in root `CLAUDE.md` "Slash c
 
 ### Context monitoring + auto-cycle (team mode only)
 
-Status lines write per-session heartbeats (gated on a `~/.claude/team-registry/` entry, so solo sessions are silent). The orchestrator runs `/context-check <team>` **locally each slice** but pings the lead **only on a tier crossing** (≥ WARN) — OK slices produce no ping; the lead's free idle-notifications + the task list cover progress. Tiers (WARN 70 / ACTION 75 / HARD-STOP 80, env-overridable via `CLAUDE_TEAM_CTX_*`) and the full auto-cycle flow are **canonical in root `CLAUDE.md` "Context monitoring" + `docs/team-protocol.md` "Context monitoring + auto-cycle."**
+Status lines write per-session heartbeats (gated on a `~/.claude/team-registry/` entry, so solo sessions are silent). The orchestrator runs `/context-check <team>` **locally each slice** but pings the lead **only on a tier crossing** (≥ WARN) — OK slices produce no ping; the lead's free idle-notifications + the task list cover progress. The tier ladder (WARN/ACTION/HARD-STOP) and the full auto-cycle flow are **canonical in `docs/team-protocol.md` "Context monitoring + auto-cycle"** (numbers = the script's env defaults, `CLAUDE_TEAM_CTX_*`).
 
 ### Step-9 routing matrix
 

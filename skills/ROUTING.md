@@ -18,9 +18,9 @@ them — they never author them.
 | — arch review (during 3) | gstack/CE | `/plan-eng-review` + `/codex` (cross-model), CE `ce-doc-review` | READ-ONLY findings into the gap-audit; **never** `/autoplan` (it generates a plan) |
 | 4 **Task tracker** | **🔒 you** | **`tasks-gen`** (Claude) | → spec-anchored `IMPLEMENTATION_PLAN.md` |
 | 5 Scaffold | **you** | **`scaffold-generate`** (Claude) | personalize the harness + stamp manifest |
-| 6 **Implementation** | **🔒 you** | **`/tdd`** agent-team engine | forbid CE `ce-work` / gstack `/spec --execute` as the engine |
+| 6 **Implementation** | **🔒 you** | **`/tdd`** agent-team engine; **`/phase-exit`** executes each phase's gate (audits + spec coverage + posture-gated rows) at the 6→7 boundary | forbid CE `ce-work` / gstack `/spec --execute` as the engine |
 | 7 Code review | you → escalate | your 3 subagents → CE `ce-code-review` (rubric) → gstack `/review`+`/codex` (high-stakes) | never 4 passes on a trivial diff |
-| 8 Security | gstack | `/cso` (OWASP+STRIDE) | at phase/release boundaries on sensitive surfaces |
+| 8 Security | **generated machinery first** | the `/phase-exit` security row resolves the executor: at `phase-boundary` policy the gate's `security-reviewer` dispatch IS the pass; else Claude Code's built-in **`/security-review`** (branch pending changes) — gstack `/cso` (OWASP+STRIDE) is the heavier escalation on trust-boundary surfaces | one combined gate per phase — never a doubled pass |
 | 9 QA (web) | gstack | `/qa`, `/design-review` | **skip entirely off-web** (backend/CLI/lib) |
 | 10 Ship | CE | `ce-commit-push-pr` + `ce-resolve-pr-feedback` | atomic Step-10 commits stay inside `/tdd` |
 | 11 Deploy / observe | gstack | `/land-and-deploy` + `/canary` + `/benchmark` | GitHub + web only; no auto-rollback (revert is a human gate) |

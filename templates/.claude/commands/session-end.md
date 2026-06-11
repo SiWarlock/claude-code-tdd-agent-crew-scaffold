@@ -20,17 +20,23 @@ Procedure:
    - If a test was written *after* the implementation: flag it. Note in the session doc: *"TDD violation: <file> implemented before tests existed."*
    - If TDD was skipped on something safety-critical: surface it as a blocker, not just a note.
 
-2.5. **Cross-doc invariant audit.** Read the "Cross-doc invariants" table in `{{CODE_AREA}}CLAUDE.md`. For each model listed, check whether its field list (added/removed/renamed fields) changed this session. If yes, verify the corresponding `{{ARCH_DOC}}` section was updated in the same set of commits. If a model field changed without a doc edit:
+2.5. **Cross-doc invariant audit.** Read the "Cross-doc invariants" table in `{{CODE_AREA}}CLAUDE.md`. For each model listed, check whether its field list (added/removed/renamed fields) changed this session. If yes, verify the paired `{{ARCH_DOC}}` edit exists — **where to look depends on mode** (commits stagger by design: your Step-10 commit lands code+tests; the orchestrator's doc edits ride its `/orchestrate-end` round commit — so never demand a doc edit "in the same commits"):
+   - **Single-track (orchestrator shares this checkout):** the orchestrator wrote the doc row **hot, uncommitted** — check the working tree: `git diff -- {{ARCH_DOC}}` (plus the committed history this session). The edit being uncommitted is the documented happy path, not a violation.
+   - **Multi-track (you carry a `<track>-` prefix):** the orchestrator's doc edit may live in another checkout and is invisible here — do a **memory check only**: confirm every model field change this session was flagged at Step 9 (the orchestrator confirmed receipt); list any that were not.
+   If a model field changed and (single-track) no doc edit exists anywhere, or (multi-track) it was never flagged at Step 9:
    - Flag it as a discipline violation.
    - List the affected model + section + the specific fields that changed.
    - Surface to the user with a recommendation: update the doc now, or accept the drift with an explicit ADR-style note.
    - The session doc must annotate this as an open follow-up.
 
-2.6. **Step-9 items — already routed hot; don't re-route or re-enumerate.** The orchestrator routed each during the session; its `/orchestrate-end` is the single verify pass. Just ensure any *still-open* follow-up is captured in the session doc's "Open follow-ups." **Do NOT modify `{{TASK_TRACKER}}` or `{{CODE_AREA}}LESSONS.md` here.**
+2.6. **Step-9 items — already routed hot; don't re-route or re-enumerate.** The orchestrator routed each during the session; its `/orchestrate-end` is the single verify pass. Just ensure any *still-open* follow-up is captured in the session doc's "Open follow-ups." (Territory rule: per the `{{CODE_AREA}}CLAUDE.md` "must NOT touch" list — hook-enforced.)
 
 2.7. **Wiring / reachability — confirm, don't re-trace.** Each feature already stated *"Reachable from `<entry>` via `<path>`"* at `/tdd` Step 7.5; carry those into the session doc's Reachability section. Re-trace (`/wired`) only a feature whose wiring a *later* slice might have removed. Any still tested-but-unwired feature → an open follow-up "Future TODO — belongs to a phase." A green suite over an unreachable feature is a silent gap.
 
-3. **ALWAYS create a session doc** at `docs/sessions/<NNN>-<YYYY-MM-DD>-<topic>.md`. This is required, not optional. Compute `<NNN>` as the next sequential number — `ls docs/sessions/`, find the max NNN prefix, increment, zero-pad to 3 digits. **Multi-track mode (you carry a `<track>-` name prefix): prefix the filename with your track** — `docs/sessions/<track>-<NNN>-<date>-<topic>.md` — and compute `<NNN>` within your track (`ls docs/sessions/<track>-*`), so parallel tracks' session docs don't collide when the track branches merge (root `CLAUDE.md` "Naming + cross-bleed prevention"). Single-track / solo → plain `<NNN>-…`.
+3. **ALWAYS create a session doc** at `docs/sessions/<NNN>-<YYYY-MM-DD>-<topic>.md`. This is required, not optional. Compute `<NNN>` as the next sequential number — `ls docs/sessions/`, find the max NNN prefix, increment, zero-pad to 3 digits. Single-track / solo → plain `<NNN>-…`.
+<!-- ▼ MODE [team-multi-track] pointer: delete ▼ -->
+   **Multi-track mode (you carry a `<track>-` name prefix): prefix the filename with your track** — `docs/sessions/<track>-<NNN>-<date>-<topic>.md` — and compute `<NNN>` within your track (`ls docs/sessions/<track>-*`), so parallel tracks' session docs don't collide when the track branches merge (root `CLAUDE.md` "Naming + cross-bleed prevention").
+<!-- ▲ END MODE ▲ -->
 
    The doc must include these sections:
    - **Header** — date, phase, predecessor + successor session links
@@ -66,4 +72,4 @@ Commit with Conventional Commits + `{{AI_TRAILER}}` trailer. Topic prefix `docs(
 
 **Do NOT push.** Push happens at end of round (the orchestrator's `/orchestrate-end`).
 
-**Do NOT modify `{{TASK_TRACKER}}`, `{{CODE_AREA}}LESSONS.md`, or `{{ARCH_DOC}}` from this command.** Those are orchestrator-owned. Step 2.6 *surfaces* what should be in those files; the orchestrator *writes* via `/orchestrate-end` (or hot during the session).
+**Orchestrator territory stays untouched from this command** — the canonical list is the `{{CODE_AREA}}CLAUDE.md` "must NOT touch" list (mechanically enforced by the territory-guard hook in team mode). Step 2.6 *surfaces* what should land in those files; the orchestrator *writes* via `/orchestrate-end` (or hot during the session).

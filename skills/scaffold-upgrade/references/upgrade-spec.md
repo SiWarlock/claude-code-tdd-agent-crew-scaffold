@@ -62,7 +62,7 @@ SCAFFOLDING-GUIDE §11."
 | `kind` | Examples | Merge rule |
 |---|---|---|
 | `verbatim` | `tdd.md` 10 steps, Step-9 routing, escalation taxonomy, commit cadence | AUTO-APPLY iff `theirs == base` (provably untouched) → take `ours`. Else PROPOSE with a loud "you diverged from verbatim machinery" flag. |
-| `placeholder-only` | `preflight.md`, `wired.md`, single-area `run-tests.md` | AUTO-APPLY if 3-way clean. Else PROPOSE (a placeholder drifted). |
+| `placeholder-only` | `preflight.md`, `wired.md`, single-area `run-tests.md` | AUTO-APPLY iff `theirs == base` (provably untouched). A clean-but-diverged 3-way is a low-risk PROPOSE (`propose-clean`) — never a silent write; a conflict is a PROPOSE too. |
 | `mixed` | `CLAUDE.md`, `area-CLAUDE.md`, `orchestrator-briefing.md` | Per-region split: machinery + `illustrative` blocks → auto-eligible; `customized` blocks → PROPOSE-ONLY, never clobber. |
 | `accreted` | `LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, area-`CLAUDE.md` tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
 | `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only the appended Appendix A skeleton is a PROPOSE candidate. |
@@ -124,7 +124,7 @@ pre-commit) and are **not overridable** by a "work without stopping" instruction
 `renamed-placeholder`, `moved-section`, `new-required-section`, `renamed-template`, `deleted-template`
 (PROPOSE-only, never auto-delete), `added-template` (mode/optional-filtered), `accreted-format` (the only path
 allowed to rewrite accreted bodies — human-gated, idempotent, sampled). Idempotent + journaled
-(`.scaffolding/.migrations/<id>/`) + append-only (a buggy migration is fixed by a NEW one, never edited in place)
+(the `.scaffolding/.migrations/<id>.done` touchfile the script checks; multi-step migrations may also keep per-step markers under `.scaffolding/.migrations/<id>/`) + append-only (a buggy migration is fixed by a NEW one, never edited in place)
 + per-migration failure is non-fatal.
 
 **Script vs model split.** `scaffold_upgrade.sh` (bash+jq) does `resolve`/`substitute`/`diff`/`migrations`/

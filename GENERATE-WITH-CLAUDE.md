@@ -141,8 +141,8 @@ Before the substantive interview, ask the user via `AskUserQuestion`:
 **Question:** Which mode do you want for this project?
 
 **Options:**
-- **Team pattern** — 3 roles (team lead + orchestrator + implementer-per-area), direct teammate comms, escalation taxonomy. Recommended for: multi-week projects, multi-area projects, projects with safety/correctness criticality, parallel work streams — **each parallel TRACK runs in its own git worktree with its own agent team; the Parallelization plan in `{{TASK_TRACKER}}` records the phase/track DAG + critical path**. Generates `/team-start [track]` (track-scoping + worktree setup), `/team-end`, `docs/team-protocol.md`, `docs/team-handoffs/`.
-- **Single-operator fallback** — 2 sessions, the human is the bridge. Recommended for: solo dev, one-week project, single code area, no parallel tracks. Skips `/team-start`, `/team-end`, `docs/team-protocol.md` — those concepts collapse into the human.
+- **Team pattern (RECOMMENDED for ALL projects — including solo developers)** — 3 roles (team lead + orchestrator + implementer-per-area), direct teammate comms, escalation taxonomy. A solo dev runs **team mode (single track)**: the full 3-role team in one worktree — "track" is a parallelization unit, not a staffing mode. Parallel work scales it: **each parallel TRACK runs in its own git worktree with its own agent team; the Parallelization plan in `{{TASK_TRACKER}}` records the phase/track DAG + critical path**. Generates `/team-start [track]` (track-scoping + worktree setup), `/team-end`, `docs/team-protocol.md`, `docs/team-handoffs/`.
+- **Single-operator fallback** — 2 sessions, the human is the bridge. Reserved for **environments where the agent-teams feature is unavailable** — it is not the solo-developer default. Its two concrete losses: (1) the human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode. Skips `/team-start`, `/team-end`, `docs/team-protocol.md` — those concepts collapse into the human.
 
 The user's answer determines several downstream generation choices (which slash commands to write, whether to write `team-protocol.md`, how to phrase comm rules in root `CLAUDE.md`).
 
@@ -185,6 +185,7 @@ For each code area:
 - **Type checker** (mypy --strict, tsc --noEmit, …)
 - **Test runner** (pytest, vitest, go test, …)
 - **Standard commands** — install deps, run dev server, run tests, lint, format-check, type-check.
+- **Dependency-audit command** (`{{AUDIT_CMD}}`, production-grade) — e.g. `npm audit --omit=dev`, `pip-audit`, `cargo audit`; `null` when N/A. Runs ONCE per phase at the `/phase-exit` gate (new-vs-baseline), deliberately NOT in `/preflight` (time-varying, network-dependent, unbounded output).
 - **Test classes/markers** for `/run-tests` (e.g. `unit`, `integration`, `e2e`).
 
 Most of this should be inferrable from package manifests. Confirm rather than ask cold.
@@ -212,8 +213,15 @@ Most of this should be inferrable from package manifests. Confirm rather than as
   - `code-quality-reviewer` — Step-8 review. **Default yes** for any non-trivial project (runs `sonnet`, diff-only — cheap).
   - `security-reviewer` — Step-8 review, mandatory on invariant-touching slices. **Default yes** for projects with safety invariants; default no otherwise.
   - `reachability-auditor` — phase-exit gate audit. **Default yes** — universal value.
+  - `arch-drift-auditor` — phase-exit spec-vs-code audit over the phase's anchors. **Default yes** — it executes a standard checklist row.
   - `brief-drafter` — orchestrator's brief-skeleton tool. **Default yes for definition file; integration deferred until quality trial.** (See `agents/README.md` for the trial protocol.)
 - **Reviewer policy** — sets `{{SECURITY_REVIEW_POLICY}}` + `{{CODE_QUALITY_REVIEW_POLICY}}` in root `CLAUDE.md` (the Step-8 fan-out cadence; reviewers run on the slice diff). Each is one of `off` · `invariant` · `every-slice` · `phase-boundary`. **Defaults: `security-reviewer = invariant`, `code-quality-reviewer = every-slice`.** Confirm or override with the user — it trades review depth for per-slice tokens. (If the user opted out of a reviewer above, set its policy `off`.) **Let the Build posture inform the default:** a `production-grade` posture leans toward tighter review (e.g. `security-reviewer = every-slice` on security-touching areas); an `MVP/prototype` posture is fine with the lighter defaults.
+- **Production-gate pack — ONE grouped `AskUserQuestion` (multiSelect), never four serial gates.** Present the posture-derived recommended defaults with per-item opt-out, pre-marked per the chosen Build posture (production-grade ⇒ all pre-selected; MVP/prototype ⇒ none pre-selected). The items:
+  1. **gitleaks secrets hook** — `secrets-guard.sh` blocking mode (warn-only regex fallback ships regardless).
+  2. **Dependency-audit checklist row** (+ `{{AUDIT_CMD}}` from Batch C).
+  3. **Whole-system security row** + the `{{SECURITY_REVIEW_POLICY}}` value it resolves against.
+  4. **Perf-budget checklist row** (only meaningful when the architecture states budgets).
+  Record each answer **individually** in the manifest (the upgrade path filters posture-gated content by them). The always-ask rule is satisfied in one round-trip — explicit and per-decision, just not four interruptions.
 
 ---
 
@@ -226,10 +234,12 @@ After the interview, present a compact **generation plan** and **wait for approv
 - **Code areas:** N areas — `<dir>` (`<name>`, `<stack one-liner>`) …
 - **Phase IDs + the phase list** going into `{{TASK_TRACKER}}`.
 - **Optional commands included:** `/eval`? `/trace`? `/wired` (standard, always).
-- **Optional starter subagents included:** which of the 4.
+- **Optional starter subagents included:** which of the 5.
 - **Reviewer policy:** `security-reviewer = <policy>`, `code-quality-reviewer = <policy>`.
 - **Filled values for every `{{PLACEHOLDER}}`** — a short table.
 - **EXAMPLE BLOCKs you'll rewrite** — one-line summary of what each becomes.
+- **Tracker retrofit (Step 4)** — if a tracker already exists, the list of missing required structure you
+  propose to retrofit (or "none — structure verified"). Retrofits run only with this approval — never silently.
 - **Provenance manifest** — note that `.scaffolding/manifest.json` will be stamped at the end (Step 12.5): it records the scaffolding commit, your filled placeholder values, and the file/EXAMPLE-BLOCK ledger so future `/scaffold-upgrade` runs are clean 3-way merges, not hand-diffs.
 
 **Do not write any files until the user approves this plan.** If the user changes their mind on mode or other foundational choices, re-do the plan.
@@ -265,7 +275,10 @@ From `templates/area-LESSONS.md`, written to `<code-area>/LESSONS.md`. This is j
 
 ### Step 4 — `{{TASK_TRACKER}}`
 
-From `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**. **In team mode, also fill the `[id=parallelization-plan]` block** (Track map): derive phase-level **tracks** from `{{ARCH_DOC}}` §2.5 (the subsystem dependency DAG) refined by the per-task `Depends on:` graph, and record the phase/track DAG + critical path + the `track → worktree → team-name` table; each task entry carries a `Depends on:` line. **In single-operator mode, delete the `parallelization-plan` block** (like `optional-demo-phase` when out of scope) — solo builds walk the DAG serially in one tree.
+Two paths depending on what already exists (mirrors Step 5's preserve-vs-author logic):
+
+- **If a tracker already exists** — the normal cc-crew chain (`/tasks-gen` authored `IMPLEMENTATION_PLAN.md`) or any other pre-existing tracker: it is a **read-only content input — never author, rewrite, or re-fill it.** Step 4 is a **structure verify/retrofit pass only**: check that the required structure from `templates/IMPLEMENTATION_PLAN.md` is present (header protocol blocks, "Currently in progress", Carry-forward, deliverable map, the `[id=…]` EXAMPLE-BLOCK markers, per-phase `Spec anchors:` lines, Log / Trims / Decisions-tabled sections; in team mode the `[id=parallelization-plan]` block). Any missing structure becomes a **proposed retrofit listed in the §6 generation plan** — applied only after the user approves it there, **never silently**. Phases, tasks, anchors, and all living-section content are never altered.
+- **If no tracker exists:** author it from `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**. **In team mode, also fill the `[id=parallelization-plan]` block** (Track map): derive phase-level **tracks** from `{{ARCH_DOC}}` §2.5 (the subsystem dependency DAG) refined by the per-task `Depends on:` graph, and record the phase/track DAG + critical path + the `track → worktree → team-name` table; each task entry carries a `Depends on:` line. **In single-operator mode, delete the `parallelization-plan` block** (like `optional-demo-phase` when out of scope) — solo builds walk the DAG serially in one tree.
 
 ### Step 5 — `{{ARCH_DOC}}`
 
@@ -295,27 +308,37 @@ From `templates/docs/scaffolding-reference.md`. Project-specific map. Fill the f
 From `templates/.claude/commands/`. Generation order:
 
 **Team pattern:**
-- `team-start` → `team-end` → `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `run-tests` → `check-arch` → `wired`
+- `team-start` → `team-end` → `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `phase-exit` → `run-tests` → `check-arch` → `wired`
 - Then optionally: `eval` / `trace`
 
 **Single-operator:**
-- `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `run-tests` → `check-arch` → `wired`
+- `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `phase-exit` → `run-tests` → `check-arch` → `wired`
 - Then optionally: `eval` / `trace`
 - Skip: `team-start`, `team-end`
 
 For each:
-- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim. (`team-start`'s track argument now scopes a track's phases — reading the `Parallelization plan` — and provisions the track's git worktree; keep those steps verbatim, fill only the area-basename / path placeholders in the spawn templates.)
+- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `phase-exit`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim. (`team-start`'s track argument now scopes a track's phases — reading the `Parallelization plan` — and provisions the track's git worktree; keep those steps verbatim, fill only the area-basename / path placeholders in the spawn templates.)
 - **`preflight`, `run-tests`** are cwd-aware in the template. **If the project has one code area, delete the mode-detection and any second-mode block** — leave a single linear gate. If 2 areas, fill both modes. If 3+ areas, expand the case statement to cover each area, repeating the per-area block.
 - **`context-check`** — generate ONLY in team-pattern mode. Skip for single-operator-fallback.
 - **`eval`, `trace`** — include only if the user opted in (Batch E). Otherwise don't write them.
+- **`/perf` is deliberately NOT shipped** — benchmark tasks run via `/run-tests`/Bash at their own cadence; add a dedicated command reactively if benchmark invocations recur enough to earn one.
 
 ### Step 11 — `.claude/agents/`
 
 Always write `templates/.claude/agents/README.md` with the updated inventory.
 
-For each of the 4 starter subagents the user opted into, write its definition file from `templates/.claude/agents/<name>.md`. The starter subagents are highly portable — fill area / language placeholders where applicable; keep the scope, protocol, forbidden-patterns, and output sections verbatim.
+For each of the 5 starter subagents the user opted into (`code-quality-reviewer`, `security-reviewer`, `reachability-auditor`, `arch-drift-auditor`, `brief-drafter`), write its definition file from `templates/.claude/agents/<name>.md`. The starter subagents are highly portable — fill area / language placeholders where applicable; keep the scope, protocol, forbidden-patterns, and output sections verbatim.
 
-If the user opted out of all 4, the directory contains only `README.md` (the original "empty inventory" stance is preserved).
+If the user opted out of all 5, the directory contains only `README.md` (the original "empty inventory" stance is preserved).
+
+### Step 11.5 — Project-local scripts + guard hooks (`<project>/scripts/`, `.claude/settings.json`)
+
+Distinct from the **user-global** monitoring scripts in Step 13 — these are generated INTO the project:
+
+- **`scripts/spec-lint.sh`** from `templates/scripts/spec-lint.sh` (fill `{{ARCH_DOC}}` + `{{TASK_TRACKER}}`; `chmod +x`). The spec-traceability linter: `brief` (orchestrator pre-dispatch gate + `/tdd` Step-0 conditional re-lint), `tests <phase>` (phase-exit spec-coverage row), `reqs` (warn-only derived REQ coverage). Manifest row: `{dest: "scripts/spec-lint.sh", template: "templates/scripts/spec-lint.sh", kind: "placeholder-only"}`.
+- **`scripts/guards/`** (three PreToolUse hooks, `chmod +x`): `git-guard.sh` (bans `git add -A`/`git add .` for all roles; bans `git push` for implementer sessions), `territory-guard.sh` (blocks implementer writes to orchestrator territory — fill the `TERRITORY` array from the SAME manifest values that fill the area `CLAUDE.md` "must NOT touch" list, one CLAUDE/LESSONS pair per code area; that list is the canonical statement, the guard is its enforcement), `secrets-guard.sh` (on `git commit`: `gitleaks protect --staged` when installed — blocking; warn-only regex fallback otherwise; placeholder-free). All no-op for sessions without a team-registry entry, so solo/bootstrap sessions are unaffected. Manifest rows: kind `placeholder-only` (`territory-guard.sh`, `git-guard.sh`) / `verbatim` (`secrets-guard.sh`).
+- **`.gitleaksignore`** from `templates/.gitleaksignore` (seeded; the project accretes fingerprint entries — TDD fixtures are false-positive-heavy, and the documented flow is fingerprint-ignore, never weakening the hook). Manifest row: kind `accreted`.
+- **`.claude/settings.json`** from `templates/.claude/settings.json` (the PreToolUse wiring). **Merge — don't replace** — into any existing project `.claude/settings.json` (append our hook entries; remove nothing). Manifest row: kind `verbatim` (or `mixed` if merged into pre-existing user content — then record `divergence: merged-into-existing`). The gitleaks/secrets-guard default rides the grouped production-gate question (§5 Batch E) — asked, never silently applied.
 
 ### Step 12 — Empty directories
 
@@ -335,7 +358,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "scaffoldingRepo": "<remote URL or local path of the scaffolding checkout>",
   "generatedFromSha": "<full 40-char SHA — `git -C <scaffolding-checkout> rev-parse HEAD`>",
   "generatedFromRef": "<branch or tag that SHA was on — advisory>",
@@ -345,16 +368,17 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "lastUpgradedAt": null,
 
   "mode": "team | single-operator",
+  "posture": "production-grade | MVP/prototype",
   "track": "<the lead session's track name, or null>",
   "tracks": ["<parallel track names from the Parallelization plan, or [] for a single-track build>"],
   "optionalCommands": ["eval", "trace"],
-  "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "brief-drafter"],
+  "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "arch-drift-auditor", "brief-drafter"],
 
   "placeholders": { "PROJECT_NAME": "…", "ARCH_DOC": "ARCHITECTURE.md", "TASK_TRACKER": "IMPLEMENTATION_PLAN.md", "AI_TRAILER": "…", "SECURITY_REVIEW_POLICY": "invariant", "CODE_QUALITY_REVIEW_POLICY": "every-slice", "…": "…" },
   "codeAreas": [
     { "CODE_AREA": "app/", "CODE_AREA_NAME": "backend", "CODE_AREA_BASENAME": "app",
       "RUNTIME": "Python 3.12", "PKG_MANAGER": "uv", "TEST_CMD": "uv run pytest",
-      "TYPECHECK_CMD": "uv run mypy app", "BUILD_CMD": null }
+      "TYPECHECK_CMD": "uv run mypy app", "BUILD_CMD": null, "AUDIT_CMD": "pip-audit" }
   ],
 
   "generatedFiles": [
@@ -373,6 +397,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 Rules:
 - **`generatedFromSha`** is the full 40-char HEAD of the **scaffolding checkout** you generate from (not the target project): `git -C <scaffolding-checkout> rev-parse HEAD`. If the templates were handed over outside a git checkout and no SHA is resolvable, record `"generatedFromSha": null` plus `"shaUnknown": true` and a short `"note"` — `/scaffold-upgrade` falls back to a verbatim-machinery fingerprint.
+- **`posture`** (schema v2) is the **Build posture** the project was generated under — copied from the `Build posture:` line of `{{ARCH_DOC}}`'s executive summary, as confirmed during the interview (never fabricated; if no such line exists, it was asked in §5). `/scaffold-upgrade` uses it to filter **posture-gated** upgrade content (e.g. production-grade phase-exit checklist rows) mechanically; a v1 manifest has no `posture`, so posture-gated content degrades to human-gated there.
 - **`placeholders` / `codeAreas` are exactly the values you substituted** — every resolved token, verbatim. `codeAreas` is an array (one entry per area; a 2nd+ area maps to the `{{CODE_AREA_2}}`… suffix set); `BUILD_CMD` may be `null`.
 - **`generatedFiles[]` / `exampleBlocks[]`** are the ledger you built incrementally in §7. Include **every** file you wrote — accreted and user-canonical files too, so the upgrade knows they exist and leaves them alone.
 - This file is **machine-owned** — never hand-edited — and **committed** (it lives in git for the upgrade's archaeology). Validate it parses: `jq . .scaffolding/manifest.json`.
@@ -446,7 +471,7 @@ After install, ask the user to confirm:
 
 **Settings.json — what to change and what NOT to change:**
 
-The settings file is `~/.claude/settings.json` (USER-GLOBAL, NOT the project's `.claude/settings.json`). The context-monitoring system is implemented via the status line script + the spawn-prompt registry-write — **not via Claude Code hooks**. Do NOT add any hook config (no `Stop`, `SessionStart`, `UserPromptSubmit`, etc. hooks are required or used by this system).
+The settings file is `~/.claude/settings.json` (USER-GLOBAL, NOT the project's `.claude/settings.json`). The **context-monitoring system** is implemented via the status line script + the spawn-prompt registry-write — **not via Claude Code hooks**. Do NOT add any hook config **for context monitoring** (no `Stop`, `SessionStart`, `UserPromptSubmit`, etc. hooks are required or used by *that* system) — and never in the USER-GLOBAL file. The project-LOCAL `.claude/settings.json` with its PreToolUse guard hooks is a different, deliberate surface — generated in Step 11.5, scoped to the project.
 
 What you DO change in `~/.claude/settings.json`:
 
@@ -571,6 +596,7 @@ Each is one of `off` · `invariant` (invariant-/security-touching slices only) �
 | `{{FORMAT_CHECK_CMD}}` | Check formatting | `uv run ruff format --check .`, `pnpm format --check` |
 | `{{TYPECHECK_CMD}}` | Run the type checker | `uv run mypy app`, `pnpm typecheck` |
 | `{{BUILD_CMD}}` | Build (if applicable — e.g. frontend production build) | `pnpm build`, `cargo build --release` |
+| `{{AUDIT_CMD}}` | Dependency/supply-chain audit — run at the `/phase-exit` gate, never in `/preflight` (`null` when N/A) | `npm audit --omit=dev`, `pip-audit`, `cargo audit` |
 | `{{TEST_CLASSES}}` | `/run-tests` argument values (the `argument-hint`) | `unit\|integration\|all` |
 
 > `{{CODE_AREA}}` **includes its trailing slash** — templates use it as a path prefix (`{{CODE_AREA}}CLAUDE.md` → `app/CLAUDE.md`). `{{CODE_AREA_BASENAME}}` is the bare name for `cwd` matching.
@@ -599,6 +625,22 @@ Each `EXAMPLE BLOCK` region carries a stable **`[id=<slug>]`** in both its openi
 | `.claude/commands/trace.md` | `trace-body` |
 
 ---
+
+### MODE pruning markers (template-only — strip at generation)
+
+Some templates carry **mode-pruning regions** so a generated file ships only the prose its mode needs:
+
+```
+<!-- ▼ MODE [solo|team-single-track|team-multi-track] pointer: <one-line text, or `delete`> ▼ -->
+...content kept only when the project's state is in the [list]...
+<!-- ▲ END MODE ▲ -->
+```
+
+Derive the project's **3-state mode** from the foundational choices (no extra question): `single-operator` → `solo`; team with an empty/absent Track map → `team-single-track`; team with parallel tracks → `team-multi-track`. Then, per region: state ∈ list → keep the **content**, delete the two marker lines; state ∉ list → replace the whole region with the `pointer:` line (or nothing when it says `delete`). Rules:
+
+- **No MODE marker ever survives into a generated file** — `scaffold-upgrade check-markers` treats a survivor as an error (these are the opposite of EXAMPLE BLOCK markers, which MUST survive).
+- No nesting. The pointer text ends at the closing `▼ -->` of the opening line.
+- `/scaffold-upgrade` replays this pruning (derived from the manifest's `mode` + `tracks`) when rebuilding its base/ours trees — which is why the state must be derivable, never ad-hoc.
 
 ## §11 — Hard rules (do NOT)
 

@@ -23,7 +23,7 @@
 > - <milestone 1 — date>
 > - <milestone 2 — date>
 
-> **Spec-anchor convention (architecture-as-contract).** Each phase header below carries a `**Spec anchors:**` block listing the `{{ARCH_DOC}}` sections the phase implements. Orchestrator + implementer re-read the listed anchors at session start. If a slice surfaces a behavior the anchors don't cover, that's a cross-doc invariant flag at Step 9 — either the anchor is missing or the implementation has drifted. Architecture is contract; drift surfaces structurally, not silently. In team mode, each phase header also carries a `**Track:**` tag + a `**Depends on (phases):**` edge — the source the `## Parallelization plan` (Track map) renders from.
+> **Spec-anchor convention (architecture-as-contract).** Each phase header below carries a `**Spec anchors:**` block listing the `{{ARCH_DOC}}` sections the phase implements. Orchestrator + implementer re-read the listed anchors at session start. If a slice surfaces a behavior the anchors don't cover, that's a cross-doc invariant flag at Step 9 — either the anchor is missing or the implementation has drifted. Architecture is contract; drift surfaces structurally, not silently. In team mode, each phase header also carries a `**Track:**` tag + a `**Depends on (phases):**` edge — the source the `## Parallelization plan` (Track map) renders from. **New tasks added mid-build** (Step-9 routing, Carry-forward INLINE-TARGET) carry `(implements §X; origin: <slice>)` — or `(ops — no contract anchor)` — on the `### <phase-id>.N` heading, with §X covered by the phase's anchors; heading-level only, the `- [ ]` field lines beneath are never individually marked.
 
 ---
 
@@ -101,12 +101,23 @@ flowchart TD
 
 ## Phase exit checklist (template — applies to every phase)
 
-Before ticking a phase complete:
+Before ticking a phase complete (**executed row-by-row by `/phase-exit <phase>`** — the orchestrator
+dispatches it at the START of a round; each row is ticked in place as it passes):
 
 - [ ] **All phase task checkboxes ticked.** Conservative — partial work stays unchecked with a Log entry note.
 - [ ] **Acceptance criterion met.** `/preflight` clean + manual smoke if there's runtime behavior to validate.
 - [ ] **`/preflight` clean.** Includes any architecture-invariant tests.
 - [ ] **Cross-doc invariants verified.** No model field changes without a `{{ARCH_DOC}}` edit in the same round.
+- [ ] **Reachability audit clean per touched area** (`reachability-auditor`).
+- [ ] **Arch-drift audit clean over the phase's Spec anchors** (`arch-drift-auditor`).
+- [ ] **Spec coverage: every phase anchor has a tagged test or waiver** (`scripts/spec-lint.sh tests <phase>`).
+
+<!-- Posture-gated rows (production-grade default; each individually confirmed at generation via the
+     gate-pack question and recorded in the manifest — delete a row ONLY per that recorded answer): -->
+- [ ] **Dependency audit: no NEW findings vs the accepted-risk baseline** — `/phase-exit` runs `{{AUDIT_CMD}}` once; one-line new-vs-baseline summary (full output → `docs/audits/`); a new finding is accepted-risk-recorded in Decisions tabled or escalated as a **Finding**. _(production-grade)_
+- [ ] **Whole-system security review clean (qualifying phases).** Qualifies when the phase carries security-/invariant-tagged tasks or trust-boundary surfaces (per `THREAT_MODEL.md` when it exists, else the architecture's risk/security anchors). Executor resolves from `{{SECURITY_REVIEW_POLICY}}`: at `phase-boundary`, the gate's security-reviewer dispatch (phase-diff surface) **is** this review — one combined gate, never a second pass; otherwise the default tool is the built-in `/security-review` over the branch's pending changes (the track's accumulated diff), with gstack `/cso` as the heavier escalation when installed and trust-boundary anchors are in scope. Critical findings escalate as **Findings**. _(production-grade)_
+- [ ] **Perf budgets met, or the regression is flagged as a Finding** — run the phase's benchmark task(s) against the `{{ARCH_DOC}}` budgets; phases with no stated budgets tick with `n/a — no budgets (deliberate deferral recorded)`. _(production-grade, when budgets exist)_
+
 - [ ] **Session doc(s) for this phase exist** and list every file created/modified.
 - [ ] **Commits pushed to {{GIT_REMOTE}}.**
 
@@ -138,6 +149,11 @@ The project is "done" when:
 - [ ] Files: <concrete paths — NEW vs. extended>
 - [ ] Cross-doc invariant: <NEW / extended / none>
 - [ ] Depends on: <task IDs whose tests/impl this requires, or `none`>
+
+<!-- OPTIONAL `Implements: REQ-x[, REQ-y]` line — add ONLY when one § maps to multiple REQs and this
+     task covers a strict subset of them. Otherwise REQ→task coverage is DERIVED, never restated: the
+     phase's `Spec anchors:` line + the {{ARCH_DOC}} Spec Anchor Index already map REQ → § → task, and a
+     per-task REQ line would be a third drifting copy of that mapping. -->
 
 <!-- ▲ END EXAMPLE BLOCK [id=task-entry-format] ▲ -->
 
