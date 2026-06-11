@@ -154,14 +154,22 @@ Reserved for **environments where the agent-teams feature is unavailable** — i
 │   ├── run-tests.md           # (either) typed test runner
 │   ├── check-arch.md          # (either) lookup-table dispatch
 │   ├── wired.md               # (either) reachability tracer
+│   ├── phase-exit.md          # (orchestrator) executes the tracker's phase-exit checklist row-by-row
 │   ├── eval.md                # (optional) eval-class runner
 │   └── trace.md               # (optional) observability trace fetcher
+├── settings.json              # PreToolUse guard-hook wiring (project-local)
 └── agents/                    # Subagents — opt-in starter set or empty
     ├── README.md              # Inventory + integration notes
     ├── code-quality-reviewer.md   # (optional) Step 7→8 parallel review
     ├── security-reviewer.md       # (optional) Step 7→8 parallel review
     ├── reachability-auditor.md    # (optional) phase-exit gate audit
+    ├── arch-drift-auditor.md      # (optional) phase-exit spec-vs-code audit
     └── brief-drafter.md           # (optional) orchestrator's brief skeleton tool
+
+scripts/
+├── spec-lint.sh               # brief / tests / reqs traceability linter (placeholder-filled)
+└── guards/                    # PreToolUse hooks: git-guard, territory-guard, secrets-guard
+.gitleaksignore                # seeded fingerprint-ignore list (accretes; TDD fixtures are FP-heavy)
 
 docs/
 ├── team-protocol.md           # Loaded by /team-start — lead playbook
@@ -172,7 +180,9 @@ docs/
 ├── briefs/                    # /tdd briefs: NNN-<task-id>-<topic>.md
 ├── sessions/                  # Chronological session docs: NNN-<date>-<topic>.md
 ├── runbooks/                  # Operational procedures (deploy, env setup, …)
-└── audits/ archive/ …         # Optional: audit findings, archived plans
+├── audits/                    # /phase-exit fan-out reports: <phase>-<agent>.md (state lives in files)
+├── gap-audits/                # PRD→REQ coverage table + anchor remap (from /arch-finalize)
+└── archive/ …                 # Archived plans, rolled-over Log entries (TASKS-LOG.md)
 
 CLAUDE.md                      # Root — global / cross-area conventions + shared comm rules
 <code-area>/CLAUDE.md          # Area-specific conventions (one per code area)
@@ -213,7 +223,7 @@ A "slice" is one unit of TDD work + one commit. It can be a single focused featu
 7. Implementer sends a one-line "done with slice — `<commit hash>`" message. Orchestrator can dispatch the next brief.
 8. Repeat for the next slice.
 
-At the end of a working session: implementer runs **`/session-end`**, orchestrator runs **`/orchestrate-end`** — but **only on the user's explicit on-demand go relayed by the lead**. NOT at slice/task/phase/round/any natural boundary. Hot-routing accumulates in the working tree across many slices until the user signals close-out.
+At the end of a working session: implementer runs **`/session-end`**, orchestrator runs **`/orchestrate-end`** — on **either** close-out trigger (user-on-demand relayed by the lead, OR the context auto-cycle), NEVER at slice/task/phase/round natural boundaries. The canonical three-way close-out spec is `/orchestrate-end` Step 8 (single-operator confirms with the user; team acks the lead; auto-cycle authors NO next brief — the successor does). Hot-routing accumulates in the working tree across many slices until a trigger fires. **Phase boundaries are different:** closing a phase requires a CLEAR **`/phase-exit`** verdict (the executed checklist), dispatched at the START of a round.
 
 ---
 
@@ -233,12 +243,13 @@ Each `.claude/commands/<name>.md` is a prompt invoked as `/<name>` (with optiona
 | **`/preflight`** | Either | Full quality gate. **cwd-aware** if the project has multiple code areas. Stops on first failure; never auto-fixes. |
 | **`/run-tests [class]`** | Either | Typed test-runner shortcut. cwd-aware; maps an argument to the project's test markers/groups. |
 | **`/check-arch <topic>`** | Either | **Context-efficiency primitive.** Looks the topic up in the area `CLAUDE.md` lookup table and reads *only* that section of `{{ARCH_DOC}}`. Falls back to grep; recommends adding a lookup row if the topic recurs. Never loads a whole architecture doc. |
+| **`/phase-exit <phase>`** | Orchestrator | **Executes** the tracker's phase-exit checklist as a row→executor mapper (hardcodes no rows): auditor fan-outs (`reachability-auditor`, `arch-drift-auditor`, policy-resolved security review) in one parallel message, `spec-lint tests` + posture-gated rows via Bash, per-row ticks recorded as they pass, full reports → `docs/audits/`, CLEAR/BLOCKED verdict to the Log. Dispatch at the START of a round. |
 | **`/wired <feature>`** | Either | Reachability tracer. Trace a feature's call chain from a production entry point; report REACHABLE / UNREACHABLE with the gap. The standalone form of `/tdd` Step 7.5. |
 | **`/context-check [team]`** *(team mode)* | Any role | Reports per-teammate context usage by joining `~/.claude/team-registry/` + `~/.claude/heartbeats/`. Used by orch's per-slice auto-flow + manual invocation. See §8 "Context monitoring + auto-cycle." |
 | **`/eval [category]`** *(optional)* | Either | Runs a named eval class (eval-driven projects). |
 | **`/trace <id>`** *(optional)* | Either | Pulls a structured trace by id (observability-heavy projects). |
 
-**Intentionally absent:** no auto-commit, no auto-push, no auto-refactor command. Commits happen only at `/tdd` Step 10 and `/orchestrate-end`; pushes only at `/orchestrate-end`; refactors only at `/tdd` Step 6.
+**Intentionally absent:** no auto-commit, no auto-push, no auto-refactor command, and no `/perf` (benchmark tasks run via `/run-tests`/Bash at their own cadence — add a command reactively if it earns one). Commits happen only at `/tdd` Step 10 and `/orchestrate-end`; pushes only at `/orchestrate-end`; refactors only at `/tdd` Step 6.
 
 ---
 
@@ -279,7 +290,7 @@ Lessons accrete through `/tdd` Step 9 → orchestrator hot-routing.
 
 ### `{{TASK_TRACKER}}` — state + phase plan
 
-The single source of truth for "what's done, what's next." Section order: phase note · session protocol · reference deadlines · Currently in progress · Carry-forward (triaged every `/orchestrate-end`) · deliverable map · **Parallelization plan (Track map)** · phase exit checklist · phase sections with spec anchors, a per-phase `Track:` / `Depends on (phases):`, and dense checkbox tasks (each with a `Depends on:` edge) · an **optional Demo phase** · Trims/Nice-to-Haves Catalog · Decisions tabled · Log (append-only). The plan is **sized by the build posture** (from `{{ARCH_DOC}}`): production-grade promotes hardening early; MVP/prototype stays lean. The **Parallelization plan** is the authority for the project's parallel tracks → worktrees → team names (team mode); a demo is an explicit *optional* phase, never in the mandatory spine.
+The single source of truth for "what's done, what's next." Section order: phase note · session protocol · reference deadlines · Currently in progress · Carry-forward (triaged every `/orchestrate-end`) · deliverable map · **Parallelization plan (Track map)** · phase exit checklist · phase sections with spec anchors, a per-phase `Track:` / `Depends on (phases):`, and dense checkbox tasks (each with a `Depends on:` edge) · an **optional Demo phase** · Trims/Nice-to-Haves Catalog · Decisions tabled · Log. **Living sections are bounded, not append-only** — Carry-forward caps at ~7 items (force-triaged), the Log rolls past ~10 rounds into `docs/archive/TASKS-LOG.md`, Currently-in-progress is REPLACED each round — so the sectioned read stays cheap late in the project. The plan is **sized by the build posture** (from `{{ARCH_DOC}}`): production-grade promotes hardening early; MVP/prototype stays lean. The **Parallelization plan** is the authority for the project's parallel tracks → worktrees → team names (team mode); a demo is an explicit *optional* phase, never in the mandatory spine.
 
 Task entries are **dense bullets, not pre-written briefs** — the orchestrator authors the brief from the task entry + carry-forward + recent context.
 
@@ -290,7 +301,7 @@ The project's architecture spec, treated by the scaffolding as a **contract**:
 - **Loaded on demand, never whole.** Sessions reach it through the area-`CLAUDE.md` **lookup table** + **`/check-arch <topic>`**, which read only the cited section.
 - **The canonical contract; typed models are the executable enforcement.** The area `CLAUDE.md` carries a **Cross-doc invariants table**: each row pairs a typed data model with the `{{ARCH_DOC}}` section it mirrors. Field changes (added / removed / renamed) require an edit to the matching architecture section in the same round of commits. Drift is a *finding*, not a footnote.
 - **Orchestrator territory.** The implementer never edits it directly. When a slice changes an invariant model, the implementer **flags it at Step 9** as a "cross-doc invariant change"; the orchestrator writes the architecture edit + the table row hot during the same session.
-- **Spec anchors keep phases honest.** Every phase in `{{TASK_TRACKER}}` lists the `{{ARCH_DOC}}` sections it implements. Both roles re-read those anchors at session start.
+- **Spec anchors keep phases honest.** Every phase in `{{TASK_TRACKER}}` lists the `{{ARCH_DOC}}` sections it implements. Both roles re-read those anchors at session start. The **Spec Anchor Index** (adjacent to Appendix A) maps every REQ-* ID to its implementing §-anchor(s) — the head of the REQ → § → task → test traceability spine (`spec-lint reqs` derives coverage from it; omitted when planning produced no REQ IDs).
 - **Build posture + parallelization seams.** The executive summary carries a **`Build posture:`** line (`production-grade` | `MVP/prototype`) that sizes the whole build, and **`§2.5`** states the subsystem **dependency DAG** + the independent-subsystem seams — the input `tasks-gen` reads to derive the parallel track map. A model crossing a §2.5 edge is a **shared contract** to freeze before parallel tracks fork.
 - **How it's seeded.** At bootstrap it's the **user's provided doc** — the generator reads it end-to-end and extracts content for personalization. If the user has only a skeleton, the generator extends it as a skeleton (section headings with 1-2 sentence stubs); architecture content accretes as decisions land.
 
@@ -349,7 +360,7 @@ When the implementer sends a Step 9 summary directly to the orchestrator, each i
 
 | Step 9 category | Routed to | Sign-off |
 |---|---|---|
-| **Convention candidate** | New `LESSONS.md` anchor + index row in area `CLAUDE.md` | Orchestrator writes; escalate only if it encodes a safety rule |
+| **Convention candidate** | New `LESSONS.md` anchor + index row in area `CLAUDE.md` **+ an enforcement line** — `pin: <test ref>` \| `pattern:` (added to the forbidden-patterns machine block `/preflight` warn-greps) \| `accepted: not mechanically enforceable` | Orchestrator writes; escalate only if it encodes a safety rule |
 | **Architecture doc note** | Prose edit to the cited `{{ARCH_DOC}}` section | Orchestrator writes |
 | **Future TODO — belongs to a phase** | Real task checkbox in the correct phase/subphase of `{{TASK_TRACKER}}` (not an `Operational TODO` annotation) | Orchestrator writes |
 | **Future TODO — next-brief working set** | `{{TASK_TRACKER}}` "Carry-forward" with origin marker | Orchestrator writes |
@@ -358,6 +369,22 @@ When the implementer sends a Step 9 summary directly to the orchestrator, each i
 | **Completed work** | Tick `[ ]` → `[x]` in `{{TASK_TRACKER}}`. Conservative — only if complete + verified | Orchestrator writes |
 
 **Step-9 response structure — commit message first.** The orchestrator's reply to a Step-9 summary lands **commit message first** so the implementer can ship Step 10 immediately; hot-routing edits follow as parallel orchestrator work.
+
+### Mechanical enforcement — the PreToolUse guard hooks
+
+The hard git/territory rules are no longer prose-only. The generated `.claude/settings.json` wires three PreToolUse hooks (`scripts/guards/`): **git-guard** blocks `git add -A`/`git add .` for every role and `git push` for implementer sessions; **territory-guard** blocks implementer writes to orchestrator territory (canonical list: the area `CLAUDE.md` "must NOT touch" list — the hook is its enforcement, not a second source) and tells the agent to flag at Step 9 instead; **secrets-guard** runs `gitleaks protect --staged` on every `git commit` when gitleaks is installed (blocking; fingerprint-ignores via the seeded `.gitleaksignore`), with a warn-only regex fallback otherwise. All three no-op for sessions without a team-registry entry, so solo and bootstrap sessions are unaffected. There is deliberately NO commit-requires-fresh-preflight hook — it would deadlock the documented session-end flow.
+
+### The traceability spine — spec tags, coverage, and the PRD head-end
+
+Drift prevention starts at the PRD and stays mechanical the whole way down: `/arch-finalize` persists a **PRD→REQ coverage table** (`docs/gap-audits/prd-req-coverage.md`, uncovered rows human-reviewed); the **Spec Anchor Index** maps REQ → §; each phase's `Spec anchors:` line maps § → tasks; each RED test carries a **`spec(§X)` tag**; and `scripts/spec-lint.sh` checks the joints — `brief` (pre-dispatch gate: anchors exist, task unticked, anchors within phase scope, wiring section present), `tests <phase>` (every phase anchor has a tagged test or a named waiver), `reqs` (warn-only derived REQ coverage). New mid-build tasks carry `(implements §X; origin: <slice>)` or `(ops — no contract anchor)`; an uncoverable anchor is a contract gap → Finding, never a silent task add.
+
+### Seam-model snapshot tests
+
+A cross-doc invariant model whose `§` is crossed by a `§2.5` dependency edge is a **shared contract across tracks** — any slice touching one must include a **schema-snapshot test** (model field-name set == checked-in snapshot, `spec(§X)`-tagged) in its RED outline. A green snapshot lets `arch-drift-auditor` mark the anchor verified-by-test; a failing snapshot IS the drift finding.
+
+### The executed phase-exit gate
+
+The phase-exit checklist is no longer prose nobody runs: **`/phase-exit <phase>`** executes it row-by-row (see §6), and a phase checkbox is ticked only on a **CLEAR** verdict (or rows the human explicitly waived). Under production-grade posture the checklist also carries the gate trio — dependency audit (new-vs-baseline via `{{AUDIT_CMD}}`), whole-system security review (resolved from the reviewer policy; at `phase-boundary` the gate dispatch IS the review), and perf budgets — each individually confirmed at generation, never silently applied. Gate findings escalate as **Findings (category 2)**; "Step-9" labels are reserved for the implementer's mid-slice checkpoint.
 
 ### Carry-forward triage at `/orchestrate-end`
 
@@ -382,7 +409,9 @@ Covered in §7 under `{{ARCH_DOC}}` — the single highest-leverage drift-catche
 `/session-end` (implementer) + `/orchestrate-end` (orchestrator) + `/team-end` (lead) run on **either** trigger:
 
 1. **User-on-demand** — user explicitly signals close-out (relayed by the lead in team mode).
-2. **Context-monitoring auto-cycle** (team mode only) — lead detects a teammate's `ctx_pct` ≥ ACTION threshold on a per-slice context-report; auto-triggers the close-out cycle. Never mid-slice — the trigger lands after Step-10 commit. Full mechanics in "Context monitoring + auto-cycle" below.
+2. **Context-monitoring auto-cycle** (team mode only) — lead detects a teammate's `ctx_pct` ≥ ACTION on a per-slice context-report; auto-triggers the close-out cycle. Never mid-slice — the trigger lands after Step-10 commit. Full mechanics in "Context monitoring + auto-cycle" below.
+
+The **canonical three-way close-out spec is `/orchestrate-end` Step 8**: (a) single-operator — confirm with the user, optionally author the next brief; (b) team, user-on-demand — mechanical push verification, ack the LEAD, idle; (c) team, auto-cycle — ack the lead, author NO next brief (the successor does), expect shutdown_request. Nothing in the auto-cycle branch waits on a human reply — that deadlock is designed out (`/team-end` Step 0 likewise treats the mechanical trigger as the go and notifies rather than asks).
 
 Outside those two triggers, hot-routing accumulates in the working tree across many slices. The lead does NOT surface a close-out gate at routine work boundaries (slice / task / phase / round); the orchestrator does NOT request one at boundaries either.
 
@@ -407,11 +436,7 @@ Teammates have finite context windows. Without a reliable monitor, sessions eith
 
 3. **Orchestrator runs `/context-check <team>` per slice** — after every Step-10 commit + hot-routing, the orchestrator invokes the helper script (`~/.claude/scripts/check-team-context.sh`), which joins registry + heartbeats by session_id and outputs a per-team context snapshot. The orch sends this as a structured ping to the lead.
 
-4. **Lead evaluates thresholds** (configurable via env vars):
-   - **OK** (< 70%) — silent log, no surface.
-   - **WARN** (70-74%) — one-line surface to user with trajectory estimate (~N slices to ACTION based on 3-slice rolling growth).
-   - **ACTION** (75-79%) — auto-trigger close-out cycle at this clean slice break. **Both orch + impl cycle together** (clean handoff, symmetric freshness): Lead → orch → impl runs `/session-end` → orch runs `/orchestrate-end` → lead spins down both → lead spawns fresh orch + fresh impl.
-   - **HARD-STOP** (≥ 80%) — halt new brief dispatch + cycle immediately.
+4. **Lead evaluates the tier ladder** — OK / WARN / ACTION / HARD-STOP. The NUMBERS live in one place: the `check-team-context.sh` env defaults (`CLAUDE_TEAM_CTX_WARN/ACTION/HARD` — 70/75/80 at time of writing), cited canonically in the generated `docs/team-protocol.md` tier table; prose elsewhere uses tier names only. The actions: **WARN** — one-line surface with trajectory estimate (~N slices to ACTION, 3-slice rolling growth); **ACTION** — auto-trigger the close-out cycle at this clean slice break, cycling **both** orch + impl together (clean handoff, symmetric freshness); **HARD-STOP** — halt new brief dispatch + cycle immediately.
 
 5. **Cycle preserves the never-mid-slice invariant** — the per-slice ping fires AFTER Step-10 commit. By definition, no slice is in flight at the trigger point. The current slice is always landed before close-out starts.
 
@@ -477,13 +502,14 @@ Subagents (`.claude/agents/<name>.md`) are specialized roles delegated mid-sessi
 
 ### Starter inventory (opt-in at bootstrap)
 
-The generator offers four general-purpose starter subagents. The user opts in at bootstrap; opt-out leaves the directory empty (the original "build reactively" stance).
+The generator offers five general-purpose starter subagents. The user opts in at bootstrap; opt-out leaves the directory empty (the original "build reactively" stance).
 
 | Subagent | When it runs | Integration point |
 |---|---|---|
 | `code-quality-reviewer` | `/tdd` Step 7 → Step 8 boundary | Implementer-side, parallel with `security-reviewer`. Findings feed Step-9 categorization. |
 | `security-reviewer` | `/tdd` Step 7 → Step 8 boundary (mandatory if invariant-touching) | Implementer-side. Critical findings escalate as Step-9 `Finding`. |
-| `reachability-auditor` | Phase-exit gate (before the phase's reachability proof) | Orchestrator-side. Output drives wiring tasks. |
+| `reachability-auditor` | Phase-exit gate (dispatched by `/phase-exit`, per touched area) | Orchestrator-side. Output drives wiring tasks. |
+| `arch-drift-auditor` | Phase-exit gate (dispatched by `/phase-exit` with the phase's `Spec anchors:` list) | Orchestrator-side, read-only. Diffs the contract vs shipped code per anchor; green schema snapshots count as verified-by-test, a failing snapshot IS the finding; DRIFT blocks the gate (Findings escalation), STALE-DOC routes as an Architecture-doc note. |
 | `brief-drafter` | Orchestrator's optional brief-skeleton tool | Orchestrator-side. Output is DRAFT; orchestrator reviews + finalizes. **Adoption requires a quality trial first** — run side-by-side with orchestrator-authored briefs for 2-3 real briefs before standard adoption. |
 
 ### Build reactively, not pre-emptively (for further subagents)
@@ -519,8 +545,12 @@ When the **workflow** changes, update the scaffolding. When the **project state*
 | Workflow change (new `/tdd` step, new routing destination) | The relevant command file + `docs/orchestrator-briefing.md` (canonical) + the scaffolding-reference doc |
 | New cross-doc invariant | Area `CLAUDE.md` invariants table row + atomic `{{ARCH_DOC}}` edit |
 | New escalation category | Root `CLAUDE.md` "Escalation taxonomy" + `docs/team-protocol.md` |
+| New generated script / hook | `templates/scripts/` (+ `templates/.claude/settings.json` wiring for hooks) + a GENERATE step + manifest `generatedFiles` row + an `added-template` migration |
+| Phase-exit checklist row | BOTH tracker templates (the canonical + the bundled tasks-gen twin, same commit) + a `new-required-section` migration — `/phase-exit` picks the row up automatically (it executes rows as written) |
 
 **Don't:** add *state* to slash commands or the briefing (state lives in `{{TASK_TRACKER}}`); add *workflow rules* to `{{TASK_TRACKER}}`; duplicate a convention across two scaffolding files (pick a canonical home, link from elsewhere).
+
+**Release discipline (the scaffolding repo itself):** `scripts/release-check.sh all` is the fail-loud gate — `pairs` (bundled skill twins byte-identical to their canonical templates), `census` (`[id=]` region count matches §10), `migrations` (registry/file/SHA validity), `upgrade-dryrun` (the frozen fixture under `tests/`), `playbook` (the arch-draft concat is fresh). Every template change that affects generated projects ships its `M-NNNN` migration in the same commit (two-step SHA wiring).
 
 **Renaming caveat:** the cross-referenced files (§4) are named inside command bodies. Renaming means a grep-and-update ripple — `/scaffold-upgrade`'s `renamed-template` / `renamed-placeholder` migrations automate this ripple when the rename ships in the templates.
 
@@ -542,7 +572,7 @@ Everything above is about *authoring* a change. To pull scaffolding improvements
 Honest acknowledgments:
 
 1. **Cross-team channel-bleed is a real failure mode.** The track-prefix naming rule + ignore-mismatched-prefix posture mitigate it but don't fully eliminate it — operator vigilance still matters.
-2. **Documentation drift is only audit-caught for lessons.** The cross-doc invariants table catches model↔spec drift mechanically; lesson↔code drift is only caught on audit.
+2. **Lesson↔code drift is now warn-grepped, not fully closed.** Lessons with a `pattern:` enforcement line are checked mechanically (`/preflight` warn-greps the staged diff against the forbidden-patterns block); lessons marked `accepted: not mechanically enforceable` remain audit-only — the enforcement line makes that residue explicit instead of silent.
 3. **Layer-rule tests catch backward imports, not design-time drift** — a feature placed in the wrong layer on purpose still type-checks.
 4. **All roles load `CLAUDE.md`** — the orchestrator carries some code-conventions context it never uses directly. Deliberate (consistency), but a minor context cost.
 5. **Lesson numbering leaves gaps** — the right trade-off (stable IDs), but worth knowing.
@@ -550,6 +580,8 @@ Honest acknowledgments:
 7. **Subagents aren't sandboxed** — their forbidden-patterns section is the only guard.
 8. **HITL chokepoints stay HITL** — deploys, scope cuts, load-bearing architectural decisions, push approval keep the user in the loop.
 9. **The brief-drafter subagent requires a quality trial before standard adoption** — briefs are load-bearing design audit trails; a sub-quality draft can mis-route an implementer.
+10. **The hooks enforce mechanics, not judgment.** territory/git/secrets guards stop the wrong tool call; they can't catch a wrong decision expressed through an allowed one. The checkpoints (Step 2.5, Step 9, the gates) remain the judgment layer.
+11. **Posture-gated content depends on manifest fidelity.** MODE pruning and the gate-trio filtering key off `mode`/`tracks`/`posture` in the manifest; a hand-edited manifest degrades those to human-gated paths (by design), not to silent wrong answers.
 
 ---
 
