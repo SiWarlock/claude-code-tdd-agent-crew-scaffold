@@ -105,7 +105,7 @@
     {
       "id": "M-0011",
       "title": "Phase-exit checklist v2: posture-gated dependency-audit, whole-system-security, and perf-budget rows",
-      "introducedAtSha": "PENDING-W4-6-COMMIT",
+      "introducedAtSha": "185393e6f44baedb2ba86b28453a250447309139",
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
