@@ -51,6 +51,10 @@ Every `/tdd` brief is authored as a **file** in `docs/briefs/`, not just pasted 
 - **Architecture sections it implements:** <`{{ARCH_DOC}} §X.Y`>
 - **Related context:** <other docs / prior slices the implementer should know>
 
+<!-- REQ IDs derive from the cited §s via the {{ARCH_DOC}} Spec Anchor Index — add an explicit
+     `Implements: REQ-x` line ONLY when overriding (one § maps to many REQs and this slice covers a
+     strict subset). -->
+
 ## Acceptance criteria (what "done" means)
 - [ ] <concrete behavior pin 1>
 - [ ] <concrete behavior pin 2>
@@ -58,6 +62,11 @@ Every `/tdd` brief is authored as a **file** in `docs/briefs/`, not just pasted 
 - [ ] Integration test in `<path>` passes
 - [ ] `/preflight` clean
 - [ ] If applicable: cross-doc invariant updated atomic with the model change
+
+## Wiring / entry point (Step 7.5)
+<the production entry point this slice lands behind — route / job / CLI command / exported API — and
+what calls the new code. If wiring genuinely belongs to a later slice, say exactly:
+`none — wiring lands in <slice-id>`. `spec-lint brief` fails a brief without this section.>
 
 ## Files expected to touch
 **New:**
@@ -80,6 +89,10 @@ Tests to write in `<test_path>`:
 ## Cross-doc invariant impact (implementer flags at Step 9; orchestrator writes the docs)
 - **Model field changes:** <none / list of contract models touched>
 - **Orchestrator doc rows to write hot (Step 9 routing):** <none / which `{{CODE_AREA}}CLAUDE.md` cross-doc rows + `{{ARCH_DOC}}` Appendix A rows the orchestrator authors atomic with the round>
+- **§2.5-seam (shared-contract) model touched?** If this slice's NEW/extended invariant touches an
+  Appendix-A model whose `§` is crossed by a `§2.5` dependency edge, the RED outline MUST include the
+  **schema-snapshot test** (model field-name set == checked-in snapshot, tagged `spec(§X)`) — the
+  implementer authors it in this same `/tdd` cycle; Step 2.5 reviews it like any test.
 
 > **Implementer never edits `{{CODE_AREA}}CLAUDE.md`, `{{ARCH_DOC}}`, `{{TASK_TRACKER}}`, or `{{CODE_AREA}}LESSONS.md`** — these are orchestrator territory. Flag at Step 9 categorized; orchestrator writes hot during the same session; orchestrator commits at `/orchestrate-end`.
 

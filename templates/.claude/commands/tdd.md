@@ -27,6 +27,14 @@ Argument: `$ARGUMENTS` — the feature description.
 
 Restate the feature in 1–2 sentences in your own words. **Team mode:** self-check only, NOT a send — if it doesn't match the brief's Feature line you misread the brief; fix it. **Single-operator:** confirm with the user before writing code.
 
+**Brief lint (conditional — one bash check, silent when clean).** The orchestrator already ran `scripts/spec-lint.sh brief <brief>` pre-dispatch; the dispatch line carries its stamp (`@<hash8>`). Re-lint ONLY if the file changed since:
+
+```bash
+[ "$(shasum <brief-path> | cut -c1-8)" = "<hash8 from the dispatch line>" ] || scripts/spec-lint.sh brief <brief-path>
+```
+
+On a re-lint FAIL, stop and send the failure lines to the orchestrator (the brief is its territory) — don't patch the brief yourself.
+
 ### Step 1 — Identify files
 
 Name the production file(s) + test file(s); create an empty test file if needed. If a code-intelligence MCP (e.g. CodeGraph) is available, use it to locate symbols + callers/callees instead of grep loops. State: *"Tests in `<test_path>`, implementation in `<impl_path>`."*
@@ -34,6 +42,8 @@ Name the production file(s) + test file(s); create an empty test file if needed.
 ### Step 2 — RED: write the failing test FIRST
 
 Write the test before any implementation. Be specific about input/output, reference the not-yet-existing behavior, use the project's test-class marker.
+
+**Spec tags:** each RED test carries a `spec(§X)` tag (in the test name or an adjacent comment) for the anchor its brief "Why" line cites — `scripts/spec-lint.sh tests <phase>` greps these at the phase-exit gate, so an untagged test doesn't count toward spec coverage. LESSONS-pinned tests need no tag.
 
 ### Step 2.5 — PAUSE for test review (the orchestrator reviews)
 

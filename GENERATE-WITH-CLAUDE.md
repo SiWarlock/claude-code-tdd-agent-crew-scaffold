@@ -322,6 +322,12 @@ For each of the 4 starter subagents the user opted into, write its definition fi
 
 If the user opted out of all 4, the directory contains only `README.md` (the original "empty inventory" stance is preserved).
 
+### Step 11.5 — Project-local scripts (`<project>/scripts/`)
+
+Distinct from the **user-global** monitoring scripts in Step 13 — these are generated INTO the project:
+
+- **`scripts/spec-lint.sh`** from `templates/scripts/spec-lint.sh` (fill `{{ARCH_DOC}}` + `{{TASK_TRACKER}}`; `chmod +x`). The spec-traceability linter: `brief` (orchestrator pre-dispatch gate + `/tdd` Step-0 conditional re-lint), `tests <phase>` (phase-exit spec-coverage row), `reqs` (warn-only derived REQ coverage). Manifest row: `{dest: "scripts/spec-lint.sh", template: "templates/scripts/spec-lint.sh", kind: "placeholder-only"}`.
+
 ### Step 12 — Empty directories
 
 Create empty directories (a `.gitkeep` is fine):

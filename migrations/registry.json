@@ -61,6 +61,26 @@
       "gate": "human",
       "idempotencyKey": "manifest:posture-field+schema-v2",
       "touches": [".scaffolding/manifest.json"]
+    },
+    {
+      "id": "M-0007",
+      "title": "Install the wave-2 generated-file set: scripts/spec-lint.sh, .claude/settings.json + scripts/guards/, /phase-exit, arch-drift-auditor",
+      "introducedAtSha": "PENDING-W2-6-COMMIT",
+      "kind": "added-template",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "added:wave2-drift-spine-set@v1",
+      "touches": ["scripts/spec-lint.sh", ".claude/settings.json", "scripts/guards/", ".claude/commands/phase-exit.md", ".claude/agents/arch-drift-auditor.md", "manifest.generatedFiles"]
+    },
+    {
+      "id": "M-0008",
+      "title": "Brief template format block: Wiring/entry-point section + REQ derivation note + seam-snapshot rule",
+      "introducedAtSha": "PENDING-W2-2-COMMIT",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:tdd-brief-template:wiring-entry-point",
+      "touches": ["docs/tdd-brief-template.md"]
     }
   ]
 }

@@ -34,6 +34,8 @@ The "Completed work → ticked checkbox" row is the most-likely-to-slip routing.
 
 If a slice landed partial work, leave the box `[ ]` and add a parenthetical note: `(partial: <what landed; what's still missing>; deferred to <slice or phase>)`.
 
+**New-task anchor rule (HEADING-level only).** Any `### <phase-id>.N` heading added this round (Step-9 routing, Step-5.5 INLINE-TARGET) must carry `(implements §X; origin: <slice>)` — or `(ops — no contract anchor)` for purely operational tasks — and §X must be covered by its phase's `Spec anchors:` line. No covering anchor ⇒ that's a **contract gap**: route an Architecture-doc note + escalate as a Finding; never a silent task add. The `- [ ]` field lines under a task are never individually checked.
+
 ## Step 4 — Append a Log entry to `{{TASK_TRACKER}}`
 
 The implementer's session doc is the technical narrative. The Log entry is the **orchestrator's framing** — what landed at the planning level, decisions made, scope shifts, what's now unblocked or blocked. **Keep the Log bounded** (per the tracker's Log policy): once more than ~10 rounds have accumulated inline, roll the oldest into `docs/archive/TASKS-LOG.md` with a one-line pointer.
