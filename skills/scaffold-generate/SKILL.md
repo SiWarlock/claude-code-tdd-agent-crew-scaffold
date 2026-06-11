@@ -21,14 +21,15 @@ the binding contract + tracker — read-only inputs here).
 
 ---
 
-## 1. The procedure (bundled)
+## 1. The procedure (canonical, at the checkout root)
 
-`references/generate-procedure.md` is `GENERATE-WITH-CLAUDE.md` — the authoritative 7-stage build
-procedure (§2 stages, §7 the 13 generation steps, §10 the placeholder manifest, the `{{PLACEHOLDER}}` +
-`<!-- EXAMPLE BLOCK -->` substitution system). Read it fully and follow it. This file adds three things on
+**`GENERATE-WITH-CLAUDE.md` at the root of the scaffolding checkout you are running from** is the
+authoritative 7-stage build procedure (§2 stages, §7 the 13 generation steps, §10 the placeholder
+manifest, the `{{PLACEHOLDER}}` + `<!-- EXAMPLE BLOCK -->` substitution system). Read it fully and follow
+it. (`references/generate-procedure.md` is just a pointer stub to it.) This file adds three things on
 top: which inputs to read, the manifest-stamping step, and the artifact-driven personalization.
 
-The `templates/` tree it generates from lives in the scaffolding repo checkout you're running from.
+The `templates/` tree it generates from lives in the same scaffolding repo checkout.
 
 ---
 
@@ -76,7 +77,7 @@ After generating (and before the final PAUSE), write **`.scaffolding/manifest.js
 `templates/.scaffolding/README.md` into the project's `.scaffolding/README.md` (generator-owned;
 do-not-hand-edit; rewritten by upgrades). This makes future `scaffold-upgrade` runs clean 3-way merges
 instead of hand-diffs. The full schema + assembly rules are in **`GENERATE-WITH-CLAUDE.md` Step 12.5**
-(bundled as `references/generate-procedure.md`); record:
+(at the scaffolding-checkout root); record:
 
 - `schemaVersion`; `scaffoldingRepo` + **`generatedFromSha`** (`git -C <scaffolding-checkout> rev-parse HEAD`)
   + `generatedFromRef` + `generatedAt`; `lastUpgradedFromSha: null`.
