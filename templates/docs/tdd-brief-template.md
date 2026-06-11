@@ -94,7 +94,7 @@ Tests to write in `<test_path>`:
   **schema-snapshot test** (model field-name set == checked-in snapshot, tagged `spec(§X)`) — the
   implementer authors it in this same `/tdd` cycle; Step 2.5 reviews it like any test.
 
-> **Implementer never edits `{{CODE_AREA}}CLAUDE.md`, `{{ARCH_DOC}}`, `{{TASK_TRACKER}}`, or `{{CODE_AREA}}LESSONS.md`** — these are orchestrator territory. Flag at Step 9 categorized; orchestrator writes hot during the same session; orchestrator commits at `/orchestrate-end`.
+> **Orchestrator territory** (canonical list: the `{{CODE_AREA}}CLAUDE.md` "must NOT touch" list — hook-enforced in team mode): flag at Step 9 categorized; the orchestrator writes hot during the same session and commits at `/orchestrate-end`.
 
 ## Things to flag at Step 2.5
 Open design questions the implementer should surface before going GREEN. Pre-loaded with default votes — the implementer can take defaults or ping back with disagreement.

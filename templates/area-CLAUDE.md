@@ -39,7 +39,10 @@ If you find yourself fighting the wrong conventions, check your cwd.
    - dependency manifest / lockfile (deps the slice adds)
    - `docs/sessions/<NNN>-<date>-<topic>.md` (session doc, created at `/session-end` Step 5)
 
-   **Implementer must NOT touch (all orchestrator territory):**
+   **Implementer must NOT touch (all orchestrator territory).** *This list is the canonical statement
+   of the territory rule — `/session-end`, the brief template, and the generated
+   `scripts/guards/territory-guard.sh` PreToolUse hook (which mechanically enforces it in team mode)
+   all point here.*
    - `{{TASK_TRACKER}}`
    - `{{CODE_AREA}}LESSONS.md`
    - `{{CODE_AREA}}CLAUDE.md` (entire file — both the Cross-doc invariants table AND the Lessons logged index)

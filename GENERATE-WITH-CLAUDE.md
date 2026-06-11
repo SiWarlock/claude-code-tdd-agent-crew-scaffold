@@ -322,11 +322,14 @@ For each of the 4 starter subagents the user opted into, write its definition fi
 
 If the user opted out of all 4, the directory contains only `README.md` (the original "empty inventory" stance is preserved).
 
-### Step 11.5 — Project-local scripts (`<project>/scripts/`)
+### Step 11.5 — Project-local scripts + guard hooks (`<project>/scripts/`, `.claude/settings.json`)
 
 Distinct from the **user-global** monitoring scripts in Step 13 — these are generated INTO the project:
 
 - **`scripts/spec-lint.sh`** from `templates/scripts/spec-lint.sh` (fill `{{ARCH_DOC}}` + `{{TASK_TRACKER}}`; `chmod +x`). The spec-traceability linter: `brief` (orchestrator pre-dispatch gate + `/tdd` Step-0 conditional re-lint), `tests <phase>` (phase-exit spec-coverage row), `reqs` (warn-only derived REQ coverage). Manifest row: `{dest: "scripts/spec-lint.sh", template: "templates/scripts/spec-lint.sh", kind: "placeholder-only"}`.
+- **`scripts/guards/`** (three PreToolUse hooks, `chmod +x`): `git-guard.sh` (bans `git add -A`/`git add .` for all roles; bans `git push` for implementer sessions), `territory-guard.sh` (blocks implementer writes to orchestrator territory — fill the `TERRITORY` array from the SAME manifest values that fill the area `CLAUDE.md` "must NOT touch" list, one CLAUDE/LESSONS pair per code area; that list is the canonical statement, the guard is its enforcement), `secrets-guard.sh` (on `git commit`: `gitleaks protect --staged` when installed — blocking; warn-only regex fallback otherwise; placeholder-free). All no-op for sessions without a team-registry entry, so solo/bootstrap sessions are unaffected. Manifest rows: kind `placeholder-only` (`territory-guard.sh`, `git-guard.sh`) / `verbatim` (`secrets-guard.sh`).
+- **`.gitleaksignore`** from `templates/.gitleaksignore` (seeded; the project accretes fingerprint entries — TDD fixtures are false-positive-heavy, and the documented flow is fingerprint-ignore, never weakening the hook). Manifest row: kind `accreted`.
+- **`.claude/settings.json`** from `templates/.claude/settings.json` (the PreToolUse wiring). **Merge — don't replace** — into any existing project `.claude/settings.json` (append our hook entries; remove nothing). Manifest row: kind `verbatim` (or `mixed` if merged into pre-existing user content — then record `divergence: merged-into-existing`). The gitleaks/secrets-guard default rides the grouped production-gate question (§5 Batch E) — asked, never silently applied.
 
 ### Step 12 — Empty directories
 
@@ -459,7 +462,7 @@ After install, ask the user to confirm:
 
 **Settings.json — what to change and what NOT to change:**
 
-The settings file is `~/.claude/settings.json` (USER-GLOBAL, NOT the project's `.claude/settings.json`). The context-monitoring system is implemented via the status line script + the spawn-prompt registry-write — **not via Claude Code hooks**. Do NOT add any hook config (no `Stop`, `SessionStart`, `UserPromptSubmit`, etc. hooks are required or used by this system).
+The settings file is `~/.claude/settings.json` (USER-GLOBAL, NOT the project's `.claude/settings.json`). The **context-monitoring system** is implemented via the status line script + the spawn-prompt registry-write — **not via Claude Code hooks**. Do NOT add any hook config **for context monitoring** (no `Stop`, `SessionStart`, `UserPromptSubmit`, etc. hooks are required or used by *that* system) — and never in the USER-GLOBAL file. The project-LOCAL `.claude/settings.json` with its PreToolUse guard hooks is a different, deliberate surface — generated in Step 11.5, scoped to the project.
 
 What you DO change in `~/.claude/settings.json`:
 

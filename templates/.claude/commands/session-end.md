@@ -29,7 +29,7 @@ Procedure:
    - Surface to the user with a recommendation: update the doc now, or accept the drift with an explicit ADR-style note.
    - The session doc must annotate this as an open follow-up.
 
-2.6. **Step-9 items — already routed hot; don't re-route or re-enumerate.** The orchestrator routed each during the session; its `/orchestrate-end` is the single verify pass. Just ensure any *still-open* follow-up is captured in the session doc's "Open follow-ups." **Do NOT modify `{{TASK_TRACKER}}` or `{{CODE_AREA}}LESSONS.md` here.**
+2.6. **Step-9 items — already routed hot; don't re-route or re-enumerate.** The orchestrator routed each during the session; its `/orchestrate-end` is the single verify pass. Just ensure any *still-open* follow-up is captured in the session doc's "Open follow-ups." (Territory rule: per the `{{CODE_AREA}}CLAUDE.md` "must NOT touch" list — hook-enforced.)
 
 2.7. **Wiring / reachability — confirm, don't re-trace.** Each feature already stated *"Reachable from `<entry>` via `<path>`"* at `/tdd` Step 7.5; carry those into the session doc's Reachability section. Re-trace (`/wired`) only a feature whose wiring a *later* slice might have removed. Any still tested-but-unwired feature → an open follow-up "Future TODO — belongs to a phase." A green suite over an unreachable feature is a silent gap.
 
@@ -69,4 +69,4 @@ Commit with Conventional Commits + `{{AI_TRAILER}}` trailer. Topic prefix `docs(
 
 **Do NOT push.** Push happens at end of round (the orchestrator's `/orchestrate-end`).
 
-**Do NOT modify `{{TASK_TRACKER}}`, `{{CODE_AREA}}LESSONS.md`, or `{{ARCH_DOC}}` from this command.** Those are orchestrator-owned. Step 2.6 *surfaces* what should be in those files; the orchestrator *writes* via `/orchestrate-end` (or hot during the session).
+**Orchestrator territory stays untouched from this command** — the canonical list is the `{{CODE_AREA}}CLAUDE.md` "must NOT touch" list (mechanically enforced by the territory-guard hook in team mode). Step 2.6 *surfaces* what should land in those files; the orchestrator *writes* via `/orchestrate-end` (or hot during the session).
