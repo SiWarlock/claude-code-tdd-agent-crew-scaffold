@@ -6,7 +6,7 @@ description: |
   root CLAUDE.md) + general security categories (input validation, authz/authn, injection paths,
   unbounded loops, allowance races, etc.). Findings feed Step-9 categorization; critical findings
   escalate as Step-9 `Finding` (→ human via lead).
-tools: Read, Grep, Bash
+tools: Read, Grep, Bash, mcp__codegraph__codegraph_context, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_trace, mcp__codegraph__codegraph_impact, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_files, mcp__context7__resolve-library-id, mcp__context7__query-docs
 model: opus
 effort: xhigh
 ---
@@ -41,6 +41,10 @@ For one slice at a time:
 - **Read whole `{{ARCH_DOC}}`.** Use `/check-arch` or `Read offset/limit` for specific sections.
 - **Cite findings that aren't in this slice.** Pre-existing surfaces in untouched files are not in scope.
 - **Skip the invariant pass on invariant-touching slices.** If `invariant-touching: yes`, every safety invariant gets explicit cross-check; finding nothing is an explicit `PASS` per axis.
+
+## External MCP tools (use when available)
+
+If the workspace has a **code-intelligence MCP** (e.g. CodeGraph), prefer it over `grep`+read loops: `codegraph_callers`/`codegraph_trace` to confirm whether a risky symbol is reachable from an untrusted entry point, `codegraph_impact` to scope what a flagged change touches. If a **docs MCP** (e.g. Context7) is present, confirm the security semantics of library APIs (auth flags, unsafe defaults) against current docs. Optional — both no-op when absent; fall back to `Grep`/`Read`.
 
 ## Mandatory protocol
 
