@@ -1,0 +1,96 @@
+{
+  "_comment": "Example of the three diagram keys on content.json. Generic (a typical web app) — replace every node/edge/flow with ones sourced from THIS project's docs/layers/ + ARCHITECTURE.md (+ DIAGRAM_PLAN.md). Never ship these placeholders. x/y are layout coords (top-down). Every node.layer must match a real layer id; every edge source/target must match a node id; every entry in edge.flows must match a flow id — run the integrity check before building.",
+
+  "architecture": {
+    "id": "architecture",
+    "name": "Architecture",
+    "nodes": [
+      { "id": "browser", "label": "Browser", "sub": "SPA client", "kind": "client", "detail": "The end user's browser running the single-page app.", "x": 360, "y": 0 },
+      { "id": "web", "label": "Web App", "sub": "React / Vite", "kind": "frontend", "detail": "Serves the UI and calls the API.", "x": 360, "y": 120, "layer": "ui" },
+      { "id": "api", "label": "API", "sub": "REST controllers", "kind": "api", "detail": "HTTP entrypoint; validates and routes requests.", "x": 360, "y": 250, "layer": "api" },
+      { "id": "authz", "label": "AuthZ / Audit", "sub": "policy + audit log", "kind": "authz", "detail": "Cross-cutting: scopes every request to what the caller may touch, and records an audit event.", "x": 90, "y": 250, "layer": "authz" },
+      { "id": "svc", "label": "Order Service", "sub": "domain logic", "kind": "service", "detail": "Validates and applies the order lifecycle rules.", "x": 360, "y": 380, "layer": "domain" },
+      { "id": "db", "label": "Database", "sub": "PostgreSQL", "kind": "data", "detail": "Source of truth for orders and customers.", "x": 360, "y": 520, "layer": "data" },
+      { "id": "bus", "label": "Event Bus", "sub": "publish", "kind": "async", "detail": "Order-placed events fan out to async consumers.", "x": 660, "y": 380, "layer": "messaging" },
+      { "id": "worker", "label": "Email Worker", "sub": "consumer", "kind": "worker", "detail": "Consumes order events and sends confirmation emails.", "x": 660, "y": 520, "layer": "worker" },
+      { "id": "mail", "label": "Email Provider", "sub": "SendGrid", "kind": "external", "detail": "Third-party transactional email API.", "x": 660, "y": 650 },
+      { "id": "cron", "label": "Nightly Job", "sub": "reconciler", "kind": "job", "detail": "Batch job that reconciles abandoned carts.", "x": 90, "y": 380, "layer": "jobs" }
+    ],
+    "edges": [
+      { "id": "e1", "source": "browser", "target": "web", "label": "loads", "kind": "request", "flows": ["place", "read"] },
+      { "id": "e2", "source": "web", "target": "api", "label": "fetch /api", "kind": "request", "flows": ["place", "read"] },
+      { "id": "e3", "source": "api", "target": "authz", "label": "check", "kind": "authz", "flows": ["place", "read"] },
+      { "id": "e4", "source": "api", "target": "svc", "label": "place order", "kind": "call", "flows": ["place"] },
+      { "id": "e5", "source": "svc", "target": "db", "label": "write", "kind": "write", "flows": ["place"] },
+      { "id": "e6", "source": "api", "target": "db", "label": "read", "kind": "read", "flows": ["read"] },
+      { "id": "e7", "source": "svc", "target": "bus", "label": "publish OrderPlaced", "kind": "publish", "flows": ["place"] },
+      { "id": "e8", "source": "bus", "target": "worker", "label": "deliver", "kind": "async", "flows": ["place"] },
+      { "id": "e9", "source": "worker", "target": "mail", "label": "send", "kind": "external", "flows": ["place"] },
+      { "id": "e10", "source": "cron", "target": "db", "label": "reconcile", "kind": "write", "flows": ["batch"] }
+    ],
+    "flows": [
+      { "id": "place", "name": "Place an order", "desc": "Browser → API → authorize → order service writes the order → publishes OrderPlaced → the worker emails a confirmation." },
+      { "id": "read", "name": "Read orders", "desc": "An authorized read: API checks policy, then reads straight from the database." },
+      { "id": "batch", "name": "Nightly reconcile", "desc": "The cron job sweeps abandoned carts and writes corrections directly to the database." }
+    ]
+  },
+
+  "infrastructure": {
+    "id": "infrastructure",
+    "name": "Infrastructure",
+    "nodes": [
+      { "id": "user", "label": "Users", "sub": "browser", "kind": "client", "detail": "Browsers hitting the public domain.", "x": 400, "y": 0 },
+      { "id": "dns", "label": "DNS", "sub": "Route 53", "kind": "edge", "detail": "Resolves the app + API hostnames.", "x": 400, "y": 110 },
+      { "id": "cdn", "label": "CDN", "sub": "CloudFront", "kind": "edge", "detail": "Serves static assets from object storage.", "x": 200, "y": 220 },
+      { "id": "assets", "label": "Static Assets", "sub": "S3 (private)", "kind": "storage", "detail": "Built SPA bundle; private origin behind the CDN.", "x": 200, "y": 340 },
+      { "id": "lb", "label": "Load Balancer", "sub": "ALB", "kind": "edge", "detail": "Terminates TLS, routes to API pods.", "x": 600, "y": 220 },
+      { "id": "apipod", "label": "API Pods", "sub": "Kubernetes", "kind": "compute", "detail": "Stateless API containers.", "x": 600, "y": 340, "layer": "infra" },
+      { "id": "rds", "label": "Database", "sub": "RDS PostgreSQL", "kind": "data", "detail": "Managed primary database.", "x": 600, "y": 470, "layer": "data" },
+      { "id": "queue", "label": "Queue", "sub": "SQS", "kind": "messaging", "detail": "Buffers async jobs to the worker.", "x": 820, "y": 340 },
+      { "id": "secrets", "label": "Secrets", "sub": "Secrets Manager", "kind": "security", "detail": "Supplies DB + provider credentials to pods.", "x": 380, "y": 470 },
+      { "id": "ci", "label": "CI/CD", "sub": "GitHub Actions", "kind": "cicd", "detail": "Builds images and deploys via OIDC.", "x": 60, "y": 220, "layer": "infra" }
+    ],
+    "edges": [
+      { "id": "f1", "source": "user", "target": "dns", "label": "DNS", "kind": "request", "flows": ["load", "api"] },
+      { "id": "f2", "source": "dns", "target": "cdn", "label": "app host", "kind": "request", "flows": ["load"] },
+      { "id": "f3", "source": "cdn", "target": "assets", "label": "origin", "kind": "data", "flows": ["load"] },
+      { "id": "f4", "source": "dns", "target": "lb", "label": "api host", "kind": "request", "flows": ["api"] },
+      { "id": "f5", "source": "lb", "target": "apipod", "label": "TLS", "kind": "tls", "flows": ["api"] },
+      { "id": "f6", "source": "apipod", "target": "rds", "label": "query", "kind": "data", "flows": ["api"] },
+      { "id": "f7", "source": "apipod", "target": "queue", "label": "enqueue", "kind": "publish", "flows": ["api"] },
+      { "id": "f8", "source": "secrets", "target": "apipod", "label": "inject", "kind": "security", "flows": [] },
+      { "id": "f9", "source": "ci", "target": "apipod", "label": "deploy", "kind": "deploy", "flows": ["deploy"] },
+      { "id": "f10", "source": "ci", "target": "assets", "label": "sync + invalidate", "kind": "deploy", "flows": ["deploy"] }
+    ],
+    "flows": [
+      { "id": "load", "name": "Page load", "desc": "DNS → CDN serves the SPA bundle from private object storage." },
+      { "id": "api", "name": "API request", "desc": "DNS → load balancer → API pods → database; the pod also enqueues async work." },
+      { "id": "deploy", "name": "A deploy", "desc": "CI builds images, rolls the API pods, and syncs + invalidates the static assets." }
+    ]
+  },
+
+  "diagrams": [
+    {
+      "id": "order-lifecycle",
+      "name": "Order lifecycle",
+      "_comment": "Example opted-in extra: a state machine as a node-graph. kind 'service' here just drives colour; pick kinds that read well for the subject.",
+      "nodes": [
+        { "id": "cart", "label": "CART", "sub": "open", "kind": "client", "detail": "Items added; not yet submitted.", "x": 0, "y": 120 },
+        { "id": "placed", "label": "PLACED", "sub": "awaiting payment", "kind": "api", "detail": "Order submitted; payment pending.", "x": 220, "y": 120, "layer": "domain" },
+        { "id": "paid", "label": "PAID", "sub": "confirmed", "kind": "service", "detail": "Payment captured.", "x": 440, "y": 60, "layer": "domain" },
+        { "id": "shipped", "label": "SHIPPED", "sub": "in transit", "kind": "worker", "detail": "Fulfilment dispatched.", "x": 660, "y": 60 },
+        { "id": "cancelled", "label": "CANCELLED", "sub": "terminal", "kind": "authz", "detail": "Cancelled before payment.", "x": 440, "y": 200 }
+      ],
+      "edges": [
+        { "id": "t1", "source": "cart", "target": "placed", "label": "submit", "kind": "call", "flows": ["happy"] },
+        { "id": "t2", "source": "placed", "target": "paid", "label": "payment ok", "kind": "call", "flows": ["happy"] },
+        { "id": "t3", "source": "paid", "target": "shipped", "label": "fulfil", "kind": "call", "flows": ["happy"] },
+        { "id": "t4", "source": "placed", "target": "cancelled", "label": "timeout / cancel", "kind": "authz", "flows": ["cancel"] }
+      ],
+      "flows": [
+        { "id": "happy", "name": "Happy path", "desc": "Cart → placed → paid → shipped." },
+        { "id": "cancel", "name": "Cancellation", "desc": "A placed order times out or is cancelled before payment." }
+      ]
+    }
+  ]
+}

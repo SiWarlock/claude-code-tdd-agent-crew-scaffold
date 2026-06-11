@@ -1,0 +1,129 @@
+/* learn-site — interactive-diagram styles. Append to the generated app's src/styles.css.
+ *
+ * Depends on the site's theme variables (define these in :root and [data-theme='dark']):
+ *   --bg-elev, --bg-sunken, --text, --text-dim, --border, --border-strong,
+ *   --accent, --shadow, --radius, --mono.
+ *
+ * THEME RULE: theme the React-Flow chrome with CSS only (the [data-theme] vars + the
+ * --xy-* vars below). Never read document.documentElement.dataset.theme in JS to colour
+ * it — the attribute isn't set on first paint, so it flashes white→dark and miscolours.
+ * Colours set from JS (kind colours, the minimap mask) must be theme-INDEPENDENT.
+ */
+
+/* ===== Diagrams (architecture / infrastructure / opted-in) ===== */
+.view-wide { max-width: 1180px; }
+
+.dg-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 10px; }
+.dg-controls-label { font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2px; }
+.dg-flow-desc {
+  margin: 0 0 12px; font-size: 0.92rem; color: var(--text-dim);
+  background: var(--bg-sunken); border-left: 3px solid var(--accent);
+  border-radius: 6px; padding: 9px 13px;
+}
+
+/* The canvas MUST have an explicit height — React Flow renders nothing in a 0-height box. */
+.dg-canvas {
+  position: relative;
+  height: 74vh; min-height: 460px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.dg-canvas .react-flow { background: var(--bg-sunken); }
+
+/* node kind accent colours (--k): one stable colour per kind, reused for the node
+ * left-border (.dgn-*), the legend dot + the detail-panel chip (.dgk-*). */
+.dgn-client,    .dgk-client    { --k: #64748b; }
+.dgn-frontend,  .dgk-frontend  { --k: #6366f1; }
+.dgn-api,       .dgk-api       { --k: #0891b2; }
+.dgn-authz,     .dgk-authz     { --k: #e11d48; }
+.dgn-service,   .dgk-service   { --k: #7c3aed; }
+.dgn-data,      .dgk-data      { --k: #d97706; }
+.dgn-async,     .dgk-async     { --k: #9333ea; }
+.dgn-worker,    .dgk-worker    { --k: #16a34a; }
+.dgn-external,  .dgk-external  { --k: #6b7280; }
+.dgn-job,       .dgk-job       { --k: #b45309; }
+.dgn-edge,      .dgk-edge      { --k: #0284c7; }
+.dgn-storage,   .dgk-storage   { --k: #ca8a04; }
+.dgn-compute,   .dgk-compute   { --k: #2563eb; }
+.dgn-messaging, .dgk-messaging { --k: #9333ea; }
+.dgn-security,  .dgk-security  { --k: #dc2626; }
+.dgn-cicd,      .dgk-cicd      { --k: #db2777; }
+
+/* custom node */
+.dgn {
+  min-width: 148px; max-width: 208px;
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg-elev);
+  border: 1.5px solid var(--border-strong);
+  border-left: 5px solid var(--k, var(--border-strong));
+  border-radius: 10px;
+  padding: 9px 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, border-color 0.12s ease, opacity 0.15s ease;
+}
+.dgn:hover { transform: translateY(-1px); border-color: var(--k); }
+.dgn.dim { opacity: 0.3; }
+.dgn.active {
+  border-color: var(--k);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--k) 24%, transparent), var(--shadow);
+}
+.dgn-label { font-weight: 700; font-size: 0.82rem; color: var(--text); line-height: 1.18; }
+.dgn-sub { font-size: 0.66rem; color: var(--text-dim); font-family: var(--mono); line-height: 1.25; }
+/* hide the connection handles but keep them in the DOM for routing */
+.dgn-h { opacity: 0 !important; width: 1px; height: 1px; min-width: 0; border: none; }
+
+/* edge labels readable in both themes */
+.react-flow__edge-text { fill: var(--text-dim); font-size: 10px; }
+
+/* node-click detail panel */
+.dg-detail {
+  position: absolute; top: 14px; right: 14px; width: 290px; max-width: 70%;
+  background: var(--bg-elev); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px 18px;
+  z-index: 6;
+}
+.dg-detail-close {
+  position: absolute; top: 8px; right: 10px; background: none; border: none;
+  color: var(--text-dim); font-size: 1.3rem; line-height: 1; padding: 2px 6px;
+}
+.dg-detail-kind {
+  display: inline-block; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase; color: #fff; background: var(--k, var(--accent));
+  padding: 2px 8px; border-radius: 20px; margin-bottom: 8px;
+}
+.dg-detail h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.dg-detail-sub { margin: 0 0 9px; font-size: 0.78rem; color: var(--text-dim); font-family: var(--mono); }
+.dg-detail-body { margin: 0 0 12px; font-size: 0.9rem; color: var(--text); }
+
+/* legend */
+.dg-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.dg-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--text-dim); }
+.dg-legend-dot { width: 11px; height: 11px; border-radius: 3px; background: var(--k, var(--border-strong)); }
+
+/* react-flow chrome theming — CSS ONLY (see THEME RULE at top) */
+.react-flow__controls-button {
+  background: var(--bg-elev); border-bottom: 1px solid var(--border);
+  color: var(--text); fill: var(--text);
+}
+.react-flow__controls-button:hover { background: var(--bg-sunken); }
+/* theme the minimap background via the --xy-* var, NOT a JS style prop */
+.dg-canvas .react-flow { --xy-minimap-background-color-default: var(--bg-elev); }
+.react-flow__minimap { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; }
+.react-flow__attribution { display: none; }
+
+/* trace-a-flow pills (reuse the site's pill style if present) */
+.lc-pill {
+  font: inherit; font-size: 0.8rem; cursor: pointer;
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid var(--border-strong); background: var(--bg-elev); color: var(--text-dim);
+}
+.lc-pill:hover { border-color: var(--accent); color: var(--text); }
+.lc-pill.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+@media (max-width: 900px) {
+  .dg-detail { width: 220px; }
+  .dg-canvas { height: 62vh; }
+}
