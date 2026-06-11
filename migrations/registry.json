@@ -51,6 +51,16 @@
       "gate": "human",
       "idempotencyKey": "tracker-structure:id-slugs+bounded-sections@v1",
       "touches": ["IMPLEMENTATION_PLAN.md", "manifest.exampleBlocks"]
+    },
+    {
+      "id": "M-0006",
+      "title": "Add the posture field to .scaffolding/manifest.json (schema v2)",
+      "introducedAtSha": "PENDING-W1-10-COMMIT",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "manifest:posture-field+schema-v2",
+      "touches": [".scaffolding/manifest.json"]
     }
   ]
 }

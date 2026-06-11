@@ -26,10 +26,13 @@
 #   scaffold_upgrade.sh check-markers --work DIR
 #
 # The skill knows the schema version it understands; bump SKILL_SCHEMA when the manifest shape changes.
+# Schema history: v2 added `posture` ("production-grade" | "MVP/prototype"). A v1 manifest is still
+# accepted; its posture surfaces as "unknown" in precheck.json, and posture-gated upgrade content
+# (e.g. production-grade checklist rows) must then be HUMAN-gated, never auto-applied.
 
 set -euo pipefail
 
-SKILL_SCHEMA=1
+SKILL_SCHEMA=2
 SELF="scaffold_upgrade.sh"
 
 die()  { printf '%s: error: %s\n' "$SELF" "$*" >&2; exit 1; }
@@ -173,11 +176,13 @@ cmd_resolve() {
     --argjson schema "$schema" --argjson shaUnknown "$sha_unknown" \
     --argjson baseExists "$base_exists" --argjson already "$already" \
     --arg shallow "$shallow" --arg mode "$(jq -r '.mode // ""' "$manifest")" \
+    --arg posture "$(jq -r '.posture // ""' "$manifest")" \
     --arg dirty "$dirty" '
     { legacy:false, projectDir:$project, scaffoldDir:$scaffold, manifestPath:$manifest,
       schemaVersion:$schema, base:$base, baseConfidence:$baseConf, baseExists:$baseExists,
       to:$to, toRef:$toRef, shaUnknown:$shaUnknown, shallow:($shallow=="true"),
       alreadyUpToDate:$already, mode:$mode,
+      posture:(if $posture=="" then "unknown" else $posture end),
       dirtyScaffoldPaths:($dirty|split("\n")|map(select(length>0))),
       cleanTree:(($dirty|split("\n")|map(select(length>0))|length)==0) }' > "$WORK/precheck.json"
   cat "$WORK/precheck.json"

@@ -340,7 +340,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "scaffoldingRepo": "<remote URL or local path of the scaffolding checkout>",
   "generatedFromSha": "<full 40-char SHA — `git -C <scaffolding-checkout> rev-parse HEAD`>",
   "generatedFromRef": "<branch or tag that SHA was on — advisory>",
@@ -350,6 +350,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "lastUpgradedAt": null,
 
   "mode": "team | single-operator",
+  "posture": "production-grade | MVP/prototype",
   "track": "<the lead session's track name, or null>",
   "tracks": ["<parallel track names from the Parallelization plan, or [] for a single-track build>"],
   "optionalCommands": ["eval", "trace"],
@@ -378,6 +379,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 Rules:
 - **`generatedFromSha`** is the full 40-char HEAD of the **scaffolding checkout** you generate from (not the target project): `git -C <scaffolding-checkout> rev-parse HEAD`. If the templates were handed over outside a git checkout and no SHA is resolvable, record `"generatedFromSha": null` plus `"shaUnknown": true` and a short `"note"` — `/scaffold-upgrade` falls back to a verbatim-machinery fingerprint.
+- **`posture`** (schema v2) is the **Build posture** the project was generated under — copied from the `Build posture:` line of `{{ARCH_DOC}}`'s executive summary, as confirmed during the interview (never fabricated; if no such line exists, it was asked in §5). `/scaffold-upgrade` uses it to filter **posture-gated** upgrade content (e.g. production-grade phase-exit checklist rows) mechanically; a v1 manifest has no `posture`, so posture-gated content degrades to human-gated there.
 - **`placeholders` / `codeAreas` are exactly the values you substituted** — every resolved token, verbatim. `codeAreas` is an array (one entry per area; a 2nd+ area maps to the `{{CODE_AREA_2}}`… suffix set); `BUILD_CMD` may be `null`.
 - **`generatedFiles[]` / `exampleBlocks[]`** are the ledger you built incrementally in §7. Include **every** file you wrote — accreted and user-canonical files too, so the upgrade knows they exist and leaves them alone.
 - This file is **machine-owned** — never hand-edited — and **committed** (it lives in git for the upgrade's archaeology). Validate it parses: `jq . .scaffolding/manifest.json`.
