@@ -51,6 +51,7 @@ After writing the test(s) and BEFORE running them, send the orchestrator a **tig
 
 - **`test_<name>` — Asserts:** `<the invariant / contract it pins>` (`{{ARCH_DOC}} §X` or a `LESSONS.md` ref).
 - **Out of scope:** only when a reader wouldn't guess it.
+- **Coverage map (closing line):** each brief **acceptance bullet → the covering test**, or an explicit `not-tested-because: <reason>` (e.g. covered by an integration slice, non-deterministic). One compact line per bullet — this is what makes a silently-dropped acceptance behavior visible at review instead of at phase exit.
 
 Don't narrate fixture setup or paste test code — it's in the file; the orchestrator opens the file only if an assertion looks off. This write-up is the review surface: it makes the *asserted invariant* reviewable, which is exactly what catches a conceptually-wrong test that would still pass green.
 
