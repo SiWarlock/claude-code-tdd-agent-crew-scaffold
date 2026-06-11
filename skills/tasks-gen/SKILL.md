@@ -31,7 +31,9 @@ and anchored so drift surfaces structurally at TDD Step 9.
    Index.
 2. **`references/implementation-plan-template.md`** — the canonical `IMPLEMENTATION_PLAN.md` format + the **spec-anchor
    convention** + living-state sections. The file you write MUST match this structure so the orchestrator,
-   `/orchestrate-start`, and the cross-doc-invariants flow all work.
+   `/orchestrate-start`, and the cross-doc-invariants flow all work. (This bundled copy is synced verbatim
+   from canonical `templates/IMPLEMENTATION_PLAN.md` — `scripts/release-check.sh pairs` enforces identity;
+   never edit it independently.)
 3. **Supporting planning artifacts** (`docs/planning/*`, if present) for richer, more prescriptive tasks:
    `REQUIREMENTS.md` / `PRESEARCH.md` (acceptance criteria + req IDs), `DECISIONS.md` (locked choices),
    `RISKS.md` / `THREAT_MODEL.md` (safety-critical ordering), `DIAGRAM_PLAN.md` / `DATA_MODEL.md` (flows +

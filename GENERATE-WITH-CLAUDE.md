@@ -230,6 +230,8 @@ After the interview, present a compact **generation plan** and **wait for approv
 - **Reviewer policy:** `security-reviewer = <policy>`, `code-quality-reviewer = <policy>`.
 - **Filled values for every `{{PLACEHOLDER}}`** — a short table.
 - **EXAMPLE BLOCKs you'll rewrite** — one-line summary of what each becomes.
+- **Tracker retrofit (Step 4)** — if a tracker already exists, the list of missing required structure you
+  propose to retrofit (or "none — structure verified"). Retrofits run only with this approval — never silently.
 - **Provenance manifest** — note that `.scaffolding/manifest.json` will be stamped at the end (Step 12.5): it records the scaffolding commit, your filled placeholder values, and the file/EXAMPLE-BLOCK ledger so future `/scaffold-upgrade` runs are clean 3-way merges, not hand-diffs.
 
 **Do not write any files until the user approves this plan.** If the user changes their mind on mode or other foundational choices, re-do the plan.
@@ -265,7 +267,10 @@ From `templates/area-LESSONS.md`, written to `<code-area>/LESSONS.md`. This is j
 
 ### Step 4 — `{{TASK_TRACKER}}`
 
-From `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**. **In team mode, also fill the `[id=parallelization-plan]` block** (Track map): derive phase-level **tracks** from `{{ARCH_DOC}}` §2.5 (the subsystem dependency DAG) refined by the per-task `Depends on:` graph, and record the phase/track DAG + critical path + the `track → worktree → team-name` table; each task entry carries a `Depends on:` line. **In single-operator mode, delete the `parallelization-plan` block** (like `optional-demo-phase` when out of scope) — solo builds walk the DAG serially in one tree.
+Two paths depending on what already exists (mirrors Step 5's preserve-vs-author logic):
+
+- **If a tracker already exists** — the normal cc-crew chain (`/tasks-gen` authored `IMPLEMENTATION_PLAN.md`) or any other pre-existing tracker: it is a **read-only content input — never author, rewrite, or re-fill it.** Step 4 is a **structure verify/retrofit pass only**: check that the required structure from `templates/IMPLEMENTATION_PLAN.md` is present (header protocol blocks, "Currently in progress", Carry-forward, deliverable map, the `[id=…]` EXAMPLE-BLOCK markers, per-phase `Spec anchors:` lines, Log / Trims / Decisions-tabled sections; in team mode the `[id=parallelization-plan]` block). Any missing structure becomes a **proposed retrofit listed in the §6 generation plan** — applied only after the user approves it there, **never silently**. Phases, tasks, anchors, and all living-section content are never altered.
+- **If no tracker exists:** author it from `templates/IMPLEMENTATION_PLAN.md`. Fill the phase note, session protocol, deadlines, the deliverable map, and the **phase sections** with the user's actual phase plan (task entries as dense checkbox bullets — *not* pre-written briefs). "Currently in progress" starts as "Bootstrap session." Everything else (Carry-forward, Decisions tabled, Log, Trims) starts **empty**. **In team mode, also fill the `[id=parallelization-plan]` block** (Track map): derive phase-level **tracks** from `{{ARCH_DOC}}` §2.5 (the subsystem dependency DAG) refined by the per-task `Depends on:` graph, and record the phase/track DAG + critical path + the `track → worktree → team-name` table; each task entry carries a `Depends on:` line. **In single-operator mode, delete the `parallelization-plan` block** (like `optional-demo-phase` when out of scope) — solo builds walk the DAG serially in one tree.
 
 ### Step 5 — `{{ARCH_DOC}}`
 

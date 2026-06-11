@@ -41,6 +41,16 @@
       "gate": "human",
       "idempotencyKey": "section:IMPLEMENTATION_PLAN:parallelization-plan",
       "touches": ["IMPLEMENTATION_PLAN.md", "manifest.exampleBlocks"]
+    },
+    {
+      "id": "M-0005",
+      "title": "Retrofit [id=] EXAMPLE-BLOCK slugs + bounded living-section rules into the task tracker",
+      "introducedAtSha": "PENDING-W1-1-SYNC-COMMIT",
+      "kind": "accreted-format",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "tracker-structure:id-slugs+bounded-sections@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md", "manifest.exampleBlocks"]
     }
   ]
 }
