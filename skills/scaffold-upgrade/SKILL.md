@@ -121,7 +121,7 @@ never run on the default branch. Short-circuit "already up to date" if `base == 
 | `placeholder-only` | `preflight.md`, `wired.md`, single-area `run-tests.md` | **AUTO-APPLY iff `theirs == base`** (provably untouched). A clean-but-diverged 3-way ⇒ **PROPOSE** (low risk, `propose-clean`); a conflict ⇒ PROPOSE (resolve). |
 | `mixed` | `CLAUDE.md`, `area-CLAUDE.md`, `orchestrator-briefing.md` | **Per-region split** (§5): machinery + `illustrative` blocks → auto-eligible; `customized` blocks → PROPOSE-ONLY, never clobber. |
 | `accreted` | `LESSONS.md`, `IMPLEMENTATION_PLAN.md` living sections, area tables | **LEAVE ALONE.** Body never touched. Only skeleton/format changes are PROPOSE suggestions; body rewrites only via an explicit `accreted-format` migration. |
-| `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only an appended Appendix A skeleton is a PROPOSE candidate. |
+| `user-canonical` | the user's `{{ARCH_DOC}}` | Out of scope. Only an appended **Appendix A** or **Spec Anchor Index** skeleton (both additive + project-state-free) is a PROPOSE candidate. |
 
 > **The prime directive governs.** Where a bundled reference phrases a per-kind rule more permissively (e.g.
 > "placeholder-only auto-applies on any clean 3-way"), the stricter rule here wins: **nothing customized is

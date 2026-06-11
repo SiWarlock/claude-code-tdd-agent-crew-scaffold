@@ -121,7 +121,9 @@ gate; it scopes to clarifying questions.)
 
 Write the finalized **`ARCHITECTURE.md` at the repo root**, conforming to `references/architecture-template.md`:
 
-- The canonical section structure with **stable `§<N>` anchors** + a **Spec Anchor Index**.
+- The canonical section structure with **stable `§<N>` anchors** + a **Spec Anchor Index** (the
+  `| REQ ID | Implemented by § | Summary |` table adjacent to Appendix A; orchestrator-maintained
+  same-round like Appendix A; **omit it entirely if planning produced no REQ-* IDs**).
 - **Appendix A — model/contract inventory:** every typed model that is a cross-doc invariant (this is what
   the area `CLAUDE.md` cross-doc-invariants table and `IMPLEMENTATION_PLAN` anchors will mirror).
 - **`§2.5 — Subsystem dependency DAG & parallelization seams`** (between §2 and §3): the import-direction rule
