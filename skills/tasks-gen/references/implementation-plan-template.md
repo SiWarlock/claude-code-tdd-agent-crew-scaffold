@@ -139,6 +139,11 @@ The project is "done" when:
 - [ ] Cross-doc invariant: <NEW / extended / none>
 - [ ] Depends on: <task IDs whose tests/impl this requires, or `none`>
 
+<!-- OPTIONAL `Implements: REQ-x[, REQ-y]` line — add ONLY when one § maps to multiple REQs and this
+     task covers a strict subset of them. Otherwise REQ→task coverage is DERIVED, never restated: the
+     phase's `Spec anchors:` line + the {{ARCH_DOC}} Spec Anchor Index already map REQ → § → task, and a
+     per-task REQ line would be a third drifting copy of that mapping. -->
+
 <!-- ▲ END EXAMPLE BLOCK [id=task-entry-format] ▲ -->
 
 ### <phase-id>.2 — <task name>

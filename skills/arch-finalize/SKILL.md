@@ -139,6 +139,10 @@ Write the finalized **`ARCHITECTURE.md` at the repo root**, conforming to `refer
   the input `tasks-gen` reads to derive parallel build **tracks** (the Track map); mark Appendix-A models
   crossed by a DAG edge as shared contracts. (If no clean seams exist, state single-track explicitly — never
   default into it.)
+- An explicit **draft→final anchor remap**: emit a one-table map (e.g. draft `## 4A` → final `§2.5`)
+  to `docs/gap-audits/anchor-remap.md`, and in the same pass update every `DIAGRAM_PLAN.md`
+  "Spec anchors" entry and `DECISIONS.md` "Related Architecture Anchors" entry to the final `§`
+  anchors — left at the draft numbering, those references dangle silently the moment this file lands.
 - Content drawn from the draft + planning artifacts + the confirmed gap-audit fixes. Decisions reflected
   as **locked** (with their `DECISIONS.md` rationale); remaining `open` items called out explicitly.
 - A `Build contract` line at the top: downstream skills treat this file as the source of truth.
