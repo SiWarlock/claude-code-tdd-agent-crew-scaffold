@@ -616,6 +616,22 @@ Each `EXAMPLE BLOCK` region carries a stable **`[id=<slug>]`** in both its openi
 
 ---
 
+### MODE pruning markers (template-only — strip at generation)
+
+Some templates carry **mode-pruning regions** so a generated file ships only the prose its mode needs:
+
+```
+<!-- ▼ MODE [solo|team-single-track|team-multi-track] pointer: <one-line text, or `delete`> ▼ -->
+...content kept only when the project's state is in the [list]...
+<!-- ▲ END MODE ▲ -->
+```
+
+Derive the project's **3-state mode** from the foundational choices (no extra question): `single-operator` → `solo`; team with an empty/absent Track map → `team-single-track`; team with parallel tracks → `team-multi-track`. Then, per region: state ∈ list → keep the **content**, delete the two marker lines; state ∉ list → replace the whole region with the `pointer:` line (or nothing when it says `delete`). Rules:
+
+- **No MODE marker ever survives into a generated file** — `scaffold-upgrade check-markers` treats a survivor as an error (these are the opposite of EXAMPLE BLOCK markers, which MUST survive).
+- No nesting. The pointer text ends at the closing `▼ -->` of the opening line.
+- `/scaffold-upgrade` replays this pruning (derived from the manifest's `mode` + `tracks`) when rebuilding its base/ours trees — which is why the state must be derivable, never ad-hoc.
+
 ## §11 — Hard rules (do NOT)
 
 - **Don't redesign the workflow.** The 3-role pattern (or single-operator fallback), the `/tdd` steps, the routing matrix, the commit cadence, the checkpoints, the escalation taxonomy — these are the *point* of the scaffolding. Fill placeholders; keep the machinery verbatim.

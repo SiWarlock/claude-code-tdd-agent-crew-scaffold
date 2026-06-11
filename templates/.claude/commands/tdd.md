@@ -25,7 +25,13 @@ Argument: `$ARGUMENTS` — the feature description.
 
 ### Step 0 — Restate
 
-Restate the feature in 1–2 sentences in your own words. **Team mode:** self-check only, NOT a send — if it doesn't match the brief's Feature line you misread the brief; fix it. **Single-operator:** confirm with the user before writing code.
+Restate the feature in 1–2 sentences in your own words.
+<!-- ▼ MODE [team-single-track|team-multi-track] pointer: delete ▼ -->
+**Team mode:** self-check only, NOT a send — if it doesn't match the brief's Feature line you misread the brief; fix it.
+<!-- ▲ END MODE ▲ -->
+<!-- ▼ MODE [solo] pointer: delete ▼ -->
+**Single-operator:** confirm with the user before writing code.
+<!-- ▲ END MODE ▲ -->
 
 **Brief lint (conditional — one bash check, silent when clean).** The orchestrator already ran `scripts/spec-lint.sh brief <brief>` pre-dispatch; the dispatch line carries its stamp (`@<hash8>`). Re-lint ONLY if the file changed since:
 
@@ -61,7 +67,10 @@ Send it via `SendMessage` (root `CLAUDE.md` "Inter-teammate messaging"), then **
 - **`TWEAK:`** → revise, re-send only the changed lines, re-pause.
 - **`ADD:`** → add the test, re-send, re-pause.
 
-This pause is a designed safeguard — a "work without stopping" instruction does NOT license skipping it (it scopes to clarifying questions, not protocol checkpoints; surface the conflict instead). Same applies to the Step 9 → Step 10 handoff. **Single-operator:** the user is the reviewer.
+This pause is a designed safeguard — a "work without stopping" instruction does NOT license skipping it (it scopes to clarifying questions, not protocol checkpoints; surface the conflict instead). Same applies to the Step 9 → Step 10 handoff.
+<!-- ▼ MODE [solo] pointer: delete ▼ -->
+**Single-operator:** the user is the reviewer.
+<!-- ▲ END MODE ▲ -->
 
 ### Step 3 — Confirm RED
 

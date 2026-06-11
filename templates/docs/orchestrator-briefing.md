@@ -101,7 +101,9 @@ The full two-channel budget — **task list for status; `SendMessage` only for i
 
 Do NOT extend it: no "ready for review" / "holding" / "FYI"; no Step-0 acknowledgement; no re-quoting a teammate's message; no status pings (status lives on the task list). Every extra message is a crossed-in-flight risk between async agents.
 
+<!-- ▼ MODE [solo] pointer: delete ▼ -->
 _(Single-operator fallback: no lead and no team task list — you and the implementer are two sessions the human bridges; the human is the recipient and carries status. Keep the same terseness.)_
+<!-- ▲ END MODE ▲ -->
 
 ---
 
@@ -121,7 +123,7 @@ Messages auto-deliver and wake the recipient, so a "still waiting?" almost alway
 
 **Idle only when:** the active phase has no queued slices and the user hasn't said what's next; a blocking dependency needs user direction; or the lead instructed `/orchestrate-end`. Otherwise the default is "next slice now."
 
-**Why:** the lead can't see `ctx_pct` without a ping, but it doesn't *need* one per slice — the auto-cycle gate fires at ACTION (75%), and a WARN-gated send catches it with margin while removing one `SendMessage` + one lead wake on every OK slice (the common case). The local `--snapshot` keeps the trajectory data fresh regardless.
+**Why:** the lead can't see `ctx_pct` without a ping, but it doesn't *need* one per slice — the auto-cycle gate fires at ACTION (tier table: `docs/team-protocol.md`), and a WARN-gated send catches it with margin while removing one `SendMessage` + one lead wake on every OK slice (the common case). The local `--snapshot` keeps the trajectory data fresh regardless.
 
 ---
 

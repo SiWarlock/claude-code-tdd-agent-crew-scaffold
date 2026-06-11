@@ -91,13 +91,54 @@ substitute_stream() {  # $1 = map TSV file; reads stdin, writes substituted cont
   printf '%s' "$content"
 }
 
+# ---- mode pruning (template-only MODE markers) ---------------------------------------------------
+# Templates may carry mode-pruning regions:
+#   <!-- ▼ MODE [solo|team-single-track|team-multi-track] pointer: <one-line text, or `delete`> ▼ -->
+#   ...content kept only when the project's derived state is in the [list]...
+#   <!-- ▲ END MODE ▲ -->
+# Generation strips the marker LINES (content kept bare when the state matches; otherwise the whole
+# region is replaced by the pointer line, or nothing for `delete`). These markers are TEMPLATE-ONLY —
+# they never survive into generated files — so base/ours rebuilds MUST replay the same pruning or
+# `theirs == base` would fail for every pruned file. No nesting.
+
+# The project's 3-state mode, DERIVED from existing manifest fields (no new field):
+#   single-operator => solo · team + tracks==[] => team-single-track · team + tracks>0 => team-multi-track
+derive_mode_state() {  # $1 = manifest -> stdout state
+  jq -r 'if .mode == "single-operator" then "solo"
+         elif ((.tracks // []) | length) > 0 then "team-multi-track"
+         else "team-single-track" end' "$1"
+}
+
+prune_stream() {  # $1 = state; stdin -> stdout with MODE regions resolved
+  awk -v state="$1" '
+    BEGIN { inblock = 0; keep = 1; down = "\xe2\x96\xbc"; up = "\xe2\x96\xb2" }
+    index($0, down " MODE [") {
+      inblock = 1
+      modes = $0; sub(/^.*MODE \[/, "", modes); sub(/\].*$/, "", modes)
+      keep = (index("|" modes "|", "|" state "|") > 0)
+      if (!keep && index($0, "pointer: ") > 0) {
+        ptr = substr($0, index($0, "pointer: ") + 9)
+        p = index(ptr, down); if (p > 0) ptr = substr(ptr, 1, p - 1)
+        gsub(/[ \t]+$/, "", ptr)
+        if (ptr != "delete" && ptr != "") print ptr
+      }
+      next
+    }
+    index($0, "END MODE") && index($0, up) { inblock = 0; keep = 1; next }
+    inblock && !keep { next }
+    { print }
+  '
+}
+
 # Build a fully substituted template tree at REF into OUTDIR (one file per generatedFiles row).
+# Substitution AND mode pruning are both replayed so the tree matches what generation produced.
 # Records any template missing at REF into <work>/missing-<tag>.txt (tag = base|ours|<ref>).
 build_tree() {  # $1 = manifest, $2 = scaffold dir, $3 = ref, $4 = outdir, $5 = tag
   local manifest="$1" scaffold="$2" ref="$3" outdir="$4" tag="$5"
-  local rows dest template area mapf miss
+  local rows dest template area mapf miss state
   miss="$WORK/missing-$tag.txt"; : > "$miss"
   mkdir -p "$outdir"
+  state=$(derive_mode_state "$manifest")
   rows=$(jq -c '.generatedFiles[]?' "$manifest")
   while IFS= read -r row; do
     [ -n "$row" ] || continue
@@ -113,7 +154,7 @@ build_tree() {  # $1 = manifest, $2 = scaffold dir, $3 = ref, $4 = outdir, $5 = 
     fi
     mapf="$WORK/.map.tmp"; emit_map_for_area "$manifest" "$area" > "$mapf"
     mkdir -p "$outdir/$(dirname "$dest")"
-    git -C "$scaffold" show "$ref:$template" | substitute_stream "$mapf" > "$outdir/$dest"
+    git -C "$scaffold" show "$ref:$template" | substitute_stream "$mapf" | prune_stream "$state" > "$outdir/$dest"
   done <<EOF
 $rows
 EOF
@@ -396,15 +437,22 @@ cmd_apply() {
 cmd_check_markers() {
   [ -n "$WORK" ] || die "check-markers needs --work"
   local project manifest; project=$(pc '.projectDir'); manifest=$(pc '.manifestPath')
-  local hits=0 dest
+  local hits=0 mode_hits=0 dest
   while IFS= read -r dest; do
     [ -n "$dest" ] || continue
     if [ -f "$project/$dest" ] && grep -nE '^(<<<<<<<|\|\|\|\|\|\|\||=======|>>>>>>>)' "$project/$dest" >/dev/null 2>&1; then
       warn "UNRESOLVED conflict markers in: $dest"
       hits=$((hits+1))
     fi
+    # MODE pruning markers are TEMPLATE-ONLY — their ABSENCE in generated files is correct (unlike
+    # EXAMPLE BLOCK markers); their PRESENCE means an upgrade write leaked an unpruned template.
+    if [ -f "$project/$dest" ] && grep -q '▼ MODE \[' "$project/$dest" 2>/dev/null; then
+      warn "TEMPLATE-ONLY MODE marker leaked into: $dest (a write skipped mode pruning)"
+      mode_hits=$((mode_hits+1))
+    fi
   done < <(jq -r '.generatedFiles[]?.dest' "$manifest")
   if [ "$hits" -gt 0 ]; then die "$hits file(s) still contain conflict markers — resolve before commit (PAUSE 2)"; fi
+  if [ "$mode_hits" -gt 0 ]; then die "$mode_hits file(s) contain template-only MODE markers — re-apply from a pruned tree"; fi
   printf 'no conflict markers found\n' >&2
 }
 

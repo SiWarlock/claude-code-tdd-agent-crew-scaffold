@@ -96,6 +96,14 @@ PS_POL=$(e 'CLAUDE.md' '.regions | map(select(.id=="project-structure"))[0].poli
 case "$PS_POL" in auto-eligible|skip) ok "diff: illustrative project-structure region → $PS_POL" ;;
   *) bad "diff: illustrative project-structure region policy '$PS_POL'" ;; esac
 
+# mode-pruning replay: rebuilt trees must never carry template-only MODE markers
+# (HEAD templates have them; the fixture manifest derives team-single-track)
+if grep -rq '▼ MODE \[' "$WORK/ours" 2>/dev/null; then
+  bad "mode pruning NOT replayed: template-only MODE markers leaked into the rebuilt ours tree"
+else
+  ok "mode pruning replayed: no MODE markers in the rebuilt ours tree"
+fi
+
 # ---- 4. migrations — window selection + journal idempotency --------------------------------------
 "$SCRIPT" migrations --work "$WORK" > /dev/null
 MIG="$WORK/migrations.json"

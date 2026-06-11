@@ -169,6 +169,7 @@ done
 
 If a predecessor handoff is being resumed later, the next `/team-start` re-spawns teammates → fresh registry entries land via spawn prompts.
 
+<!-- ▼ MODE [team-multi-track] pointer: _(Step 6.6 — worktree teardown/merge gate: multi-track only; not part of this single-track copy.)_ ▼ -->
 ## Step 6.6 — Track worktree teardown + merge gate (multi-track only; skip if single-track)
 
 If this team ran in a track worktree (provisioned by `/team-start <track>` Step 2.5):
@@ -179,6 +180,8 @@ If this team ran in a track worktree (provisioned by `/team-start <track>` Step 
    git worktree remove ../{{REPO_DIRNAME}}-<track>     # add --force ONLY after confirming no uncommitted work
    ```
    Leave the worktree in place if the team is merely pausing and will resume in it.
+
+<!-- ▲ END MODE ▲ -->
 
 ## Step 7 — Tell the user
 

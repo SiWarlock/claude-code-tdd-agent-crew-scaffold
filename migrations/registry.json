@@ -91,6 +91,16 @@
       "gate": "human",
       "idempotencyKey": "section:IMPLEMENTATION_PLAN:phase-exit-machinery-rows@v1",
       "touches": ["IMPLEMENTATION_PLAN.md"]
+    },
+    {
+      "id": "M-0010",
+      "title": "Root CLAUDE.md restructure: close-out/monitoring pointers, role-pairing command note, de-hardcoded thresholds",
+      "introducedAtSha": "PENDING-W3-1-COMMIT",
+      "kind": "moved-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "root-claude:closeout+monitoring-pointers@v1",
+      "touches": ["CLAUDE.md", "docs/team-protocol.md", "docs/scaffolding-reference.md", "docs/orchestrator-briefing.md", ".claude/commands/session-end.md", ".claude/commands/tdd.md", ".claude/commands/team-end.md"]
     }
   ]
 }
