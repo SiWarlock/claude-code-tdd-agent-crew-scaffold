@@ -3,9 +3,9 @@ name: tasks-gen
 description: >-
   Decompose the finalized ARCHITECTURE.md into an extremely prescriptive, spec-anchored IMPLEMENTATION_PLAN.md that
   the /tdd agent-team engine implements against. Every phase references the ARCHITECTURE.md anchors it
-  implements; every task carries Files (NEW/extended), a cross-doc-invariant tag, and happy/edge/error/
-  integration test scenarios. Runs on Claude Code. Flags (never invents) tasks that need absent
-  architecture. Invoke when the user says "generate the tasks", "make the implementation plan", "decompose the
+  implements; every task carries Files (NEW/extended), a cross-doc-invariant tag, and acceptance bullets
+  pinning the spec-implied edge/error behaviors the architecture names. Runs on Claude Code. Flags (never
+  invents) tasks that need absent architecture. Invoke when the user says "generate the tasks", "make the implementation plan", "decompose the
   architecture into tasks", or after /arch-finalize has produced the binding ARCHITECTURE.md.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Task
 ---
@@ -39,7 +39,7 @@ and anchored so drift surfaces structurally at TDD Step 9.
    `RISKS.md` / `THREAT_MODEL.md` (safety-critical ordering), `DIAGRAM_PLAN.md` / `DATA_MODEL.md` (flows +
    models for scenario detail).
 
-**Tools (use when available):** if a docs MCP (e.g. Context7) is present, use it to confirm library/API specifics when writing test scenarios; prefer a code-intelligence MCP (e.g. CodeGraph) over `grep` when tracing existing code. Optional — no-op if absent.
+**Tools (use when available):** if a docs MCP (e.g. Context7) is present, use it to confirm library/API specifics when pinning library/API behaviors in acceptance bullets; prefer a code-intelligence MCP (e.g. CodeGraph) over `grep` when tracing existing code. Optional — no-op if absent.
 
 ---
 
@@ -54,7 +54,12 @@ Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
   - a **`Files:`** line — which files are NEW vs extended;
   - a **`Cross-doc invariant:`** line — `NEW` / `extended` / `none` (a typed model that must mirror
     `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table);
-  - **test scenarios** — happy / edge / error / integration (these become the Step-2.5 test designs).
+  - **acceptance bullets that pin behaviors, not tests** — when the architecture names an edge/error/
+    integration behavior for the task's anchors (rejection rules, idempotency, boundary conditions,
+    failure modes), pin it as an acceptance bullet so it can't be silently dropped at brief time.
+  - **Layering note — do NOT pre-write test designs in the plan.** Test design is authored by the
+    **orchestrator at brief time** (the RED outline in the `/tdd` brief) and reviewed at Step 2.5; the
+    plan's acceptance bullets are the behavior contract those tests must cover, not the tests themselves.
 - **Build order (posture-aware) = invariants → lifecycle correctness → tests → [optional: walking-skeleton /
   local demo — ONLY if a demo is in scope] → hardening/polish.** Order tasks so load-bearing invariants and
   lifecycle correctness come first, polish last (per the playbook's handoff rule). Safety-critical pins (from
