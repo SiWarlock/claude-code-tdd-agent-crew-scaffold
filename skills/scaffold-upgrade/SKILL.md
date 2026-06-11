@@ -1,14 +1,13 @@
 ---
 name: scaffold-upgrade
 description: >-
-  Bring an already-generated, already-customized project's agent-team scaffolding up to date with the
+  Bring an already-generated project's agent-team scaffolding up to date with the
   current templates via a provenance-manifest 3-way merge — WITHOUT clobbering placeholder values,
-  customized EXAMPLE BLOCK regions, or accreted state (LESSONS.md, IMPLEMENTATION_PLAN.md living sections). Runs on
-  Claude Code from a scaffolding-repo checkout pointed at the target project; never vendored into projects.
-  A bundled bash+jq script does the deterministic git/substitution/merge work; this skill adjudicates
-  classification edges, drafts the conflicts git can't, runs structural migrations, and drives two human
-  gates. Invoke when the user says "upgrade the scaffolding", "update this project's scaffolding",
-  "scaffold-upgrade", "check the scaffolding for drift", or after pulling new scaffolding templates.
+  customized EXAMPLE BLOCK regions, or accreted state. Unlike /scaffold-generate (first-time
+  generation), this UPDATES an existing install. Runs on Claude Code from a scaffolding-repo
+  checkout pointed at the target project; never vendored. A bundled script does the deterministic merge
+  work; the skill adjudicates edges, drafts conflicts, runs migrations, drives two human gates. Invoke
+  on "upgrade the scaffolding", "scaffold-upgrade", "check the scaffolding for drift", or after pulling new templates.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Task
 ---
 

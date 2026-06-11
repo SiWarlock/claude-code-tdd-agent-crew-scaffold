@@ -1,22 +1,13 @@
 ---
 name: layer-docs
 description: >-
-  Derive AND continuously maintain a project's layer documentation. On the FIRST run it does a deep
-  end-to-end comprehension pass — analyzing the whole codebase AND its planning/architecture artifacts
-  (ARCHITECTURE.md, the /arch-draft docs in docs/planning/, any /office-hours or /plan-ceo-review output,
-  IMPLEMENTATION_PLAN.md, READMEs) — derives the project's REAL layers (not a generic template), and writes a
-  full-scope overview plus one digestible doc per layer (executive summary first, depth below) into
-  docs/layers/. On LATER runs it works INCREMENTALLY: it figures out what changed (new code, new features,
-  refactors, deletions) since the docs were last generated and updates ONLY the affected layer docs — never
-  clobbering human edits — stamping a small state file so the docs stay in sync as the project evolves. A
-  --check mode reports which docs are stale without writing. Every claim is anchored to the actual code
-  (file:line); drift between the architecture doc and the real code is flagged, not hidden. Output is read by
-  humans AND consumed by /learn-site and a project knowledge base. Standalone, on-demand; runs from inside
-  the target project; host-neutral (Claude or Codex). Prefers a code-intelligence MCP (e.g. CodeGraph) for
-  structure/impact and a docs MCP (e.g. Context7) for framework facts when present. Invoke when the user says
-  "layer-docs", "document the layers", "update the layer docs", "refresh the docs", "the code changed update
-  the docs", "what docs are stale", "map the architecture from the code", or wants to create OR keep current
-  a comprehension doc set.
+  Derive AND continuously maintain a project's layer documentation in docs/layers/. First run: a deep
+  code + planning-artifact comprehension pass that derives the project's REAL layers and writes a
+  full-scope overview plus one digestible doc per layer. Later runs are INCREMENTAL — only what changed,
+  never clobbering human edits; --check reports staleness. Every claim is file:line-anchored;
+  arch-vs-code drift is flagged. Standalone; runs inside the target project; host-neutral (Claude or
+  Codex). Writes the doc set /learn-site builds its website from — run this one FIRST. Invoke on
+  "layer-docs", "document the layers", "update the layer docs", "refresh the docs", "what docs are stale".
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion
 ---
 
