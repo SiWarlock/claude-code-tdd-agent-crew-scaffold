@@ -65,7 +65,7 @@
     {
       "id": "M-0007",
       "title": "Install the wave-2 generated-file set: scripts/spec-lint.sh, .claude/settings.json + scripts/guards/, /phase-exit, arch-drift-auditor",
-      "introducedAtSha": "PENDING-W2-6-COMMIT",
+      "introducedAtSha": "744b87bfe6e89237a53e8b9338f53aec7cabb0eb",
       "kind": "added-template",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
@@ -85,7 +85,7 @@
     {
       "id": "M-0009",
       "title": "Phase-exit checklist: add reachability-audit, arch-drift-audit, and spec-coverage rows (+ executed-by-/phase-exit note)",
-      "introducedAtSha": "PENDING-W2-6-COMMIT",
+      "introducedAtSha": "744b87bfe6e89237a53e8b9338f53aec7cabb0eb",
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
