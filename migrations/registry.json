@@ -45,7 +45,7 @@
     {
       "id": "M-0005",
       "title": "Retrofit [id=] EXAMPLE-BLOCK slugs + bounded living-section rules into the task tracker",
-      "introducedAtSha": "PENDING-W1-1-SYNC-COMMIT",
+      "introducedAtSha": "7ec3bfcba9b5b8decfd317ed2a9777bb232869f1",
       "kind": "accreted-format",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
