@@ -34,6 +34,8 @@ The "Completed work → ticked checkbox" row is the most-likely-to-slip routing.
 
 If a slice landed partial work, leave the box `[ ]` and add a parenthetical note: `(partial: <what landed; what's still missing>; deferred to <slice or phase>)`.
 
+**Phase ticks are gated.** A phase-level checkbox is ticked complete only after a **CLEAR `/phase-exit` verdict** for that phase (or rows explicitly waived by the human, recorded on the row). Task-level ticks are this step's normal work; phase-level ticks are not.
+
 **New-task anchor rule (HEADING-level only).** Any `### <phase-id>.N` heading added this round (Step-9 routing, Step-5.5 INLINE-TARGET) must carry `(implements §X; origin: <slice>)` — or `(ops — no contract anchor)` for purely operational tasks — and §X must be covered by its phase's `Spec anchors:` line. No covering anchor ⇒ that's a **contract gap**: route an Architecture-doc note + escalate as a Finding; never a silent task add. The `- [ ]` field lines under a task are never individually checked.
 
 ## Step 4 — Append a Log entry to `{{TASK_TRACKER}}`

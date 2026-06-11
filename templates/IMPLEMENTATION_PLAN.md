@@ -101,12 +101,16 @@ flowchart TD
 
 ## Phase exit checklist (template — applies to every phase)
 
-Before ticking a phase complete:
+Before ticking a phase complete (**executed row-by-row by `/phase-exit <phase>`** — the orchestrator
+dispatches it at the START of a round; each row is ticked in place as it passes):
 
 - [ ] **All phase task checkboxes ticked.** Conservative — partial work stays unchecked with a Log entry note.
 - [ ] **Acceptance criterion met.** `/preflight` clean + manual smoke if there's runtime behavior to validate.
 - [ ] **`/preflight` clean.** Includes any architecture-invariant tests.
 - [ ] **Cross-doc invariants verified.** No model field changes without a `{{ARCH_DOC}}` edit in the same round.
+- [ ] **Reachability audit clean per touched area** (`reachability-auditor`).
+- [ ] **Arch-drift audit clean over the phase's Spec anchors** (`arch-drift-auditor`).
+- [ ] **Spec coverage: every phase anchor has a tagged test or waiver** (`scripts/spec-lint.sh tests <phase>`).
 - [ ] **Session doc(s) for this phase exist** and list every file created/modified.
 - [ ] **Commits pushed to {{GIT_REMOTE}}.**
 

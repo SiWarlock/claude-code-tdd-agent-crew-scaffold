@@ -81,6 +81,16 @@
       "gate": "human",
       "idempotencyKey": "section:tdd-brief-template:wiring-entry-point",
       "touches": ["docs/tdd-brief-template.md"]
+    },
+    {
+      "id": "M-0009",
+      "title": "Phase-exit checklist: add reachability-audit, arch-drift-audit, and spec-coverage rows (+ executed-by-/phase-exit note)",
+      "introducedAtSha": "PENDING-W2-6-COMMIT",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:IMPLEMENTATION_PLAN:phase-exit-machinery-rows@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md"]
     }
   ]
 }

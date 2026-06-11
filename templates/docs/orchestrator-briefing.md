@@ -82,7 +82,7 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
 7. **Per-slice context check** (team mode only) — after Step-10 + hot-routing, run `/context-check <team>` locally, and **ping the lead only when a tier ≥ WARN is crossed**. OK slices → no ping (the lead sees progress via the task list + idle-notifications). See "Per-slice context check" below.
 8. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
-9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress."
+9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress." **Phase boundaries:** dispatch **`/phase-exit <phase>`** at the START of the round that should close a phase — it executes the tracker's checklist rows (auditor fan-outs, spec coverage, verify-only push row) and a phase checkbox is ticked only on its CLEAR verdict (or human-waived rows).
 10. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
 11. **Heavyweight ops** (deploys, env config) — HITL / escalation.
 

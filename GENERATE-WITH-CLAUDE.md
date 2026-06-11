@@ -226,7 +226,7 @@ After the interview, present a compact **generation plan** and **wait for approv
 - **Code areas:** N areas — `<dir>` (`<name>`, `<stack one-liner>`) …
 - **Phase IDs + the phase list** going into `{{TASK_TRACKER}}`.
 - **Optional commands included:** `/eval`? `/trace`? `/wired` (standard, always).
-- **Optional starter subagents included:** which of the 4.
+- **Optional starter subagents included:** which of the 5.
 - **Reviewer policy:** `security-reviewer = <policy>`, `code-quality-reviewer = <policy>`.
 - **Filled values for every `{{PLACEHOLDER}}`** — a short table.
 - **EXAMPLE BLOCKs you'll rewrite** — one-line summary of what each becomes.
@@ -300,16 +300,16 @@ From `templates/docs/scaffolding-reference.md`. Project-specific map. Fill the f
 From `templates/.claude/commands/`. Generation order:
 
 **Team pattern:**
-- `team-start` → `team-end` → `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `run-tests` → `check-arch` → `wired`
+- `team-start` → `team-end` → `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `phase-exit` → `run-tests` → `check-arch` → `wired`
 - Then optionally: `eval` / `trace`
 
 **Single-operator:**
-- `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `run-tests` → `check-arch` → `wired`
+- `orchestrate-start` → `orchestrate-end` → `session-start` → `session-end` → `tdd` → `preflight` → `phase-exit` → `run-tests` → `check-arch` → `wired`
 - Then optionally: `eval` / `trace`
 - Skip: `team-start`, `team-end`
 
 For each:
-- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim. (`team-start`'s track argument now scopes a track's phases — reading the `Parallelization plan` — and provisions the track's git worktree; keep those steps verbatim, fill only the area-basename / path placeholders in the spawn templates.)
+- **Highly portable** (`tdd`, `session-start`, `session-end`, `orchestrate-start`, `orchestrate-end`, `check-arch`, `wired`, `phase-exit`, `team-start`, `team-end`, `context-check`) — fill command/path placeholders, keep procedures verbatim. (`team-start`'s track argument now scopes a track's phases — reading the `Parallelization plan` — and provisions the track's git worktree; keep those steps verbatim, fill only the area-basename / path placeholders in the spawn templates.)
 - **`preflight`, `run-tests`** are cwd-aware in the template. **If the project has one code area, delete the mode-detection and any second-mode block** — leave a single linear gate. If 2 areas, fill both modes. If 3+ areas, expand the case statement to cover each area, repeating the per-area block.
 - **`context-check`** — generate ONLY in team-pattern mode. Skip for single-operator-fallback.
 - **`eval`, `trace`** — include only if the user opted in (Batch E). Otherwise don't write them.
@@ -318,9 +318,9 @@ For each:
 
 Always write `templates/.claude/agents/README.md` with the updated inventory.
 
-For each of the 4 starter subagents the user opted into, write its definition file from `templates/.claude/agents/<name>.md`. The starter subagents are highly portable — fill area / language placeholders where applicable; keep the scope, protocol, forbidden-patterns, and output sections verbatim.
+For each of the 5 starter subagents the user opted into (`code-quality-reviewer`, `security-reviewer`, `reachability-auditor`, `arch-drift-auditor`, `brief-drafter`), write its definition file from `templates/.claude/agents/<name>.md`. The starter subagents are highly portable — fill area / language placeholders where applicable; keep the scope, protocol, forbidden-patterns, and output sections verbatim.
 
-If the user opted out of all 4, the directory contains only `README.md` (the original "empty inventory" stance is preserved).
+If the user opted out of all 5, the directory contains only `README.md` (the original "empty inventory" stance is preserved).
 
 ### Step 11.5 — Project-local scripts + guard hooks (`<project>/scripts/`, `.claude/settings.json`)
 
@@ -363,7 +363,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "track": "<the lead session's track name, or null>",
   "tracks": ["<parallel track names from the Parallelization plan, or [] for a single-track build>"],
   "optionalCommands": ["eval", "trace"],
-  "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "brief-drafter"],
+  "optionalSubagents": ["code-quality-reviewer", "security-reviewer", "reachability-auditor", "arch-drift-auditor", "brief-drafter"],
 
   "placeholders": { "PROJECT_NAME": "…", "ARCH_DOC": "ARCHITECTURE.md", "TASK_TRACKER": "IMPLEMENTATION_PLAN.md", "AI_TRAILER": "…", "SECURITY_REVIEW_POLICY": "invariant", "CODE_QUALITY_REVIEW_POLICY": "every-slice", "…": "…" },
   "codeAreas": [

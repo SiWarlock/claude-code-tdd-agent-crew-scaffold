@@ -211,7 +211,7 @@ Optional Step-8 review subagents (`code-quality-reviewer`, `security-reviewer`) 
 - **security-reviewer:** `{{SECURITY_REVIEW_POLICY}}`
 - **code-quality-reviewer:** `{{CODE_QUALITY_REVIEW_POLICY}}`
 
-Policy values: `off` · `invariant` (only invariant- or security-touching slices) · `every-slice` · `phase-boundary` (once at the phase-exit gate). Reviewers review the **slice diff**, not whole files. Edit these values any time to tune per-slice cost.
+Policy values: `off` · `invariant` (only invariant- or security-touching slices) · `every-slice` · `phase-boundary` (once at the phase-exit gate, dispatched by `/phase-exit`). Per-slice reviews cover the **slice diff**, not whole files. **At `phase-boundary` the review surface is the phase's accumulated branch diff + the trust boundaries it crosses** — for a track's later phases this over-approximates to the accumulated track diff (acceptable; say so in the report). Edit these values any time to tune per-slice cost.
 
 ## Key safety rules (do not paraphrase — explicit invariants)
 
@@ -234,6 +234,7 @@ Policy values: `off` · `invariant` (only invariant- or security-touching slices
 - `/wired <feature>` — trace a feature's call path from a production entry point
 - `/context-check [team]` — _(team mode)_ report per-teammate context usage; used by orch's per-slice auto-flow + manual invocation
 - `/preflight` — full quality gate
+- `/phase-exit <phase>` — _(orchestrator)_ execute the phase-exit checklist row-by-row (auditor fan-outs, spec coverage, ticks + verdict)
 - `/run-tests [class]` — typed test runner shortcut
 - `/check-arch <topic>` — architecture doc lookup
 - `/eval [category]` — _(optional)_ runs an eval class
