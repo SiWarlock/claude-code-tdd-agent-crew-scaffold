@@ -11,7 +11,8 @@ You are helping me turn a PRD, project brief, or lightweight product idea into a
 I have attached:
 
 1. The PRD or product brief.
-2. The architecture-planning playbook (`references/architecture-planning-playbook.md`).
+2. The architecture-planning playbook (`references/architecture-planning-playbook.md` — the generated
+   concatenation of the spine + stage files; attach this single file).
 
 Read both end-to-end.
 

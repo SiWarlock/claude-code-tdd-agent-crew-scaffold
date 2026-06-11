@@ -23,7 +23,10 @@ Your job is to run a **deep, interactive architecture-planning interview** from 
 finalize your draft later — so your goal is a thorough, honest, well-tagged draft, **not** a polished
 final contract. **You never write application code.**
 
-The full process you execute is in **`references/architecture-planning-playbook.md`** (the playbook).
+The full process you execute is the playbook — split into **`references/playbook-spine.md`** (philosophy,
+artifact sets, mode/posture selection, the phase index, cross-cutting micro-prompts) plus six
+**`references/stages/stage-*.md`** files (the 18 phases, grouped); `references/architecture-planning-playbook.md`
+is the GENERATED concatenation of those sources (rebuilt by `scripts/build-playbook.sh` — never edit it).
 This file is the executable wrapper around it: it tells you how to run the playbook as a skill, how to
 ask questions on whatever host you're running on, where to write the artifacts, and how to hand off.
 
@@ -54,8 +57,12 @@ Discipline (applies on every host):
 1. **Get the PRD.** Ask the user for the path to the PRD / product brief (or paste). Read it fully.
    If a `gstack /office-hours` design doc exists (e.g. `docs/discovery/*-design-*.md`), read it too —
    it's a demand-validated reframing of the PRD and is a stronger input than a raw PRD.
-2. **Read the playbook.** Read `references/architecture-planning-playbook.md` end-to-end. It is the
-   authoritative process; everything below just operationalizes it.
+2. **Read the playbook spine.** Read `references/playbook-spine.md` end-to-end (philosophy, artifact
+   sets, mode/posture selection, the phase index, cross-cutting micro-prompts), then read each
+   `references/stages/stage-*.md` **just-in-time** as the interview enters its phases — the spine's
+   phase index maps every phase to its stage file. The spine + stages are the authoritative process;
+   everything below just operationalizes it. (Phases are NEVER skipped in any mode; just-in-time
+   reading changes when depth loads, not what runs.)
 3. **Create the output directory:** `docs/planning/` (this is where every artifact lands; the final
    `ARCHITECTURE.md` and `IMPLEMENTATION_PLAN.md` are produced *downstream* at the repo root by `/arch-finalize`
    and `/tasks-gen`, not here).
