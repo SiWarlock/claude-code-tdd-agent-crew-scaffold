@@ -855,6 +855,11 @@ REQ-T-001   Testing
 REQ-E-001   Evaluation/demo
 ```
 
+> **REQ-NF seeds (production-grade):** elicit explicit numbers for latency/throughput budgets on the
+> hot paths the PRD implies, availability target, data durability, and cost ceiling — from the PRD or
+> the user ONLY (Phase 7 captures the same budgets as constraints). A budget nobody stated is a
+> question, never an invented number; "no budgets — deliberate deferral" is a recordable answer.
+
 ---
 
 ## 11. Phase 7 — Constraints, Evaluation, and Timebox
@@ -883,6 +888,8 @@ Capture:
 - preferred technologies
 - deployment constraints
 - data/security/compliance constraints
+- performance budgets for the hot paths the PRD implies — numbers from the PRD or the user ONLY,
+  never model-invented; "no budgets — deliberate deferral" is a recordable answer
 - demo constraints
 - reviewer/evaluator expectations
 - what technical depth will be rewarded
@@ -1377,6 +1384,8 @@ PII/PHI
 payment failure
 race conditions
 idempotency
+supply chain (dependency provenance, lockfile discipline, audit cadence)
+performance/scale failure modes (hot-path saturation, unbounded growth)
 background job failure
 deployment misconfiguration
 user confusion
