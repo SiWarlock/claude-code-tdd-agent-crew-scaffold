@@ -101,6 +101,16 @@
       "gate": "human",
       "idempotencyKey": "root-claude:closeout+monitoring-pointers@v1",
       "touches": ["CLAUDE.md", "docs/team-protocol.md", "docs/scaffolding-reference.md", "docs/orchestrator-briefing.md", ".claude/commands/session-end.md", ".claude/commands/tdd.md", ".claude/commands/team-end.md"]
+    },
+    {
+      "id": "M-0011",
+      "title": "Phase-exit checklist v2: posture-gated dependency-audit, whole-system-security, and perf-budget rows",
+      "introducedAtSha": "PENDING-W4-6-COMMIT",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "section:IMPLEMENTATION_PLAN:phase-exit-v2-trio@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md", "manifest.placeholders"]
     }
   ]
 }

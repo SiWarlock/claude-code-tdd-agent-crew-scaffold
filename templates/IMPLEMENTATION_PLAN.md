@@ -111,6 +111,13 @@ dispatches it at the START of a round; each row is ticked in place as it passes)
 - [ ] **Reachability audit clean per touched area** (`reachability-auditor`).
 - [ ] **Arch-drift audit clean over the phase's Spec anchors** (`arch-drift-auditor`).
 - [ ] **Spec coverage: every phase anchor has a tagged test or waiver** (`scripts/spec-lint.sh tests <phase>`).
+
+<!-- Posture-gated rows (production-grade default; each individually confirmed at generation via the
+     gate-pack question and recorded in the manifest — delete a row ONLY per that recorded answer): -->
+- [ ] **Dependency audit: no NEW findings vs the accepted-risk baseline** — `/phase-exit` runs `{{AUDIT_CMD}}` once; one-line new-vs-baseline summary (full output → `docs/audits/`); a new finding is accepted-risk-recorded in Decisions tabled or escalated as a **Finding**. _(production-grade)_
+- [ ] **Whole-system security review clean (qualifying phases).** Qualifies when the phase carries security-/invariant-tagged tasks or trust-boundary surfaces (per `THREAT_MODEL.md` when it exists, else the architecture's risk/security anchors). Executor resolves from `{{SECURITY_REVIEW_POLICY}}`: at `phase-boundary`, the gate's security-reviewer dispatch (phase-diff surface) **is** this review — one combined gate, never a second pass; otherwise the default tool is the built-in `/security-review` over the branch's pending changes (the track's accumulated diff), with gstack `/cso` as the heavier escalation when installed and trust-boundary anchors are in scope. Critical findings escalate as **Findings**. _(production-grade)_
+- [ ] **Perf budgets met, or the regression is flagged as a Finding** — run the phase's benchmark task(s) against the `{{ARCH_DOC}}` budgets; phases with no stated budgets tick with `n/a — no budgets (deliberate deferral recorded)`. _(production-grade, when budgets exist)_
+
 - [ ] **Session doc(s) for this phase exist** and list every file created/modified.
 - [ ] **Commits pushed to {{GIT_REMOTE}}.**
 
