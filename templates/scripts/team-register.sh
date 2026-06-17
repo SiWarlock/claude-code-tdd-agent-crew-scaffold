@@ -15,9 +15,9 @@
 #   <name>   the teammate's name, e.g. backend-orchestrator (or <track>-<area>-<role>)
 #   <role>   lead | orchestrator | implementer
 #   <team>   the team label (context-monitoring group key) — the track name, or
-#            session-<first8 of the lead's session id>. NOT from a TeamCreate call:
-#            the Claude Code team auto-forms on first spawn; this label only scopes
-#            our custom /context-check grouping (registry + heartbeats).
+#            session-<first8 of the lead's session id>. Use the SAME string the lead
+#            passed to TeamCreate / the Agent team_name param, so our /context-check
+#            grouping (registry + heartbeats) lines up 1:1 with the real team.
 #   [area]   the code-area dir for an implementer (optional; pass "" to skip it when setting [track])
 #   [track]  the parallel track this teammate belongs to (optional; from the IMPLEMENTATION_PLAN Track map)
 #   [branch] the track's worktree branch, e.g. track/<track> (optional; cwd already records the worktree path)
