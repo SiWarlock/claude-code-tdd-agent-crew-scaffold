@@ -280,9 +280,12 @@ unanswerable gap is a real gap to resolve before the scaffolding lands.
 
 ## Keeping a generated project current
 
-Run **`/scaffold-upgrade`** (the `scaffold-upgrade` skill) from a scaffolding checkout pointed at your
-project — **never hand-diff**. Using the provenance manifest, it re-derives the templates at your generation
-commit and at the target ref with your stored values and does a **3-way merge**: it auto-applies only the
+Run **`/scaffold-upgrade`** (the `scaffold-upgrade` skill) **from inside your project** — **never hand-diff**.
+The skill is global (never vendored) and **fetches the template source itself**: by default it clones the
+manifest's `scaffoldingRepo` at the target ref into a throwaway checkout (use `--scaffold <path>` to point at
+a local checkout instead) — so you never need this repo pre-cloned at a known path. Using the provenance
+manifest, it re-derives the templates at your generation commit and at the target ref with your stored values
+and does a **3-way merge**: it auto-applies only the
 machinery you never touched (`theirs == base`) and **proposes — never clobbers —** everything you
 customized, leaving accreted state (`LESSONS.md`, your task tracker) and your architecture doc alone.
 Structural changes a text-merge can't express ride version-gated, idempotent **migrations**. Two PAUSE gates
