@@ -90,11 +90,13 @@ A `SCAFFOLDING-GUIDE §11` recipe, run once per existing project by a fresh sess
 
 ## 3. The skill (`/scaffold-upgrade`)
 
-**Identity.** `/scaffold-upgrade [--check] [--from <sha>] [--to <ref>] [--auto]` — a skill (a prompt Claude
-executes), run from a **fresh standalone session** pointed at the project (cwd) + a scaffolding checkout. It is
-**not** a team-role command, does not run inside `/tdd`, writes no project STATE. It **lives in the scaffolding
-repo and is always run from the current checkout — it is NOT vendored into projects** (so the upgrade logic
-itself never goes stale in a project).
+**Identity.** `/scaffold-upgrade [--check] [--from <sha>] [--to <ref>] [--scaffold <path>] [--auto]` — a skill
+(a prompt Claude executes), run from a **fresh standalone session inside the project** (cwd = the project root).
+The scaffolding template source is **obtained by the skill** (SKILL.md §1.5): by default a full clone of the
+manifest's `scaffoldingRepo` at the target ref, or a local checkout via `--scaffold <path>` — it is NOT assumed
+to be a checkout the operator already has on disk. It is **not** a team-role command, does not run inside
+`/tdd`, writes no project STATE. The skill itself is **global, NOT vendored into projects** (so the upgrade
+logic never goes stale in a project).
 
 **Prime directive.** Project files are **user-owned**. There is no "re-render over the top." The ONLY files
 written without explicit human confirmation are `verbatim`/`placeholder-only` files that are **provably untouched**
@@ -197,8 +199,9 @@ Ship incrementally so you can dogfood the safe read-only parts first.
    `--auto` (skip PAUSE 1 for provably-untouched verbatim/placeholder only) once you trust it.
 3. **Manifest location.** Recommend `.scaffolding/manifest.json` (room for the README + journals + upgrade-log).
    Alternative: a single `.scaffolding-manifest.json` dotfile.
-4. **Skill is scaffolding-repo-resident, not vendored** (recommended, above). Confirm you're OK running
-   `/scaffold-upgrade` from a scaffolding checkout pointed at the project, rather than as a per-project command.
+4. **Skill is global, not vendored** (recommended, above). Run `/scaffold-upgrade` from inside the project;
+   the skill obtains the template source by cloning the manifest's `scaffoldingRepo` (or `--scaffold <path>`),
+   rather than assuming a scaffolding checkout already on the operator's disk or vendoring a per-project command.
 5. **Script language:** bash + jq (recommended — matches `check-team-context.sh`/`statusline`; zero new deps) vs
    a bun/TS tool like gstack. Bash keeps it dependency-free and in-toolchain.
 6. **Build sequence:** the incremental Phase 1→5 above (recommended — dogfood `--check` early) vs all-at-once.

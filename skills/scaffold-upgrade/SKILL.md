@@ -18,10 +18,13 @@ against a recoverable common ancestor and merges only what changed upstream, **n
 project customized. It keeps an already-generated project's slash commands, layered `CLAUDE.md`, briefing
 docs, and machinery current as the scaffolding templates evolve.
 
-**You run from a scaffolding-repo checkout, pointed at the target project (its repo root is the cwd).** You
-are **not** a team-role command, you do **not** run inside `/tdd`, and you write **no** project STATE. The
-skill is **never vendored into projects** — always run it from the current scaffolding checkout so the
-upgrade logic itself never goes stale inside a project.
+**Run it from inside the target project** (cwd = its repo root, which carries `.scaffolding/manifest.json`).
+The skill is **global, never vendored into the project** (so the upgrade logic itself never goes stale) — and
+it **obtains the scaffolding template source itself** (§1.5): by default it clones the manifest's
+`scaffoldingRepo` at the target ref into a throwaway checkout, or uses a local checkout you pass via
+`--scaffold <path>`. **You do NOT need any particular repo pre-cloned at a known path on disk** — the
+manifest records where the templates came from, and the skill fetches them. You are **not** a team-role
+command, you do **not** run inside `/tdd`, and you write **no** project STATE.
 
 **Prime directive — project files are user-owned.** There is no "re-render over the top." The ONLY files
 written without explicit human confirmation are `verbatim`/`placeholder-only` files that are **provably
@@ -45,14 +48,19 @@ prior art). These are bundled so the skill is self-contained — do **not** depe
 **Two inputs:**
 1. **The target project** — the cwd (its repo root), which must contain `.scaffolding/manifest.json` (stamped
    by `scaffold-generate` Step 12.5). No manifest → the **LEGACY** path (§7).
-2. **A scaffolding checkout** at the version to upgrade *to* (defaults to that checkout's `HEAD`). Passed in
-   by path, so a moved/renamed remote is irrelevant.
+2. **The scaffolding template source** at the version to upgrade *to*. The skill **obtains this itself**
+   (§1.5 resolution order) — it is NOT assumed to be a checkout already on the operator's disk. Default: a
+   fresh **full** clone of the manifest's `scaffoldingRepo` at `--to` (else `generatedFromRef` / HEAD) into a
+   temp dir, removed when done. Override with `--scaffold <path>` to point at a local checkout (offline work,
+   or a dev working copy).
 
-**Args:** `/scaffold-upgrade [--check] [--from <sha>] [--to <ref>] [--auto]`
+**Args:** `/scaffold-upgrade [--check] [--from <sha>] [--to <ref>] [--scaffold <path>] [--auto]`
 - `--check` — drift-detection only (the `cruft check` analog). Runs PRECHECK→DRY-RUN, reports "N commits /
   M files behind," exits before any mutation. **Safe in CI.**
 - `--from <sha>` — override the base SHA (escape hatch when the manifest SHA is wrong/missing).
-- `--to <ref>` — upgrade to a tag/branch/SHA rather than scaffolding `HEAD`.
+- `--to <ref>` — upgrade to a tag/branch/SHA rather than the scaffolding remote's default-branch HEAD.
+- `--scaffold <path>` — use a local scaffolding checkout instead of cloning `scaffoldingRepo`. Must be a
+  **full** (non-shallow) clone — the base SHA's blobs must resolve, or the 3-way merge silently corrupts.
 - `--auto` — let the AUTO-APPLY group write without PAUSE 1, **for provably-untouched verbatim/placeholder
   files only**; PROPOSE + migrations still gate. **Off by default.**
 
@@ -69,6 +77,38 @@ beats a CLI at), runs prose migrations, presents the dry-run, drives the two gat
 legacy values (never fabricating), and authors the commit.
 
 **Tools (use when available):** when reading the project's files to classify edges or draft a conflict resolution, prefer a code-intelligence MCP (e.g. CodeGraph) over `grep`+read loops where it helps. Optional — no-op if absent.
+
+---
+
+## 1.5 Obtain the scaffolding source (resolve `--scaffold` FIRST — do this before PRECHECK)
+
+You do **NOT** assume a scaffolding repo is already checked out anywhere on disk. Produce a `--scaffold`
+path by resolving, in this order, then pass it to **every** `scaffold_upgrade.sh` call:
+
+1. **Explicit `--scaffold <path>`** — if the user passed one, verify it's a **full** (non-shallow) git
+   checkout of the scaffolding repo (`git -C <path> rev-parse --is-shallow-repository` → `false`) and use it.
+2. **Clone the manifest's `scaffoldingRepo` (the portable default).** This is what makes the upgrade work for
+   anyone — the source is recorded in the project, not assumed to be a repo the operator happens to have:
+   ```bash
+   src=$(jq -r '.scaffoldingRepo'   .scaffolding/manifest.json)
+   ref=$(jq -r '.generatedFromRef // "HEAD"' .scaffolding/manifest.json)   # overridden by --to
+   work=$(mktemp -d)
+   git clone "$src" "$work/scaffold"           # FULL clone — never --depth; the base SHA's blobs MUST resolve
+   git -C "$work/scaffold" checkout "${TO:-$ref}"
+   SCAFFOLD="$work/scaffold"                    # pass as --scaffold to resolve/substitute/diff/migrations
+   ```
+   A **full** clone is mandatory — a shallow clone silently corrupts the 3-way merge (the base/`generatedFromSha`
+   blobs won't be present). `scaffoldingRepo` may be a remote URL **or** a local path; `git clone` handles both
+   (cloning a local path still gives an isolated, correctly-checked-out working tree).
+3. **Fallbacks.** If `scaffoldingRepo` is `null` / `shaUnknown`, or the clone fails (offline, or a private
+   remote with no credentials), **STOP** and ask the user for either `--scaffold <path>` or the remote URL —
+   **never guess a path on disk** (the old "run from your local scaffolding checkout" assumption is exactly the
+   bug this step removes). The LEGACY path (§7) also lands here when there's no manifest.
+4. **Clean up** the temp clone (`rm -rf "$work"`) after STAMP+COMMIT, and on abort.
+
+> **Not vendored, not assumed-local.** The skill stays out of the project (so its logic never goes stale) AND
+> never depends on the operator having this repo cloned somewhere — it fetches the exact source the manifest
+> names. A project-vendored copy of the templates, if one exists, is just a valid `--scaffold <path>`.
 
 ---
 
@@ -102,6 +142,8 @@ APPLY       (SCRIPT+MODEL)    write files · inline <<<<<<< conflict markers · 
 STAMP+COMMIT(SCRIPT+MODEL)    advance lastUpgradedFromSha · refresh ledgers · append upgrade-log · one explicit-add commit
 DONE                          "What's New" CHANGELOG summary; the human pushes
 ```
+
+**Before PRECHECK:** resolve `--scaffold` per §1.5 (clone `scaffoldingRepo`, or use the passed local checkout) — every phase below needs it.
 
 **PRECHECK gates (all mutation-free except branch/stash):** if the manifest `schemaVersion` is newer than
 this skill understands → **STOP**, tell the user to update the skill. If the working tree is dirty on
