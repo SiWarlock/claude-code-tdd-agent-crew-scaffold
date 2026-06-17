@@ -111,6 +111,16 @@
       "gate": "human",
       "idempotencyKey": "section:IMPLEMENTATION_PLAN:phase-exit-v2-trio@v1",
       "touches": ["IMPLEMENTATION_PLAN.md", "manifest.placeholders"]
+    },
+    {
+      "id": "M-0012",
+      "title": "Install warn-only team-event hooks: scripts/hooks/team-event-log.sh + TeammateIdle/TaskCompleted settings entries",
+      "introducedAtSha": "PENDING-ENH-B-COMMIT",
+      "kind": "added-template",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "added:team-event-hooks@v1",
+      "touches": ["scripts/hooks/team-event-log.sh", ".claude/settings.json", "manifest.generatedFiles"]
     }
   ]
 }
