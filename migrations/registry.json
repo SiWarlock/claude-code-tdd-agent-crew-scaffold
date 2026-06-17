@@ -115,7 +115,7 @@
     {
       "id": "M-0012",
       "title": "Install warn-only team-event hooks: scripts/hooks/team-event-log.sh + TeammateIdle/TaskCompleted settings entries",
-      "introducedAtSha": "PENDING-ENH-B-COMMIT",
+      "introducedAtSha": "840312df8b7878606737425adbdba3911f23e97a",
       "kind": "added-template",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
