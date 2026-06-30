@@ -121,6 +121,16 @@
       "gate": "human",
       "idempotencyKey": "added:team-event-hooks@v1",
       "touches": ["scripts/hooks/team-event-log.sh", ".claude/settings.json", "manifest.generatedFiles"]
+    },
+    {
+      "id": "M-0013",
+      "title": "Add the host field to .scaffolding/manifest.json (schema v3)",
+      "introducedAtSha": "9109910dafdcac59fb3e48061933baedf1451bc6",
+      "kind": "new-required-section",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "manifest:host-field+schema-v3",
+      "touches": [".scaffolding/manifest.json"]
     }
   ]
 }

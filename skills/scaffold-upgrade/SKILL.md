@@ -125,6 +125,14 @@ change, not a **value** change. `base = --from ?? lastUpgradedFromSha ?? generat
 scaffolding HEAD`. Where `theirs == base` (the project never touched a file), `ours` wins automatically.
 Where the project customized, the diff is bounded and reviewed — never blind-overwritten.
 
+**Host axis (schema v3).** Both `base` and `ours` are built for the manifest's `host` (`.host // "claude"`):
+the same `templates/` tree is pruned to the host's `<!-- ▼ HOST [...] ▼ -->` regions and its host-derived
+tokens (`{{ROOT_MEMORY}}`, `{{COMMANDS_HOME}}`, `{{HOOKS_CONFIG}}`, `{{USER_GLOBAL_DIR}}`, `{{PROJECT_DIR_ENV}}`,
+`{{HOST_NAME}}`, `{{AREA_MEMORY}}`) are resolved from it (engine: `host_token_map` + `host_prune_stream`).
+Because both sides use the **same** host, the diff still reflects only template change. The host is fixed for
+the life of a project (it lives in the manifest) — `/scaffold-upgrade` never switches a project's host; moving
+a project between Claude and Codex is a re-generation, not an upgrade.
+
 ---
 
 ## 3. The phase ladder
@@ -173,6 +181,12 @@ never run on the default branch. Short-circuit "already up to date" if `base == 
 
 ## 5. mixed-file regions + migrations
 
+**Two template-only marker classes are stripped at build (their presence in a generated file is a leak,
+caught by `check-markers`), distinct from the EXAMPLE BLOCK markers below which are PRESERVED:** `MODE`
+(`<!-- ▼ MODE [team-single-track|…] ▼ -->`) prunes by `mode`, and `HOST` (`<!-- ▼ HOST [claude|codex] ▼ -->`)
+prunes by `host`. Both `base` and `ours` are pruned with the manifest's own mode+host, so a diff never shows
+pruning noise.
+
 **Region split (mixed files).** Regions are delimited by the stable `<!-- ▼ EXAMPLE BLOCK [id=<slug>] … -->`
 / `<!-- ▲ END EXAMPLE BLOCK [id=<slug>] ▲ -->` markers. Outside-block text is machinery (treated like
 `verbatim`/`placeholder-only`). Per region: `exampleBlocks[id].status == "illustrative"` → AUTO-APPLY-eligible
@@ -184,7 +198,11 @@ your copy — review the whole file."
 
 **Migrations** (for structural change a content-diff can't express). Registry travels with the templates:
 `migrations/registry.json` + one `M-NNNN-*.md` each. Selection = topological window `base < introducedAtSha
-<= to` in commit order; a crossed migration never re-fires. **Idempotent** (idempotencyKey checked first),
+<= to` in commit order; a crossed migration never re-fires. **Host filter:** a migration may carry an
+optional `"hosts": ["claude"|"codex"]` array — present ⇒ it selects only when the manifest's `host` is
+listed; absent ⇒ all hosts. The 12 historical migrations carry no `hosts` and need none: every Codex
+project's base SHA post-dates them, so the SHA-window already excludes them (a fresh Codex project sees an
+empty window). Add `hosts` only for a migration authored *after* both hosts coexist that targets just one. **Idempotent** (idempotencyKey checked first),
 **journaled** (a `.scaffolding/.migrations/<id>.done` touchfile marks completion so an interrupted upgrade resumes), **append-only** (a buggy migration is fixed
 by a NEW one at a later SHA, never edited in place), per-migration failure non-fatal. Seven kinds:
 `renamed-placeholder`, `moved-section`, `new-required-section`, `renamed-template`, `deleted-template`
