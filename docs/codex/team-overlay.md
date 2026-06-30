@@ -114,9 +114,11 @@ writes its full report to `docs/audits/<phase>-<agent>.md` and returns a ≤10-l
 
 ## 5. Generated layout (host = codex + mode = team + opt-in)
 
-- **`config.toml`** gains `[agents]` (`max_threads`, `max_depth ≥ 3`, `job_max_runtime_seconds`,
-  `interrupt_message`) + `[agents.<role>]` blocks + `[hooks] SubagentStart/SubagentStop`. See
-  `templates/config.codex.toml`'s experimental team section (commented, OFF until you enable it).
+- **`config.toml`** is generated from **`templates/config.codex.team.toml`** (which **replaces** the solo
+  `templates/config.codex.toml` when you opt in), adding `[agents]` (`max_threads`, `max_depth ≥ 3`,
+  `job_max_runtime_seconds`, `interrupt_message`) + `[agents.<role>]` blocks + `[hooks]
+  SubagentStart/SubagentStop`. These are **live** TOML — the overlay is OFF not because they're commented but
+  because it stays dormant until Codex's runtime `collaboration_mode` / `effort = ultra` is enabled.
 - **`.codex/agents/<role>.toml`** — role charters (orchestrator, implementer, reviewer-quality,
   reviewer-security, reachability-auditor, arch-drift-auditor), each layering model + sandbox writable-roots
   onto the role. Bodies are the direct port of the Claude `.claude/agents/*.md` review checklists.
@@ -133,8 +135,9 @@ writes its full report to `docs/audits/<phase>-<agent>.md` and returns a ≤10-l
 - A trivial `spawn_agent` round-trip: root spawns a child that writes a sentinel to
   `.codex-team/<label>/probe.json` and returns it; `wait_agent` returns within `timeout_ms`; `close_agent`
   succeeds. This is the churn guard — it proves spawn/result/close on the *installed* Codex version.
-- Worktree shell ops, ledger read/write, `SubagentStart/Stop` hooks firing, the territory sandbox blocking an
-  out-of-area write + a network push.
+- Ledger read/write, `SubagentStart/Stop` hooks firing, the territory sandbox blocking an out-of-area write +
+  a network push. (Worktree shell ops are verifiable too, but the worktree-provision path is **dormant** in
+  single-track v1 — see §2.)
 
 **CANNOT be reliably verified (accepted risk; experimental):**
 - That `collaboration_mode` / `effort = ultra` behaves consistently across Codex versions.

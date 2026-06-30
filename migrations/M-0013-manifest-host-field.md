@@ -17,6 +17,7 @@
   "kind": "new-required-section",
   "appliesWhen": "base < introducedAtSha <= to",
   "gate": "human",
+  "hosts": ["claude"],
   "idempotencyKey": "manifest:host-field+schema-v3",
   "touches": [".scaffolding/manifest.json"]
 }
@@ -24,8 +25,11 @@
 
 (`introducedAtSha` is the schema-v3 engine commit — where `SKILL_SCHEMA` became `3` and the engine began
 reading `.host`. A project generated before that SHA has no `host` field, so `base < introducedAtSha <= to`
-selects this migration exactly for those projects; fresh Codex projects are born at a later base and never
-select it. `kind: new-required-section` — the "section" is a manifest field, same handler semantics:
+selects this migration exactly for those projects. **`hosts: ["claude"]`** makes "a Codex project never
+selects it" true *by construction* — the per-migration host filter returns `no` for `host=codex` regardless
+of base, so the claim does not rely on SHA-window precision (which is absent on the documented
+`generatedFromSha: null` / outside-a-git-checkout path where `base` is empty). A pre-v3 manifest is, by
+definition, a Claude project, so a Claude-only filter is exactly correct. `kind: new-required-section` — the "section" is a manifest field, same handler semantics:
 insert the missing structure, never fabricate content.)
 
 ## What changed upstream, and why

@@ -129,6 +129,7 @@
       "kind": "new-required-section",
       "appliesWhen": "base < introducedAtSha <= to",
       "gate": "human",
+      "hosts": ["claude"],
       "idempotencyKey": "manifest:host-field+schema-v3",
       "touches": [".scaffolding/manifest.json"]
     }

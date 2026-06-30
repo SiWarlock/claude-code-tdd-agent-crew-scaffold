@@ -50,8 +50,10 @@ The orchestrator *owns* the ledger, but the lead initializes its dir so Step 4's
 ```bash
 TEAM_LABEL="${ARGUMENTS:-session-$(printf %s "${CODEX_SESSION_ID:-$$}" | cut -c1-8)}"   # single-track v1 — no <track> prefix
 mkdir -p ".codex-team/${TEAM_LABEL}"
-: > ".codex-team/${TEAM_LABEL}/tasks.jsonl"     # orchestrator-owned task ledger (status + commit hashes + circuit-breaker state)
-: > ".codex-team/${TEAM_LABEL}/events.jsonl"    # SubagentStart/Stop append log (replaces team-event-log.sh)
+# CREATE-IF-ABSENT, never truncate — a re-stand-up of /team-start (e.g. after a cycle) must PRESERVE the
+# orchestrator's accrued task ledger + circuit-breaker state. Use `:>` only for a deliberately fresh team.
+[ -e ".codex-team/${TEAM_LABEL}/tasks.jsonl" ]  || : > ".codex-team/${TEAM_LABEL}/tasks.jsonl"   # orchestrator-owned task ledger (status + commit hashes + circuit-breaker state)
+[ -e ".codex-team/${TEAM_LABEL}/events.jsonl" ] || : > ".codex-team/${TEAM_LABEL}/events.jsonl"  # SubagentStart/Stop append log (replaces team-event-log.sh)
 ```
 
 **State the single-track v1 limit out loud:** *"This overlay runs ONE spawn-tree (one orchestrator → one implementer-per-slice → its reviewers). Multi-track parallelism is deferred; the worktree-provision hook is guarded off."* The ledger row is the **source of truth** for coding roles (`--output-schema` is gpt-5-family only, so `gpt-5-codex` implementers report through the ledger, not structured output) — and a child that crashes still exits 0 while writing **no** row, so downstream you treat **a missing ledger row as FAIL, never as "still pending."**

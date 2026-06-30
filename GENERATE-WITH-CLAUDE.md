@@ -295,6 +295,8 @@ Write the files in **dependency order** — later files reference earlier ones.
 > | Step 11.5 `.claude/settings.json` | `config.toml` | from `templates/config.codex.toml`; emit `scripts/spec-lint.sh` + `scripts/guards/{git,secrets}-guard.sh`; **drop** `territory-guard.sh` + `scripts/hooks/team-event-log.sh` (team-only) |
 > | Step 13 user-global install | — | skipped (Codex solo carries no statusline/team-monitoring; `config.toml` is repo-local). If you instead want hooks/MCP user-global, MERGE them into `~/.codex/config.toml` (never replace), mirroring the Step-13 settings-merge discipline. |
 > Do NOT use `@file` imports in `AGENTS.md` (unconfirmed in Codex) — inline what a Claude `CLAUDE.md` would `@import`.
+>
+> This table is the host = codex **solo core** mapping. If the EXPERIMENTAL team overlay was opted into (§4.0b), it **adds** to it: `config.toml` comes from `templates/config.codex.team.toml` (not `config.codex.toml`), and you additionally emit `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, and the Codex `/team-start` + `/team-end` skills.
 
 ### Step 1 — Root `CLAUDE.md`
 
@@ -407,6 +409,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
   "host": "claude | codex",
   "mode": "team | single-operator",
+  "codex_team_experimental": false,
   "posture": "production-grade | MVP/prototype",
   "track": "<the lead session's track name, or null>",
   "tracks": ["<parallel track names from the Parallelization plan, or [] for a single-track build>"],
@@ -437,6 +440,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 Rules:
 - **`host`** (schema v3) is the generation target — `"claude"` or `"codex"` (§4.0). It drives, per generated file, which `<!-- ▼ HOST [...] ▼ -->` region survives and how the host-derived tokens (§10) resolve. **Absent ⇒ `"claude"`** (every pre-v3 manifest is a Claude project). `/scaffold-upgrade` reads it (`precheck.host`) and merges from the same `templates/` tree against the host-correct dests. Do not mix hosts in one manifest.
+- **`codex_team_experimental`** (schema v3; `host = codex` only) records the EXPERIMENTAL team-overlay opt-in (§4.0b). **Default `false`.** When `true` (which also forces `"mode": "team"`), the overlay artifacts are emitted (`config.toml` from `templates/config.codex.team.toml`, `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, the Codex team skills). For `host = claude` it is omitted (or `false`).
 - **`generatedFromSha`** is the full 40-char HEAD of the **scaffolding checkout** you generate from (not the target project): `git -C <scaffolding-checkout> rev-parse HEAD`. If the templates were handed over outside a git checkout and no SHA is resolvable, record `"generatedFromSha": null` plus `"shaUnknown": true` and a short `"note"` — `/scaffold-upgrade` falls back to a verbatim-machinery fingerprint.
 - **`posture`** (schema v2) is the **Build posture** the project was generated under — copied from the `Build posture:` line of `{{ARCH_DOC}}`'s executive summary, as confirmed during the interview (never fabricated; if no such line exists, it was asked in §5). `/scaffold-upgrade` uses it to filter **posture-gated** upgrade content (e.g. production-grade phase-exit checklist rows) mechanically; a v1 manifest has no `posture`, so posture-gated content degrades to human-gated there.
 - **`placeholders` / `codeAreas` are exactly the values you substituted** — every resolved token, verbatim. `codeAreas` is an array (one entry per area; a 2nd+ area maps to the `{{CODE_AREA_2}}`… suffix set); `BUILD_CMD` may be `null`.
