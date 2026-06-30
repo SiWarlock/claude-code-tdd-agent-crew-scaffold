@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Pull a structured trace for a given id and format it for inspection. Usage: /trace <id>
 allowed-tools: Bash, Read, Grep
 argument-hint: "<id>"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: trace
+description: Pull a structured trace for a given id and format it for inspection. Usage: /trace <id>
+argument-hint: "<id>"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   OPTIONAL COMMAND. Generate this file ONLY if the project has structured traces

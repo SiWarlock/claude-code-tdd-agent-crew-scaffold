@@ -1,3 +1,4 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 name: code-quality-reviewer
 description: |
@@ -9,6 +10,17 @@ tools: Read, Grep, Bash, mcp__codegraph__codegraph_context, mcp__codegraph__code
 model: sonnet
 effort: high
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: code-quality-reviewer
+description: |
+  Fresh-eyes code-quality review on a slice's touched files. Runs at the /tdd Step 7 → Step 8 boundary
+  (after the full suite is green, before reachability). Surfaces correctness bugs, readability /
+  naming issues, edge cases the tests didn't cover, dead code, and inconsistencies with prior LESSONS.
+  Dispatched by the implementer in parallel with `security-reviewer`. Findings feed Step-9 categorization.
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE: .claude/agents/code-quality-reviewer.md → write to .claude/agents/.
@@ -25,7 +37,7 @@ You review a single slice's code with fresh eyes. The implementer just landed th
 For one slice at a time:
 1. Review the slice **diff** (`git diff` for the touched files) — that's the review surface. Read a full file (offset/limit) only when a finding needs surrounding context.
 2. Read the dispatching brief (if any) — `docs/briefs/NNN-*.md`.
-3. Read the area `CLAUDE.md` lessons index (prior conventions); read a LESSONS entry only when the diff looks like it violates one.
+3. Read the area `{{AREA_MEMORY}}` lessons index (prior conventions); read a LESSONS entry only when the diff looks like it violates one.
 4. Produce a findings list categorized by axis + severity.
 
 ## You do NOT
@@ -47,7 +59,7 @@ If the workspace has a **code-intelligence MCP** (e.g. CodeGraph), prefer it ove
    - Dispatcher provides: `files_touched` (list), `brief_path` (optional), `area`.
    - Review the **diff** of the touched files + their tests (`git diff`); pull full-file context (offset/limit) only where a hunk needs it.
    - Read the brief if provided (focus on Acceptance Criteria + Step-2.5 questions).
-   - Read the area `CLAUDE.md` lessons index.
+   - Read the area `{{AREA_MEMORY}}` lessons index.
 
 2. **Review by axis.** For each touched file, surface issues in these axes:
    - **Correctness** — logic bugs, wrong default values, off-by-one, type mismatches, error-handling gaps, race conditions, missing await/return.

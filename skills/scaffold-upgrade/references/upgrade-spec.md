@@ -47,8 +47,10 @@ idempotent, journaled migrations** for state a text-diff can't express. We borro
 Records, at minimum:
 - **Provenance:** `schemaVersion`, `scaffoldingRepo`, `generatedFromSha` (full 40-char), `generatedFromRef`,
   `generatedAt`, `lastUpgradedFromSha` (null at bootstrap), `lastUpgradedAt`.
-- **Shape-determining choices:** `mode` (team|single-operator), `track`, `optionalCommands`, `optionalSubagents`
-  — so an upgrade never tries to merge a file the project legitimately never had.
+- **Shape-determining choices:** `host` (claude|codex; schema v3, absent ⇒ claude), `mode` (team|single-operator),
+  `track`, `optionalCommands`, `optionalSubagents` — so an upgrade never tries to merge a file the project
+  legitimately never had. `host` also selects the HOST marker regions + host-derived token values applied to
+  both base and ours (M-0013 backfills it on pre-v3 manifests).
 - **Resolved values:** `placeholders{}` + per-area `codeAreas[]` (exactly the §10 manifest, filled) — the key
   to re-substituting both old and new templates.
 - **`generatedFiles[]`:** one row per written file — `{dest, template, kind, area?}`. The spine of the merge.

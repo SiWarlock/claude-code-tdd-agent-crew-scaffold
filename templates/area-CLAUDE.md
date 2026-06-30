@@ -1,5 +1,5 @@
 <!--
-  TEMPLATE: area CLAUDE.md → write to <code-area>/CLAUDE.md (e.g. app/CLAUDE.md).
+  TEMPLATE: area {{AREA_MEMORY}} → write to <code-area>/{{AREA_MEMORY}} (e.g. app/{{AREA_MEMORY}}).
   One per code area. For a multi-area project, generate one per area, each with
   its own stack + launch-protocol row. Keep the launch protocol, session
   start/end protocol, cross-doc-invariants discipline, layer rule, and
@@ -11,14 +11,14 @@
 
 # {{PROJECT_NAME}} `{{CODE_AREA}}` — Build Guide
 
-> **You're in `{{CODE_AREA}}`.** This file plus root `CLAUDE.md` both load. The root file covers global project conventions + shared comm rules (track-prefix, escalation taxonomy, messaging budget); this file owns code-area conventions for {{CODE_AREA_NAME}}.
+> **You're in `{{CODE_AREA}}`.** This file plus root `{{ROOT_MEMORY}}` both load. The root file covers global project conventions + shared comm rules (track-prefix, escalation taxonomy, messaging budget); this file owns code-area conventions for {{CODE_AREA_NAME}}.
 
 ## Launch protocol
 
 | Working on... | cwd | Loads |
 |---|---|---|
-| Planning / docs / commits | repo root (`{{REPO_DIRNAME}}/`) | root `CLAUDE.md` only |
-| {{CODE_AREA_NAME}} code | `{{CODE_AREA}}` | this `CLAUDE.md` + root |
+| Planning / docs / commits | repo root (`{{REPO_DIRNAME}}/`) | root `{{ROOT_MEMORY}}` only |
+| {{CODE_AREA_NAME}} code | `{{CODE_AREA}}` | this `{{AREA_MEMORY}}` + root |
 
 <!-- For a multi-area project, add a row per additional code area. -->
 
@@ -45,13 +45,13 @@ If you find yourself fighting the wrong conventions, check your cwd.
    all point here.*
    - `{{TASK_TRACKER}}`
    - `{{CODE_AREA}}LESSONS.md`
-   - `{{CODE_AREA}}CLAUDE.md` (entire file — both the Cross-doc invariants table AND the Lessons logged index)
+   - `{{CODE_AREA}}{{AREA_MEMORY}}` (entire file — both the Cross-doc invariants table AND the Lessons logged index)
    - `{{ARCH_DOC}}`
    - `docs/orchestrator-briefing.md` / `docs/tdd-brief-template.md` / `docs/briefs/` / `docs/runbooks/`
    - other top-level deliverable / design docs
    - `.gitignore` and root-level dotfiles (unless adding a new artifact to ignore, flagged at Step 9)
 
-   At Step 10: **explicit `git add <path>` per slice file; never `git add -A`/`.`; never stage an orchestrator-territory file.** Changes to any orchestrator-territory file (a new cross-doc model, a lesson, an arch note) are **flagged at Step 9**, not edited here — the orchestrator writes them hot (root `CLAUDE.md` + the Step-9 matrix).
+   At Step 10: **explicit `git add <path>` per slice file; never `git add -A`/`.`; never stage an orchestrator-territory file.** Changes to any orchestrator-territory file (a new cross-doc model, a lesson, an arch note) are **flagged at Step 9**, not edited here — the orchestrator writes them hot (root `{{ROOT_MEMORY}}` + the Step-9 matrix).
 
 2. **Orchestrator runs `/orchestrate-end`** for round close-out + Carry-forward triage + round terminal commit + push.
 
@@ -67,11 +67,11 @@ Don't paste these sections into the prompt. Grep the file:section, read only wha
 
 <!-- Starts near-empty. Add a row whenever a topic is looked up twice. -->
 
-**Code intelligence & docs (when available):** prefer a code-intelligence MCP / docs MCP over grep+read loops — see root `CLAUDE.md` "Code intelligence & docs."
+**Code intelligence & docs (when available):** prefer a code-intelligence MCP / docs MCP over grep+read loops — see root `{{ROOT_MEMORY}}` "Code intelligence & docs."
 
 ## Stack
 
-<!-- ▼ EXAMPLE BLOCK [id=area-stack]: stack quick-reference for implementer sessions. Canonical stack lives in root CLAUDE.md + {{ARCH_DOC}}; this is the cheat sheet. ▼ -->
+<!-- ▼ EXAMPLE BLOCK [id=area-stack]: stack quick-reference for implementer sessions. Canonical stack lives in root {{ROOT_MEMORY}} + {{ARCH_DOC}}; this is the cheat sheet. ▼ -->
 
 - **Runtime:** {{RUNTIME}}
 - **Framework:** {{FRAMEWORK}}
@@ -103,7 +103,7 @@ Don't paste these sections into the prompt. Grep the file:section, read only wha
 
 ## TDD protocol
 
-**Write the failing test first.** Applies to deterministic code — see the TDD posture in root `CLAUDE.md` for what is test-first vs. exempt.
+**Write the failing test first.** Applies to deterministic code — see the TDD posture in root `{{ROOT_MEMORY}}` for what is test-first vs. exempt.
 
 **Commit per slice when practical.** Never bundle a safety-critical slice with anything else.
 
@@ -132,7 +132,7 @@ be expressed as a pattern carry a `pin:` (test ref) or `accepted:` note on the r
 
 Several typed models in this codebase are **contracts** mirrored in `{{ARCH_DOC}}` and indexed in the table below. The architecture doc is the canonical contract; the model is the executable enforcement. Drift produces silent disagreement.
 
-**Authoring discipline (orchestrator owns this table).** The implementer never edits this table or `{{ARCH_DOC}}` directly — it flags a field add/remove/rename at Step 9 as a `Cross-doc invariant change`; the orchestrator writes the row + the arch edit hot the same round (see root `CLAUDE.md` + `docs/orchestrator-briefing.md`). Commits stagger; the working tree stays aligned within the round.
+**Authoring discipline (orchestrator owns this table).** The implementer never edits this table or `{{ARCH_DOC}}` directly — it flags a field add/remove/rename at Step 9 as a `Cross-doc invariant change`; the orchestrator writes the row + the arch edit hot the same round (see root `{{ROOT_MEMORY}}` + `docs/orchestrator-briefing.md`). Commits stagger; the working tree stays aligned within the round.
 
 | Model | `{{ARCH_DOC}}` section | Notes |
 |---|---|---|
@@ -181,4 +181,4 @@ Lessons start at §1.
 
 <!-- Starts empty. Each row links to its `LESSONS.md` anchor. -->
 
-<!-- Slash commands: see root CLAUDE.md "Slash commands available." Implementer pair: /session-start + /session-end. -->
+<!-- Slash commands: see root {{ROOT_MEMORY}} "Slash commands available." Implementer pair: /session-start + /session-end. -->

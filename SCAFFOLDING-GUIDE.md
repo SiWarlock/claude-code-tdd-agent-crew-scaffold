@@ -136,6 +136,12 @@ When parallel team-lead sessions run in the same repo (e.g. a frontend track and
 
 Reserved for **environments where the agent-teams feature is unavailable** — it is NOT the solo-developer default (a solo dev runs **team mode (single track)**: the full 3-role team, one worktree). In the fallback you drop the team lead and run the original two-session model: you sit in for the lead, paste between an orchestrator session and an implementer session, and the escalation taxonomy collapses (everything is in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. Its two concrete losses: (1) the human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode. The generator (§13) asks at bootstrap which mode you want.
 
+### Codex host + the experimental team overlay
+
+Everything above describes the **Claude Code** host. The generator can also target **Codex CLI** (chosen first, at §4.0; recorded as `host` in the manifest). On Codex the **solo core** is the supported path — root + nested `AGENTS.md`, `skills/<name>/SKILL.md` slash commands, `config.toml` (`[mcp_servers]` + `[[hooks.PreToolUse]]` guards) — and it maps directly onto the single-operator model above (one Codex session running `/tdd`). The whole agent-team coordination layer (team lead, `SendMessage`, shared task list, statusline auto-cycle, per-track worktrees) has **no 1:1 Codex equivalent** and is dropped from the Codex solo core.
+
+> ⚠️ **EXPERIMENTAL — Codex multi-agent team overlay (WIP).** An opt-in overlay re-expresses the team layer on Codex's **unstable** `collaboration_mode` / `spawn_agent` v2 APIs (root-session-as-lead → orchestrator → per-slice implementer → reviewers; a filesystem ledger replaces the shared task list; per-slice teardown replaces the context auto-cycle; a 3-failure circuit breaker + a `codex-team-preflight` round-trip guard it, falling back to solo on any failure). It carries hard caveats — no native worktree isolation, `codex exec` exits 0 on failure, `--output-schema` only on the gpt-5 family, no context-% signal — and is **OFF by default** behind two switches (a generation-time opt-in **and** Codex's runtime collab mode). Treat it as WIP; pin a known-good Codex version. Full design + caveats: **`docs/codex/team-overlay.md`**.
+
 ---
 
 ## §4 — File inventory

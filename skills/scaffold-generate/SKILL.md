@@ -58,8 +58,12 @@ answer (and **never fabricate** a placeholder; a wrong value propagates across m
 
 Execute `GENERATE-WITH-CLAUDE.md`'s stages, with these notes:
 
-- **Mode choice (§4)** — team pattern vs single-operator (via `AskUserQuestion`); this fans out which
-  commands + docs get written.
+- **Host choice (§4.0)** — Claude Code vs Codex CLI (via `AskUserQuestion`), asked **first**. `codex`
+  forces `single-operator` for the solo core and selects the Codex dests (`AGENTS.md`, `skills/<name>/SKILL.md`,
+  `config.toml`) + host-derived tokens; see the HOST-MAPPING table in `GENERATE-WITH-CLAUDE.md` §7. The Codex
+  multi-agent team overlay is opt-in + EXPERIMENTAL (`docs/codex/team-overlay.md`), not the solo core.
+- **Mode choice (§4.1)** — team pattern vs single-operator (via `AskUserQuestion`); **skipped when host=codex**
+  (forced single-operator). This fans out which commands + docs get written.
 - **Interview (§5, batches A–E)** — ask **only** for what the artifacts didn't supply. Quote the key
   safety rules back **verbatim** (don't paraphrase) per the procedure.
 - **Plan + PAUSE (§6)** — present the one-screen generation plan with the filled-placeholder table; **write
@@ -79,9 +83,9 @@ do-not-hand-edit; rewritten by upgrades). This makes future `scaffold-upgrade` r
 instead of hand-diffs. The full schema + assembly rules are in **`GENERATE-WITH-CLAUDE.md` Step 12.5**
 (at the scaffolding-checkout root); record:
 
-- `schemaVersion`; `scaffoldingRepo` + **`generatedFromSha`** (`git -C <scaffolding-checkout> rev-parse HEAD`)
+- `schemaVersion` (**3** — adds `host`); `scaffoldingRepo` + **`generatedFromSha`** (`git -C <scaffolding-checkout> rev-parse HEAD`)
   + `generatedFromRef` + `generatedAt`; `lastUpgradedFromSha: null`.
-- `mode` + `track` + `optionalCommands` + `optionalSubagents` (the foundational choices).
+- **`host`** (`claude` | `codex`, §4.0; absent ⇒ `claude`) + `mode` + `track` + `optionalCommands` + `optionalSubagents` (the foundational choices). When `host=codex` the `generatedFiles[].dest` values follow the Codex layout (`AGENTS.md`, `skills/<name>/SKILL.md`, `config.toml`) while `template` paths stay shared.
 - `placeholders{}` + per-area `codeAreas[]` — every resolved value, exactly as substituted.
 - `generatedFiles[]` — one row per written file: `{dest, template, kind, area?}` where `kind` ∈
   `verbatim | placeholder-only | mixed | accreted | user-canonical`. Build this list **as you write each file**.

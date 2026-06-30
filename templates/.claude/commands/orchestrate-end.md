@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Orchestrator-only close-out — verify hot routing, reconcile the task tracker, prep next session.
 allowed-tools: Read, Edit, Write, Bash, Grep, SendMessage
 argument-hint: ""
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: orchestrate-end
+description: Orchestrator-only close-out — verify hot routing, reconcile the task tracker, prep next session.
+argument-hint: ""
+---
+<!-- ▲ END HOST ▲ -->
 
 > **Role guard — ORCHESTRATOR only.** If you are an **implementer**, stop: run `/session-end`, not this. `/orchestrate-end` is the orchestrator's round close-out; the implementer's close-out is `/session-end`.
 
@@ -24,7 +33,7 @@ If no implementer session ran this round (orchestrator-only session — scaffold
 
 ## Step 2 — Verify Step-9 hot-routing landed
 
-You routed each Step-9 item hot during the session, per the **canonical matrix in `docs/orchestrator-briefing.md`** (loaded at `/orchestrate-start` — don't re-copy it here). Verify each landed: grep the lesson title in `{{CODE_AREA}}LESSONS.md` + its linked index row in `{{CODE_AREA}}CLAUDE.md`; `git diff` any `{{ARCH_DOC}}` edits; grep Carry-forward / the phase for routed TODOs; confirm any deferment was escalated. The **most-likely-to-slip** is *Completed work → ticked checkbox* — Step 3.
+You routed each Step-9 item hot during the session, per the **canonical matrix in `docs/orchestrator-briefing.md`** (loaded at `/orchestrate-start` — don't re-copy it here). Verify each landed: grep the lesson title in `{{CODE_AREA}}LESSONS.md` + its linked index row in `{{CODE_AREA}}{{AREA_MEMORY}}`; `git diff` any `{{ARCH_DOC}}` edits; grep Carry-forward / the phase for routed TODOs; confirm any deferment was escalated. The **most-likely-to-slip** is *Completed work → ticked checkbox* — Step 3.
 
 Anything that slipped — write the fix now (escalate only if it's a deferment or safety finding).
 
@@ -86,7 +95,7 @@ This step runs BEFORE the round commit (Step 7) so triage outcomes land in the s
 
 Decision criterion: did substantial *orchestrator-side* work land this round? Substantial = scaffolding refactor, deploy ops, infrastructure changes, big planning shifts, or a session that ran orchestrator-only with no `/tdd` cycles.
 
-If YES → create `docs/sessions/<NNN>-<date>-<topic>.md` (next sequential NNN, shared sequence with implementer docs; **track-prefixed `<track>-<NNN>-…` in multi-track mode**, same track as your implementer's docs — root `CLAUDE.md` "Naming + cross-bleed prevention"). Update the predecessor session doc's Successor link.
+If YES → create `docs/sessions/<NNN>-<date>-<topic>.md` (next sequential NNN, shared sequence with implementer docs; **track-prefixed `<track>-<NNN>-…` in multi-track mode**, same track as your implementer's docs — root `{{ROOT_MEMORY}}` "Naming + cross-bleed prevention"). Update the predecessor session doc's Successor link.
 
 If NO → no orchestrator-side doc needed.
 
@@ -94,7 +103,7 @@ If NO → no orchestrator-side doc needed.
 
 After reconciliation, the orchestrator-side working tree has:
 - `{{TASK_TRACKER}}` updates (Log entry, box ticks, Carry-forward additions + Step-5.5 triage relocations, "Currently in progress" refresh, Decisions tabled changes)
-- Any hot-routed `{{CODE_AREA}}LESSONS.md` + `{{CODE_AREA}}CLAUDE.md` index additions that haven't ridden a slice commit yet
+- Any hot-routed `{{CODE_AREA}}LESSONS.md` + `{{CODE_AREA}}{{AREA_MEMORY}}` index additions that haven't ridden a slice commit yet
 - Any hot-routed `{{ARCH_DOC}}` prose edits that haven't ridden a slice commit yet
 - Any `/tdd` brief file(s) authored this round in `docs/briefs/<NNN>-<task-id>-<topic>.md` (incl. in-place refreshes of a stale brief)
 - Optionally a new `docs/sessions/<NNN>-<date>-<topic>.md` from Step 6
@@ -104,7 +113,7 @@ Stage these explicitly (do NOT use `git add -A`):
 ```bash
 git add {{TASK_TRACKER}} \
         {{CODE_AREA}}LESSONS.md \
-        {{CODE_AREA}}CLAUDE.md \
+        {{CODE_AREA}}{{AREA_MEMORY}} \
         {{ARCH_DOC}} \
         docs/briefs/<NNN>-*.md \
         docs/sessions/<NNN>-*.md
@@ -144,11 +153,11 @@ Assemble the close-out summary:
 - Suggested next slice — reference `{{TASK_TRACKER}}` "Currently in progress" + "Carry-forward" (now triaged)
 - _(production-grade, optional)_ a report-only `{{AUDIT_CMD}}` one-liner (new-vs-baseline) if run this round — the blocking run stays at `/phase-exit`
 
-Then route it three ways (this is the **canonical close-out spec** — root `CLAUDE.md` "Close-out gating" points here):
+Then route it three ways (this is the **canonical close-out spec** — root `{{ROOT_MEMORY}}` "Close-out gating" points here):
 
 - **(a) Single-operator** — present the summary to the user and confirm. Once the user confirms, author the next `/tdd` brief per `docs/tdd-brief-template.md` (saved as `docs/briefs/NNN-<task-id>-<topic>.md`) if the user wants to continue. Otherwise the round closes here.
 - **(b) Team, user-on-demand close-out** — ack the **LEAD** via `SendMessage`: one terse send (round-seal hash + "round closed"; the lead relays to the user — you never report to the user directly). Then **idle**. Author the next brief only on lead-relayed direction, never on your own initiative after a close-out.
-- **(c) Team, auto-cycle (context-triggered)** — ack the lead with the same one-liner (include the verbatim `/context-check --brief` tier line when the cycle is for your own context). **Author NO next brief** — your successor authors it after `/orchestrate-start` reads the reconciled tracker. Expect a `shutdown_request` from the lead; approve it once the round commit is in and your working tree is clean. **Nothing in this branch waits on a human reply** — the mechanical trigger already carried the authorization (root `CLAUDE.md` "Close-out gating").
+- **(c) Team, auto-cycle (context-triggered)** — ack the lead with the same one-liner (include the verbatim `/context-check --brief` tier line when the cycle is for your own context). **Author NO next brief** — your successor authors it after `/orchestrate-start` reads the reconciled tracker. Expect a `shutdown_request` from the lead; approve it once the round commit is in and your working tree is clean. **Nothing in this branch waits on a human reply** — the mechanical trigger already carried the authorization (root `{{ROOT_MEMORY}}` "Close-out gating").
 
 ## Forbidden in this command
 

@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Run a named eval class. Usage: /eval [category]
 allowed-tools: Bash, Read
 argument-hint: "[category|all]"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: eval
+description: Run a named eval class. Usage: /eval [category]
+argument-hint: "[category|all]"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   OPTIONAL COMMAND. Generate this file ONLY if the project has an eval / test-suite

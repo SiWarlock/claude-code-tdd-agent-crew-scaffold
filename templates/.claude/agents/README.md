@@ -17,7 +17,7 @@ This directory holds **subagents** — specialized roles delegated mid-session f
 
 | Subagent | When it runs | Integration point | Status |
 |---|---|---|---|
-| `code-quality-reviewer` | At `/tdd` Step 8, **per the reviewer policy** in root `CLAUDE.md` (default: every slice, lite — `sonnet`, diff-only). | Implementer-side. Findings feed Step-9 categorization. | **Active** |
+| `code-quality-reviewer` | At `/tdd` Step 8, **per the reviewer policy** in root `{{ROOT_MEMORY}}` (default: every slice, lite — `sonnet`, diff-only). | Implementer-side. Findings feed Step-9 categorization. | **Active** |
 | `security-reviewer` | At `/tdd` Step 8, **per the reviewer policy** (default: invariant-/security-touching slices only; `opus`). Mandatory on invariant-touching slices. | Implementer-side. Critical findings escalate as Step-9 `Finding` → orchestrator → lead → human. | **Active** |
 | `reachability-auditor` | At the phase-exit gate (`/phase-exit`). Orchestrator dispatches per touched area. | Orchestrator-side. Output drives wiring tasks; phase-exit acceptance is gated on clean audit. | **Active** |
 | `arch-drift-auditor` | At the phase-exit gate (`/phase-exit`). Orchestrator dispatches with the phase's `Spec anchors:` list. | Orchestrator-side. Diffs the contract vs shipped code; green snapshots = verified-by-test; DRIFT findings block the gate (Findings escalation). | **Active** |
@@ -27,7 +27,7 @@ This directory holds **subagents** — specialized roles delegated mid-session f
 
 Each subagent file (`<name>.md`) carries its own scope, forbidden patterns, mandatory protocol, and output format. The forbidden-patterns section is its only guard — subagents aren't sandboxed.
 
-**Reviewer policy (the toggle).** The Step-8 reviewer fan-out is gated by the **reviewer policy** in root `CLAUDE.md` "Reviewer subagents — Step-8 policy" — one of `off` · `invariant` · `every-slice` · `phase-boundary` per reviewer (default: security `invariant`, code-quality `every-slice` lite). Per-slice reviews cover the slice **diff**, not whole files; at `phase-boundary` the surface is the **phase's accumulated branch diff + crossed trust boundaries** (root `CLAUDE.md` states the same rule). Tune it to trade review depth for per-slice tokens.
+**Reviewer policy (the toggle).** The Step-8 reviewer fan-out is gated by the **reviewer policy** in root `{{ROOT_MEMORY}}` "Reviewer subagents — Step-8 policy" — one of `off` · `invariant` · `every-slice` · `phase-boundary` per reviewer (default: security `invariant`, code-quality `every-slice` lite). Per-slice reviews cover the slice **diff**, not whole files; at `phase-boundary` the surface is the **phase's accumulated branch diff + crossed trust boundaries** (root `{{ROOT_MEMORY}}` states the same rule). Tune it to trade review depth for per-slice tokens.
 
 ## How subagents fit the slash-command workflow
 
@@ -85,7 +85,7 @@ The 30% threshold is a heuristic — the actual signal is "is the orchestrator s
 - The context bloat or repetition is real.
 - A clear narrow scope can be defined (avoid generalist subagents).
 
-When adding a new subagent: file in this directory + entry in the "Active inventory" table above + integration-point note in `docs/orchestrator-briefing.md` "Tools" section + (if implementer-side) entry in the area `CLAUDE.md` "Subagents" pointer.
+When adding a new subagent: file in this directory + entry in the "Active inventory" table above + integration-point note in `docs/orchestrator-briefing.md` "Tools" section + (if implementer-side) entry in the area `{{AREA_MEMORY}}` "Subagents" pointer.
 
 ## Common categories (build reactively, if friction surfaces)
 

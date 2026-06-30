@@ -3,3 +3,4 @@ workflow-analysis
 ce_structure.json
 gstack
 .DS_Store
+.tokensave/

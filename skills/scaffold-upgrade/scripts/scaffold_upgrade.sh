@@ -26,13 +26,15 @@
 #   scaffold_upgrade.sh check-markers --work DIR
 #
 # The skill knows the schema version it understands; bump SKILL_SCHEMA when the manifest shape changes.
-# Schema history: v2 added `posture` ("production-grade" | "MVP/prototype"). A v1 manifest is still
-# accepted; its posture surfaces as "unknown" in precheck.json, and posture-gated upgrade content
+# Schema history: v2 added `posture` ("production-grade" | "MVP/prototype"). v3 added `host`
+# ("claude" | "codex") — the generation target. A v1/v2 manifest is still accepted; its `host`
+# surfaces as "claude" (the historical default) so existing Claude projects render byte-identically.
+# A v1 manifest's posture surfaces as "unknown" in precheck.json, and posture-gated upgrade content
 # (e.g. production-grade checklist rows) must then be HUMAN-gated, never auto-applied.
 
 set -euo pipefail
 
-SKILL_SCHEMA=2
+SKILL_SCHEMA=3
 SELF="scaffold_upgrade.sh"
 
 die()  { printf '%s: error: %s\n' "$SELF" "$*" >&2; exit 1; }
@@ -67,10 +69,42 @@ manifest_path() { printf '%s/.scaffolding/manifest.json' "$1"; }
 # ---- substitution (pure bash; preserves trailing newlines; literal, glob-safe replacement) -------
 # Emit the effective TOKEN<TAB>VALUE map for a generatedFiles row (global placeholders, overlaid with
 # the matching codeAreas entry when the row is area-scoped). Null values are skipped, not substituted.
+# ---- host token map (host-derived placeholder values) -------------------------------------------
+# A small set of placeholders whose value is DERIVED from the manifest's `host` field rather than
+# interviewed — they name host-specific layout facts (memory filename, hooks-config file, commands
+# home, user-global dir, project-dir env var, host name). Templates carry these {{TOKENS}} only at
+# load-bearing spots (cross-doc pointers, hook-wiring lines, the `cd "${{{PROJECT_DIR_ENV}}}"` in
+# secrets-guard). Emitted at LOWEST precedence (see emit_map_for_area) so a real placeholder of the
+# same name would still win. host defaults to "claude", so a manifest without a host field renders
+# byte-identically to the historical Claude layout.
+host_token_map() {  # $1 = host -> stdout TSV (TOKEN<TAB>VALUE)
+  case "$1" in
+    codex)
+      printf '%s\t%s\n' ROOT_MEMORY     "AGENTS.md"
+      printf '%s\t%s\n' AREA_MEMORY     "AGENTS.md"
+      printf '%s\t%s\n' HOOKS_CONFIG    "config.toml"
+      printf '%s\t%s\n' COMMANDS_HOME   "skills/"
+      printf '%s\t%s\n' USER_GLOBAL_DIR "~/.codex"
+      printf '%s\t%s\n' PROJECT_DIR_ENV "CODEX_PROJECT_DIR"
+      printf '%s\t%s\n' HOST_NAME       "Codex CLI"
+      ;;
+    *)  # claude (historical default)
+      printf '%s\t%s\n' ROOT_MEMORY     "CLAUDE.md"
+      printf '%s\t%s\n' AREA_MEMORY     "CLAUDE.md"
+      printf '%s\t%s\n' HOOKS_CONFIG    ".claude/settings.json"
+      printf '%s\t%s\n' COMMANDS_HOME   ".claude/commands/"
+      printf '%s\t%s\n' USER_GLOBAL_DIR "~/.claude"
+      printf '%s\t%s\n' PROJECT_DIR_ENV "CLAUDE_PROJECT_DIR"
+      printf '%s\t%s\n' HOST_NAME       "Claude Code"
+      ;;
+  esac
+}
+
 emit_map_for_area() {  # $1 = manifest, $2 = area ("" for none) -> stdout TSV
   # Area-scoped values are emitted FIRST so that, with substitute_stream's first-match-wins semantics, an
   # area override beats the global default for the same token (e.g. a per-area TEST_CMD). The area's own
   # CODE_AREA value also fills {{CODE_AREA}} for that area's files, so it is kept (it doubles as the area id).
+  # Host-derived tokens are emitted LAST (lowest precedence) so a real placeholder still wins on collision.
   local manifest="$1" area="$2"
   if [ -n "$area" ]; then
     jq -r --arg a "$area" \
@@ -78,6 +112,7 @@ emit_map_for_area() {  # $1 = manifest, $2 = area ("" for none) -> stdout TSV
       "$manifest"
   fi
   jq -r '.placeholders | to_entries[] | select(.value != null) | [.key, (.value|tostring)] | @tsv' "$manifest"
+  host_token_map "$(jq -r '.host // "claude"' "$manifest")"
 }
 
 substitute_stream() {  # $1 = map TSV file; reads stdin, writes substituted content to stdout
@@ -130,15 +165,41 @@ prune_stream() {  # $1 = state; stdin -> stdout with MODE regions resolved
   '
 }
 
+host_prune_stream() {  # $1 = host; stdin -> stdout with HOST regions resolved
+  # Mirror of prune_stream over HOST markers: <!-- ▼ HOST [claude|codex] ▼ --> ... <!-- ▲ END HOST ▲ -->.
+  # A region whose bracket list excludes the active host is dropped; if that opener carries a
+  # "pointer: <text>", the pointer line is emitted in its place (same convention as MODE).
+  # host defaults upstream to "claude", so a template with no HOST markers is passed through verbatim.
+  awk -v state="$1" '
+    BEGIN { inblock = 0; keep = 1; down = "\xe2\x96\xbc"; up = "\xe2\x96\xb2" }
+    index($0, down " HOST [") {
+      inblock = 1
+      modes = $0; sub(/^.*HOST \[/, "", modes); sub(/\].*$/, "", modes)
+      keep = (index("|" modes "|", "|" state "|") > 0)
+      if (!keep && index($0, "pointer: ") > 0) {
+        ptr = substr($0, index($0, "pointer: ") + 9)
+        p = index(ptr, down); if (p > 0) ptr = substr(ptr, 1, p - 1)
+        gsub(/[ \t]+$/, "", ptr)
+        if (ptr != "delete" && ptr != "") print ptr
+      }
+      next
+    }
+    index($0, "END HOST") && index($0, up) { inblock = 0; keep = 1; next }
+    inblock && !keep { next }
+    { print }
+  '
+}
+
 # Build a fully substituted template tree at REF into OUTDIR (one file per generatedFiles row).
 # Substitution AND mode pruning are both replayed so the tree matches what generation produced.
 # Records any template missing at REF into <work>/missing-<tag>.txt (tag = base|ours|<ref>).
 build_tree() {  # $1 = manifest, $2 = scaffold dir, $3 = ref, $4 = outdir, $5 = tag
   local manifest="$1" scaffold="$2" ref="$3" outdir="$4" tag="$5"
-  local rows dest template area mapf miss state
+  local rows dest template area mapf miss state host
   miss="$WORK/missing-$tag.txt"; : > "$miss"
   mkdir -p "$outdir"
   state=$(derive_mode_state "$manifest")
+  host=$(jq -r '.host // "claude"' "$manifest")
   rows=$(jq -c '.generatedFiles[]?' "$manifest")
   while IFS= read -r row; do
     [ -n "$row" ] || continue
@@ -154,7 +215,7 @@ build_tree() {  # $1 = manifest, $2 = scaffold dir, $3 = ref, $4 = outdir, $5 = 
     fi
     mapf="$WORK/.map.tmp"; emit_map_for_area "$manifest" "$area" > "$mapf"
     mkdir -p "$outdir/$(dirname "$dest")"
-    git -C "$scaffold" show "$ref:$template" | substitute_stream "$mapf" | prune_stream "$state" > "$outdir/$dest"
+    git -C "$scaffold" show "$ref:$template" | substitute_stream "$mapf" | prune_stream "$state" | host_prune_stream "$host" > "$outdir/$dest"
   done <<EOF
 $rows
 EOF
@@ -218,11 +279,12 @@ cmd_resolve() {
     --argjson baseExists "$base_exists" --argjson already "$already" \
     --arg shallow "$shallow" --arg mode "$(jq -r '.mode // ""' "$manifest")" \
     --arg posture "$(jq -r '.posture // ""' "$manifest")" \
+    --arg host "$(jq -r '.host // "claude"' "$manifest")" \
     --arg dirty "$dirty" '
     { legacy:false, projectDir:$project, scaffoldDir:$scaffold, manifestPath:$manifest,
       schemaVersion:$schema, base:$base, baseConfidence:$baseConf, baseExists:$baseExists,
       to:$to, toRef:$toRef, shaUnknown:$shaUnknown, shallow:($shallow=="true"),
-      alreadyUpToDate:$already, mode:$mode,
+      alreadyUpToDate:$already, mode:$mode, host:$host,
       posture:(if $posture=="" then "unknown" else $posture end),
       dirtyScaffoldPaths:($dirty|split("\n")|map(select(length>0))),
       cleanTree:(($dirty|split("\n")|map(select(length>0))|length)==0) }' > "$WORK/precheck.json"
@@ -371,7 +433,8 @@ EOF
 # ---- migrations: select the (base,to] window from registry.json ---------------------------------
 cmd_migrations() {
   [ -n "$WORK" ] || die "migrations needs --work"
-  local scaffold base to; scaffold=$(pc '.scaffoldDir'); base=$(pc '.base'); to=$(pc '.to')
+  local scaffold base to host; scaffold=$(pc '.scaffoldDir'); base=$(pc '.base'); to=$(pc '.to')
+  host=$(pc '.host'); [ -n "$host" ] && [ "$host" != "null" ] || host="claude"
   local reg; reg=$(git -C "$scaffold" show "$to:migrations/registry.json" 2>/dev/null || echo '{"migrations":[]}')
   local ids; ids=$(printf '%s' "$reg" | jq -r '.migrations[]? | select(.introducedAtSha != null) | (.introducedAtSha + "\t" + .id)')
   local selected="[]" line isha mid
@@ -394,6 +457,12 @@ cmd_migrations() {
     fi
     if [ "$upper" = true ] && [ "$lower" = true ]; then
       local entry; entry=$(printf '%s' "$reg" | jq -c --arg id "$mid" '.migrations[] | select(.id==$id)')
+      # host filter: a migration may declare a `hosts` array naming the host(s) it applies to.
+      # Absent ⇒ applies to all hosts (back-compat: the 12 historical migrations carry no `hosts`).
+      # Present ⇒ select only when the manifest's active host is listed.
+      local hostok; hostok=$(printf '%s' "$entry" | jq -r --arg h "$host" '
+        if (.hosts|type)=="array" then (if (.hosts|index($h))!=null then "yes" else "no" end) else "yes" end' 2>/dev/null)
+      if [ "$hostok" != "yes" ]; then continue; fi
       # idempotency pre-check: a journal touchfile under .scaffolding/.migrations/<id>.done
       local done=false; [ -f "$(pc '.projectDir')/.scaffolding/.migrations/$mid.done" ] && done=true
       selected=$(printf '%s' "$selected" | jq -c --argjson e "$entry" --argjson d "$done" '. + [($e + {alreadyApplied:$d})]')
@@ -437,7 +506,7 @@ cmd_apply() {
 cmd_check_markers() {
   [ -n "$WORK" ] || die "check-markers needs --work"
   local project manifest; project=$(pc '.projectDir'); manifest=$(pc '.manifestPath')
-  local hits=0 mode_hits=0 dest
+  local hits=0 mode_hits=0 host_hits=0 dest
   while IFS= read -r dest; do
     [ -n "$dest" ] || continue
     if [ -f "$project/$dest" ] && grep -nE '^(<<<<<<<|\|\|\|\|\|\|\||=======|>>>>>>>)' "$project/$dest" >/dev/null 2>&1; then
@@ -450,9 +519,15 @@ cmd_check_markers() {
       warn "TEMPLATE-ONLY MODE marker leaked into: $dest (a write skipped mode pruning)"
       mode_hits=$((mode_hits+1))
     fi
+    # HOST pruning markers are likewise TEMPLATE-ONLY — their presence means a write skipped host pruning.
+    if [ -f "$project/$dest" ] && grep -q '▼ HOST \[' "$project/$dest" 2>/dev/null; then
+      warn "TEMPLATE-ONLY HOST marker leaked into: $dest (a write skipped host pruning)"
+      host_hits=$((host_hits+1))
+    fi
   done < <(jq -r '.generatedFiles[]?.dest' "$manifest")
   if [ "$hits" -gt 0 ]; then die "$hits file(s) still contain conflict markers — resolve before commit (PAUSE 2)"; fi
   if [ "$mode_hits" -gt 0 ]; then die "$mode_hits file(s) contain template-only MODE markers — re-apply from a pruned tree"; fi
+  if [ "$host_hits" -gt 0 ]; then die "$host_hits file(s) contain template-only HOST markers — re-apply from a pruned tree"; fi
   printf 'no conflict markers found\n' >&2
 }
 

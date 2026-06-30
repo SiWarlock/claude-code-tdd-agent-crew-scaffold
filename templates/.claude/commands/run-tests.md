@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Run tests by class. cwd-aware. Usage: /run-tests [{{TEST_CLASSES}}]
 allowed-tools: Bash
 argument-hint: "[{{TEST_CLASSES}}]"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: run-tests
+description: Run tests by class. cwd-aware. Usage: /run-tests [{{TEST_CLASSES}}]
+argument-hint: "[{{TEST_CLASSES}}]"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE NOTE (delete when generating):

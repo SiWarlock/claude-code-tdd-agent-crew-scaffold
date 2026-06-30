@@ -288,10 +288,16 @@ templates/../migrations/                       # sibling to templates/, shipped 
                                      // | renamed-template | deleted-template | added-template | accreted-format
   "appliesWhen": "base < introducedAtSha <= to",   // version-window gate (copier PEP440 analog, by SHA topology)
   "gate": "human",                   // human | auto   (structural/accreted-touching => human; pure-additive => auto-eligible)
+  "hosts": ["claude", "codex"],      // OPTIONAL (schema v3). Absent => all hosts. Present => select only when manifest.host is listed.
   "idempotencyKey": "placeholder:TEST_RUNNER->TEST_FRAMEWORK",
   "touches": ["manifest.placeholders", ".claude/commands/tdd.md", "app/CLAUDE.md", "IMPLEMENTATION_PLAN.md"]
 }
 ```
+
+**Host filter (schema v3):** the optional `hosts` array narrows a migration to one host. The 12 historical
+migrations omit it (all-hosts) and need no backfill — every Codex project's base SHA post-dates them, so the
+SHA window already excludes them. M-0013 (`manifest-host-field`) backfills `host:"claude"` on pre-v3 manifests
+and itself carries no `hosts` (it only ever selects for old, i.e. Claude, projects via the SHA window).
 
 **Selection (the gstack `sort -V` analog):** the script walks `registry.json`, selects every migration whose
 `introducedAtSha` is in the topological window `(base, to]` (i.e. introduced *after* the project's base and

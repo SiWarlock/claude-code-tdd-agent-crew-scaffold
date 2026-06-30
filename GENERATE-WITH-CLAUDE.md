@@ -42,7 +42,9 @@ When a clarification question has discrete options (e.g. "is this a single-opera
 
 ## §1 — What you will produce
 
-When you're done, the user's repo will have:
+This layout is the **Claude Code** host (the default). For the **Codex CLI** host (chosen in §4.0) the same templates produce the Codex layout instead — `AGENTS.md` (root + nested) for the memory files, `skills/<name>/SKILL.md` for the slash commands, `config.toml` for hooks + MCP, and no user-global install. The HOST-MAPPING table in §7 lists the per-file dest deltas; the Codex multi-agent team overlay is a separate, opt-in, EXPERIMENTAL path (`docs/codex/team-overlay.md`).
+
+When you're done (host = claude), the user's repo will have:
 
 ```
 CLAUDE.md                       # root — global conventions + shared comm rules
@@ -81,7 +83,7 @@ Everything in `templates/` maps to one of these. The templates carry the **workf
 ## §2 — Your procedure at a glance
 
 1. **Orient (§3)** — read `SCAFFOLDING-GUIDE.md`; read the user's architecture document end-to-end; inspect the repo for anything you can infer (existing package manifests, directory layout, prior `CLAUDE.md` if any).
-2. **Mode choice (§4)** — ask the user: team pattern, or single-operator fallback?
+2. **Host + mode choice (§4)** — ask the user the host first (Claude Code or Codex CLI; §4.0), then — for Claude only — team pattern or single-operator fallback (§4.1). Codex forces single-operator for the solo core.
 3. **Interview (§5)** — interactive, back-and-forth. Ask only what you can't infer from the architecture doc + repo. Use `AskUserQuestion` for structured choices; conversational for free-form. **Clarification on ambiguity is mandatory; fabrication is forbidden.**
 4. **Plan + PAUSE (§6)** — present a one-screen generation plan: mode, code areas, stack(s), phase plan, optional commands, optional subagents, the placeholder values. **Wait for approval.**
 5. **Generate (§7)** — fill every template, write every file, and stamp the provenance manifest (Step 12.5).
@@ -134,9 +136,32 @@ This becomes the foundation. Now you know what to ask.
 
 ---
 
-## §4 — Mode choice: team pattern or single-operator?
+## §4 — Host + mode choice
 
-Before the substantive interview, ask the user via `AskUserQuestion`:
+Two foundational choices precede the substantive interview. Ask the **host** first — it gates the mode question.
+
+### §4.0 — Host choice: Claude Code or Codex CLI?
+
+Ask the user via `AskUserQuestion`: **which agent host will run this project's scaffolding?**
+
+- **Claude Code (default)** — generates the `.claude/` layout: root + area `CLAUDE.md`, `.claude/commands/*.md` slash commands, `.claude/agents/*.md` subagents, `.claude/settings.json` hooks. Supports BOTH team pattern and single-operator. Everything below behaves exactly as it always has.
+- **Codex CLI** — generates the Codex layout: root + nested `AGENTS.md` (Codex reads nested `AGENTS.md` by cwd, deeper-wins — 1:1 with area-`CLAUDE.md`), slash commands as `skills/<name>/SKILL.md`, `config.toml` (`[mcp_servers]` + `[[hooks.PreToolUse]]` guards). **Codex forces `single-operator` mode for the solo core** — the agent-team coordination layer cannot port 1:1 (Codex has no peer-teammate / shared-task-list / context-% primitives). An **EXPERIMENTAL** Codex multi-agent team overlay exists (see `docs/codex/team-overlay.md`) but is opt-in and WIP; the solo core is the supported Codex path.
+
+Record the answer as `host` (`claude` | `codex`) in the manifest. **host defaults to `claude`** everywhere, so an omitted host is the historical Claude behavior.
+
+The host selects, per generated file, which **HOST marker region** (`<!-- ▼ HOST [claude] ▼ -->` / `<!-- ▼ HOST [codex] ▼ -->`) survives and which **host-derived tokens** (`{{ROOT_MEMORY}}`, `{{COMMANDS_HOME}}`, `{{HOOKS_CONFIG}}`, `{{USER_GLOBAL_DIR}}`, `{{PROJECT_DIR_ENV}}`, `{{HOST_NAME}}`, `{{AREA_MEMORY}}`) resolve to (see §10). The same `templates/` tree generates both hosts; you do not maintain a second tree.
+
+#### §4.0b — (host = codex only) the EXPERIMENTAL team overlay opt-in
+
+After choosing `codex`, the **default** is the supported **solo core** (the layout above; mode `single-operator`). Only if the user explicitly asks for the experimental multi-agent overlay, ask a second, clearly-worded `AskUserQuestion`:
+
+> *"Generate the **EXPERIMENTAL** Codex multi-agent team overlay? It is built on Codex's unstable `collaboration_mode`/`spawn_agent` v2 APIs (no native worktree isolation; `codex exec` exits 0 on failure; `--output-schema` only on the gpt-5 family; no context-% signal). It is OFF by default and falls back to solo on any preflight failure. Recommended: **No** — use the solo core. See `docs/codex/team-overlay.md`."*
+
+Default **No**. Only on an explicit **Yes** do you set the manifest's `"codex_team_experimental": true` **and** `"mode": "team"`, and additionally emit the overlay artifacts: `config.toml` from `templates/config.codex.team.toml` (instead of `templates/config.codex.toml`); `.codex/agents/<role>.toml` from `templates/.codex/agents/*`; `.codex/hooks/subagent-{start,stop}.sh`; `scripts/codex-team-preflight.sh`; and the Codex `/team-start` + `/team-end` skills from `templates/.codex/skills/*`. **This is a two-switch gate** — even when generated, the overlay stays dormant until Codex's runtime `collaboration_mode`/`effort=ultra` is enabled. Carry the WIP banner into the generated `AGENTS.md` team section.
+
+### §4.1 — Mode choice: team pattern or single-operator?
+
+**If host = codex, skip this question — mode is `single-operator`** (the team overlay is a separate, opt-in, experimental path). For **host = claude**, ask the user via `AskUserQuestion`:
 
 **Question:** Which mode do you want for this project?
 
@@ -259,6 +284,20 @@ Write the files in **dependency order** — later files reference earlier ones.
 >
 > And for every `EXAMPLE BLOCK [id=<slug>]` region in a file you write, note an `exampleBlocks[]` row `{file, id, status}` — `status: "customized"` if you replaced the illustrative default with the project's real content, `"illustrative"` if you left the template's example in place. The `[id=<slug>]` is the stable id carried in both the opening and closing `EXAMPLE BLOCK` comment (see §10 for the full id map).
 
+> **HOST MAPPING (host = codex).** The steps below are written for the Claude layout. When `host = codex`, the SAME templates generate, but the **dest paths** and a few skips change — the HOST marker regions + host-derived tokens (§10) do the in-file work automatically. Apply these deltas (and record the Codex dests in the manifest):
+> | Claude step / dest | Codex dest | note |
+> |---|---|---|
+> | Step 1 root `CLAUDE.md` | `AGENTS.md` | same template |
+> | Step 2 `<area>/CLAUDE.md` | `<area>/AGENTS.md` | Codex reads nested `AGENTS.md` by cwd (deeper wins) |
+> | Step 6 `docs/team-protocol.md` | — | team-only; not emitted in the Codex solo core |
+> | Step 10 `.claude/commands/<c>.md` | `skills/<c>/SKILL.md` | the `[codex]` frontmatter block supplies `name:` (= the command); skip `team-start`/`team-end`/`context-check` |
+> | Step 11 `.claude/agents/<a>.md` | `skills/<a>/SKILL.md` | the 5 reviewers become solo review-prompt skills; `[agents.<role>]` roles are the EXPERIMENTAL overlay (Phase F), not the solo core |
+> | Step 11.5 `.claude/settings.json` | `config.toml` | from `templates/config.codex.toml`; emit `scripts/spec-lint.sh` + `scripts/guards/{git,secrets}-guard.sh`; **drop** `territory-guard.sh` + `scripts/hooks/team-event-log.sh` (team-only) |
+> | Step 13 user-global install | — | skipped (Codex solo carries no statusline/team-monitoring; `config.toml` is repo-local). If you instead want hooks/MCP user-global, MERGE them into `~/.codex/config.toml` (never replace), mirroring the Step-13 settings-merge discipline. |
+> Do NOT use `@file` imports in `AGENTS.md` (unconfirmed in Codex) — inline what a Claude `CLAUDE.md` would `@import`.
+>
+> This table is the host = codex **solo core** mapping. If the EXPERIMENTAL team overlay was opted into (§4.0b), it **adds** to it: `config.toml` comes from `templates/config.codex.team.toml` (not `config.codex.toml`), and you additionally emit `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, and the Codex `/team-start` + `/team-end` skills.
+
 ### Step 1 — Root `CLAUDE.md`
 
 From `templates/CLAUDE.md`. Fill identity placeholders, the project-structure tree (reflect the user's actual code areas), the tech-stack table, the cross-cutting conventions. Keep the **Team coordination — shared rules** section verbatim — it's the workflow machinery shared by all roles. If **single-operator mode**: trim the lead-specific lines (track-prefix is irrelevant, escalation taxonomy collapses to "raise with yourself"); note the fallback explicitly.
@@ -359,7 +398,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "scaffoldingRepo": "<remote URL or local path of the scaffolding checkout>",
   "generatedFromSha": "<full 40-char SHA — `git -C <scaffolding-checkout> rev-parse HEAD`>",
   "generatedFromRef": "<branch or tag that SHA was on — advisory>",
@@ -368,7 +407,9 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
   "lastUpgradedFromSha": null,
   "lastUpgradedAt": null,
 
+  "host": "claude | codex",
   "mode": "team | single-operator",
+  "codex_team_experimental": false,
   "posture": "production-grade | MVP/prototype",
   "track": "<the lead session's track name, or null>",
   "tracks": ["<parallel track names from the Parallelization plan, or [] for a single-track build>"],
@@ -388,6 +429,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
     { "dest": "app/LESSONS.md", "template": "templates/area-LESSONS.md", "kind": "accreted", "area": "app/" },
     { "dest": ".claude/commands/tdd.md", "template": "templates/.claude/commands/tdd.md", "kind": "placeholder-only" }
   ],
+  "//generatedFiles-codex": "When host=codex the `template` paths are the SAME, but the `dest` paths follow the Codex layout — e.g. { dest: \"AGENTS.md\", template: \"templates/CLAUDE.md\" }, { dest: \"app/AGENTS.md\", template: \"templates/area-CLAUDE.md\", area: \"app/\" }, { dest: \"skills/tdd/SKILL.md\", template: \"templates/.claude/commands/tdd.md\" }, { dest: \"config.toml\", template: \"templates/config.codex.toml\", kind: \"verbatim\" }. exampleBlocks[].file likewise references the Codex dest filenames (AGENTS.md, not CLAUDE.md).",
   "exampleBlocks": [
     { "file": "CLAUDE.md", "id": "tech-stack", "status": "customized" },
     { "file": "CLAUDE.md", "id": "key-safety-rules", "status": "customized" },
@@ -397,6 +439,8 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 ```
 
 Rules:
+- **`host`** (schema v3) is the generation target — `"claude"` or `"codex"` (§4.0). It drives, per generated file, which `<!-- ▼ HOST [...] ▼ -->` region survives and how the host-derived tokens (§10) resolve. **Absent ⇒ `"claude"`** (every pre-v3 manifest is a Claude project). `/scaffold-upgrade` reads it (`precheck.host`) and merges from the same `templates/` tree against the host-correct dests. Do not mix hosts in one manifest.
+- **`codex_team_experimental`** (schema v3; `host = codex` only) records the EXPERIMENTAL team-overlay opt-in (§4.0b). **Default `false`.** When `true` (which also forces `"mode": "team"`), the overlay artifacts are emitted (`config.toml` from `templates/config.codex.team.toml`, `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, the Codex team skills). For `host = claude` it is omitted (or `false`).
 - **`generatedFromSha`** is the full 40-char HEAD of the **scaffolding checkout** you generate from (not the target project): `git -C <scaffolding-checkout> rev-parse HEAD`. If the templates were handed over outside a git checkout and no SHA is resolvable, record `"generatedFromSha": null` plus `"shaUnknown": true` and a short `"note"` — `/scaffold-upgrade` falls back to a verbatim-machinery fingerprint.
 - **`posture`** (schema v2) is the **Build posture** the project was generated under — copied from the `Build posture:` line of `{{ARCH_DOC}}`'s executive summary, as confirmed during the interview (never fabricated; if no such line exists, it was asked in §5). `/scaffold-upgrade` uses it to filter **posture-gated** upgrade content (e.g. production-grade phase-exit checklist rows) mechanically; a v1 manifest has no `posture`, so posture-gated content degrades to human-gated there.
 - **`placeholders` / `codeAreas` are exactly the values you substituted** — every resolved token, verbatim. `codeAreas` is an array (one entry per area; a 2nd+ area maps to the `{{CODE_AREA_2}}`… suffix set); `BUILD_CMD` may be `null`.
@@ -539,6 +583,20 @@ Once the user has reviewed:
 ## §10 — Placeholder manifest
 
 Every `{{PLACEHOLDER}}` the templates use. Confirm a value for each during the interview.
+
+### Host axis (DERIVED from `host`, never interviewed)
+
+These are **not** asked in the interview — they are resolved from the manifest's `host` field by the upgrade engine's host token map (`scaffold_upgrade.sh` `host_token_map`) and applied at lowest precedence (a real placeholder of the same name still wins). They appear in templates only at load-bearing path/name spots, inside or alongside `<!-- ▼ HOST [...] ▼ -->` regions. **The `claude` column is the historical literal, so a Claude project renders byte-identically.**
+
+| Placeholder | host = claude | host = codex |
+|---|---|---|
+| `{{ROOT_MEMORY}}` | `CLAUDE.md` | `AGENTS.md` |
+| `{{AREA_MEMORY}}` | `CLAUDE.md` | `AGENTS.md` |
+| `{{COMMANDS_HOME}}` | `.claude/commands/` | `skills/` |
+| `{{HOOKS_CONFIG}}` | `.claude/settings.json` | `config.toml` |
+| `{{USER_GLOBAL_DIR}}` | `~/.claude` | `~/.codex` |
+| `{{PROJECT_DIR_ENV}}` | `CLAUDE_PROJECT_DIR` | `CODEX_PROJECT_DIR` |
+| `{{HOST_NAME}}` | `Claude Code` | `Codex CLI` |
 
 ### Identity & repo
 

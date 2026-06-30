@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Look up a topic in the architecture lookup table and read only that section. Usage: /check-arch <topic>
 allowed-tools: Read, Grep
 argument-hint: "<topic>"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: check-arch
+description: Look up a topic in the architecture lookup table and read only that section. Usage: /check-arch <topic>
+argument-hint: "<topic>"
+---
+<!-- ▲ END HOST ▲ -->
 
 Look up a topic in the area `CLAUDE.md` lookup table and read **only that section** of the cited file (`Read` with `offset`/`limit`). Context-efficiency primitive.
 
