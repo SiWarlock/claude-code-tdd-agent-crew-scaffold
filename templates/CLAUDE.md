@@ -8,6 +8,7 @@
 
 ## Project structure
 
+<!-- ▼ HOST [claude] ▼ -->
 ```
 {{REPO_DIRNAME}}/
 ├── .claude/
@@ -29,6 +30,27 @@
 ├── {{TASK_TRACKER}}                    # Task tracker (state + phase plan)
 └── {{ARCH_DOC}}                        # Architecture / design contract
 ```
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+```
+{{REPO_DIRNAME}}/
+├── skills/                             # Slash-command skills (one SKILL.md per command)
+├── {{CODE_AREA}}                       # {{CODE_AREA_NAME}} code
+│   ├── AGENTS.md                       # Code-area conventions
+│   └── LESSONS.md                      # Banked engineering lessons
+├── docs/
+│   ├── orchestrator-briefing.md        # Loaded by /orchestrate-start
+│   ├── tdd-brief-template.md           # /tdd brief format
+│   ├── scaffolding-reference.md        # Workflow reference (this project's map)
+│   ├── briefs/                         # Numbered /tdd briefs (NNN-<task-id>-<topic>.md)
+│   ├── sessions/                       # Numbered chronological session docs
+│   └── runbooks/                       # Operational procedures
+├── AGENTS.md                           # THIS FILE — global project conventions + shared comm rules
+├── config.toml                         # Codex config (MCP servers + PreToolUse guard hooks)
+├── {{TASK_TRACKER}}                    # Task tracker (state + phase plan)
+└── {{ARCH_DOC}}                        # Architecture / design contract
+```
+<!-- ▲ END HOST ▲ -->
 
 <!-- ▼ EXAMPLE BLOCK [id=project-structure]: project structure — extend the tree with the project's real layout (extra code areas, deliverable docs, eval suites, etc.). Add one row per additional code area; remove team-handoffs/ if generated in single-operator-fallback mode. ▼ -->
 
@@ -94,7 +116,7 @@ Runs as a Claude agent team — a thin **team lead** (human interface, escalatio
 |---|---|---|
 | Team lead | repo root (`{{REPO_DIRNAME}}/`) | this file + `docs/team-protocol.md` (lead playbook only) |
 | Orchestrator | repo root | this file + `docs/orchestrator-briefing.md` |
-| Implementer (per area) | `{{CODE_AREA}}` | this file + that area's `CLAUDE.md` |
+| Implementer (per area) | `{{CODE_AREA}}` | this file + that area's `{{AREA_MEMORY}}` |
 
 <!-- For multi-area projects, add one implementer row per additional area. -->
 
@@ -226,7 +248,7 @@ Policy values: `off` · `invariant` (only invariant- or security-touching slices
 
 <!-- ▲ END EXAMPLE BLOCK [id=key-safety-rules] ▲ -->
 
-## Slash commands (`.claude/commands/`)
+## Slash commands (`{{COMMANDS_HOME}}`)
 
 The harness injects each command's own description — no list is restated here. **Role pairing:** the LEAD runs `/team-start` / `/team-end` (+ `/context-check`); the ORCHESTRATOR runs `/orchestrate-start` / `/orchestrate-end` + `/phase-exit` (+ authors `/tdd` briefs); the IMPLEMENTER runs `/session-start` / `/session-end` + `/tdd` itself. `/preflight`, `/run-tests`, `/check-arch`, `/wired` (+ optional `/eval`, `/trace`) serve any role.
 
@@ -234,6 +256,6 @@ The harness injects each command's own description — no list is restated here.
 
 ## Lessons logged
 
-Lessons start at §1 for this project. The compact index lives in `{{CODE_AREA}}CLAUDE.md`; full prose in `{{CODE_AREA}}LESSONS.md`.
+Lessons start at §1 for this project. The compact index lives in `{{CODE_AREA}}{{AREA_MEMORY}}`; full prose in `{{CODE_AREA}}LESSONS.md`.
 
 Lesson numbers are stable IDs. Never reorder; never reuse a deleted slot.

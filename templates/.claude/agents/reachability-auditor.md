@@ -1,3 +1,4 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 name: reachability-auditor
 description: |
@@ -9,6 +10,17 @@ tools: Read, Grep, Bash, mcp__codegraph__codegraph_context, mcp__codegraph__code
 model: sonnet
 effort: xhigh
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: reachability-auditor
+description: |
+  Automates `/wired` across a whole code area at the phase-exit gate. Walks each exported symbol +
+  production entry point in the area, classifies as reachable or unreachable, and reports the gap
+  list. Runs on-demand by the orchestrator at phase boundaries; not per-slice. Per-slice
+  reachability checks stay with `/tdd` Step 7.5 + `/wired <symbol>`.
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE: .claude/agents/reachability-auditor.md → write to .claude/agents/.

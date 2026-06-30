@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Full preflight gate — sync deps, lint, format-check, type-check, test.
 allowed-tools: Bash, Read
 argument-hint: ""
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: preflight
+description: Full preflight gate — sync deps, lint, format-check, type-check, test.
+argument-hint: ""
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE NOTE (delete when generating):

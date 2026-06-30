@@ -1,3 +1,4 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 name: arch-drift-auditor
 description: |
@@ -10,6 +11,18 @@ tools: Read, Grep, Bash, mcp__codegraph__codegraph_context, mcp__codegraph__code
 model: sonnet
 effort: xhigh
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: arch-drift-auditor
+description: |
+  Audits a phase's shipped code against the architecture contract at the phase-exit gate: reads ONLY
+  the phase's cited `Spec anchors:` sections of the architecture doc and diffs each stated
+  behavior/model against what the code actually does. Green schema-snapshot tests count as
+  verified-by-test (cite + skip); a FAILING snapshot IS the finding. Dispatched by the orchestrator
+  from /phase-exit; read-only; reports to docs/audits/, returns a <=10-line summary + CLEAR/BLOCKED.
+---
+<!-- ▲ END HOST ▲ -->
 
 # arch-drift-auditor — spec-vs-code drift audit at the phase-exit gate
 

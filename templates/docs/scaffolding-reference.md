@@ -8,7 +8,7 @@
 
 # {{PROJECT_NAME}} — Scaffolding Reference
 
-> Project-specific map of this repo's Claude Code scaffolding. Documents what each piece is and how this project adapts the universal agent-team pattern.
+> Project-specific map of this repo's {{HOST_NAME}} scaffolding. Documents what each piece is and how this project adapts the universal agent-team pattern.
 >
 > **For the universal pattern documented end-to-end**, see `SCAFFOLDING-GUIDE.md` (the project-agnostic guide this scaffolding was generated from). This file is the project-specific instance.
 
@@ -65,7 +65,7 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
 
 ## Team pattern (three roles + human)
 
-The full topology, role/cwd/loads table, escalation taxonomy, and naming/cross-bleed rule are **canonical in root `CLAUDE.md` "Team coordination — shared rules"** (+ `docs/team-protocol.md` for the lead). One-line map:
+The full topology, role/cwd/loads table, escalation taxonomy, and naming/cross-bleed rule are **canonical in root `{{ROOT_MEMORY}}` "Team coordination — shared rules"** (+ `docs/team-protocol.md` for the lead). One-line map:
 
 - **Team lead** — thin, durable; `/team-start` + `/team-end`; escalation conduit to the human; stateless between events. Reads progress from the task list + free idle-notifications; pings nobody per-slice.
 - **Orchestrator** — planning, scope, docs, Step-2.5 review, Step-9 routing, commit messages, push, `/orchestrate-end`.
@@ -77,7 +77,7 @@ Orchestrator ↔ implementer communicate **directly** (`SendMessage` for checkpo
 
 ## Slash commands
 
-Command descriptions are injected by the harness per command; root `CLAUDE.md` "Slash commands" keeps only the role pairing. Pairs: lead `/team-start`+`/team-end`; orchestrator `/orchestrate-start`+`/orchestrate-end`; implementer `/session-start`+`/session-end`; plus `/tdd`, `/wired`, `/context-check`, `/preflight`, `/run-tests`, `/check-arch` (+ optional `/eval`, `/trace`). _(Single-operator: no `/team-start`/`/team-end`.)_
+Command descriptions are injected by the harness per command; root `{{ROOT_MEMORY}}` "Slash commands" keeps only the role pairing. Pairs: lead `/team-start`+`/team-end`; orchestrator `/orchestrate-start`+`/orchestrate-end`; implementer `/session-start`+`/session-end`; plus `/tdd`, `/wired`, `/context-check`, `/preflight`, `/run-tests`, `/check-arch` (+ optional `/eval`, `/trace`). _(Single-operator: no `/team-start`/`/team-end`.)_
 
 ---
 
@@ -91,7 +91,7 @@ Command descriptions are injected by the harness per command; root `CLAUDE.md` "
 4. Orchestrator reviews + replies directly (`APPROVED.`/`TWEAK:`/`ADD:`); escalates a safety design Q if needed
 5. Implementer Steps 3-7 (confirm RED → GREEN → refactor → suite)
 6. **Step 7.5 reachability** — confirm wiring from a production entry point (`/wired`)
-7. Step 8 lint+typecheck + **policy-gated** reviewer fan-out (per root `CLAUDE.md` reviewer policy — security on invariant slices, code-quality lite)
+7. Step 8 lint+typecheck + **policy-gated** reviewer fan-out (per root `{{ROOT_MEMORY}}` reviewer policy — security on invariant slices, code-quality lite)
 8. Implementer sends categorized Step-9 flags directly to orchestrator
 9. Orchestrator routes hot (commit-message-first reply); escalates deferments / safety findings / load-bearing architectural calls
 10. Implementer Step 10: commits with the orchestrator-authored message, then **marks the task `completed`** (hash in metadata) + a one-line wake to the orch
@@ -125,9 +125,9 @@ N slice commits + 1 session-doc commit + 1 round commit = **N + 2** per round. P
 <!-- ▼ EXAMPLE BLOCK [id=instance-conventions]: the conventions unique to this project — its architecture sentence (if any), its forbidden patterns, its key safety rules, its layer dependency rule, its cross-doc invariant set. These distinguish this project's instance from the universal pattern. ▼ -->
 
 - **Architecture sentence:** *{{ARCHITECTURE_SENTENCE}}*
-- **Forbidden patterns:** see `{{CODE_AREA}}CLAUDE.md`.
-- **Key safety rules:** see root `CLAUDE.md` "Key safety rules."
-- **Cross-doc invariants:** the `{{CODE_AREA}}CLAUDE.md` table tracks typed models mirroring `{{ARCH_DOC}}` sections. Field changes require atomic doc edits.
+- **Forbidden patterns:** see `{{CODE_AREA}}{{AREA_MEMORY}}`.
+- **Key safety rules:** see root `{{ROOT_MEMORY}}` "Key safety rules."
+- **Cross-doc invariants:** the `{{CODE_AREA}}{{AREA_MEMORY}}` table tracks typed models mirroring `{{ARCH_DOC}}` sections. Field changes require atomic doc edits.
 
 <!-- ▲ END EXAMPLE BLOCK [id=instance-conventions] ▲ -->
 
@@ -137,13 +137,13 @@ N slice commits + 1 session-doc commit + 1 round commit = **N + 2** per round. P
 
 | Concern | Source of truth | Loaded by |
 |---|---|---|
-| Team topology + escalation rules | Root `CLAUDE.md` "Team coordination" + `docs/team-protocol.md` | `/team-start` (lead-specific) |
+| Team topology + escalation rules | Root `{{ROOT_MEMORY}}` "Team coordination" + `docs/team-protocol.md` | `/team-start` (lead-specific) |
 | Current state, "what's done, what's next" | `{{TASK_TRACKER}}` | `/orchestrate-start` + `/session-start` |
 | Technical narrative of just-landed work | Most recent `docs/sessions/<NNN>-*.md` | `/orchestrate-start` |
 | Round ledger (thin pointer-lines) | `{{TASK_TRACKER}}` "Log" | `/orchestrate-start` |
 | Per-slice design audit trail | `docs/briefs/<NNN>-<task-id>-<topic>.md` | On-demand; latest at `/orchestrate-start` |
 | Team-pause handoff state | Most recent `docs/team-handoffs/<NNN>-*.md` | `/team-start` (when resuming) |
-| Conventions / patterns | `{{CODE_AREA}}LESSONS.md` (prose) + `{{CODE_AREA}}CLAUDE.md` (index) | On-demand |
+| Conventions / patterns | `{{CODE_AREA}}LESSONS.md` (prose) + `{{CODE_AREA}}{{AREA_MEMORY}}` (index) | On-demand |
 | Architecture / design contract | `{{ARCH_DOC}}` | On-demand via `/check-arch` |
 | Workflow rules | `docs/orchestrator-briefing.md` (Step-9 matrix canonical); this doc | `/orchestrate-start` |
 | `/tdd` brief format | `docs/tdd-brief-template.md` | Via `/orchestrate-start` |
@@ -155,14 +155,14 @@ The principle: **single source of truth per concern.** Drift between sources is 
 
 ## How to evolve this scaffolding
 
-- **New slash command** → file in `.claude/commands/` + add to root `CLAUDE.md` "Slash commands" + reference in `docs/orchestrator-briefing.md`.
-- **New subagent** → file in `.claude/agents/` + `.claude/agents/README.md` inventory + area `CLAUDE.md` "Subagents".
-- **New lesson** → next anchor in `{{CODE_AREA}}LESSONS.md` + row in the `{{CODE_AREA}}CLAUDE.md` index. Hot-routed at Step 9.
-- **New convention** → entry in `{{CODE_AREA}}CLAUDE.md` Forbidden patterns or root `CLAUDE.md` Key safety rules + a `LESSONS.md` entry if durable.
-- **New cross-doc invariant** → row in the `{{CODE_AREA}}CLAUDE.md` table + atomic `{{ARCH_DOC}}` edit.
-- **New escalation category** → root `CLAUDE.md` "Escalation taxonomy" + `docs/team-protocol.md` "What the lead does NOT do" cross-reference.
+- **New slash command** → file in `{{COMMANDS_HOME}}` + add to root `{{ROOT_MEMORY}}` "Slash commands" + reference in `docs/orchestrator-briefing.md`.
+- **New subagent** → file in `.claude/agents/` + `.claude/agents/README.md` inventory + area `{{AREA_MEMORY}}` "Subagents".
+- **New lesson** → next anchor in `{{CODE_AREA}}LESSONS.md` + row in the `{{CODE_AREA}}{{AREA_MEMORY}}` index. Hot-routed at Step 9.
+- **New convention** → entry in `{{CODE_AREA}}{{AREA_MEMORY}}` Forbidden patterns or root `{{ROOT_MEMORY}}` Key safety rules + a `LESSONS.md` entry if durable.
+- **New cross-doc invariant** → row in the `{{CODE_AREA}}{{AREA_MEMORY}}` table + atomic `{{ARCH_DOC}}` edit.
+- **New escalation category** → root `{{ROOT_MEMORY}}` "Escalation taxonomy" + `docs/team-protocol.md` "What the lead does NOT do" cross-reference.
 
-**Don't** add project *state* to scaffolding files — state lives in `{{TASK_TRACKER}}`. **Don't** rename the cross-referenced files (`{{TASK_TRACKER}}`, the `CLAUDE.md` files, `{{CODE_AREA}}LESSONS.md`, `docs/team-protocol.md`, `docs/orchestrator-briefing.md`, `docs/tdd-brief-template.md`) casually — they're named inside slash command bodies; renaming is a multi-file ripple.
+**Don't** add project *state* to scaffolding files — state lives in `{{TASK_TRACKER}}`. **Don't** rename the cross-referenced files (`{{TASK_TRACKER}}`, the `{{ROOT_MEMORY}}` files, `{{CODE_AREA}}LESSONS.md`, `docs/team-protocol.md`, `docs/orchestrator-briefing.md`, `docs/tdd-brief-template.md`) casually — they're named inside slash command bodies; renaming is a multi-file ripple.
 
 ---
 

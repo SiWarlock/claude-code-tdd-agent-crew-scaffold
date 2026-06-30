@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Orchestrator-only — execute the phase-exit checklist for a phase, row by row, ticking each as it passes. Usage: /phase-exit <phase-id>
 allowed-tools: Read, Grep, Bash, Agent, Edit
 argument-hint: "<phase-id>"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: phase-exit
+description: Orchestrator-only — execute the phase-exit checklist for a phase, row by row, ticking each as it passes. Usage: /phase-exit <phase-id>
+argument-hint: "<phase-id>"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE NOTE (delete when generating):
@@ -33,7 +42,7 @@ Map each row to its executor. The canonical mappings:
 | All phase task checkboxes ticked | Read the phase section; verify every `- [ ]` under its tasks is `[x]` (or carries a partial-note + Log entry) |
 | Acceptance criterion met | Judgment check against the phase's `Acceptance criteria` block; run the named smoke if one exists |
 | `/preflight` clean | Run `/preflight` **per touched code area** |
-| Cross-doc invariants verified | Diff Appendix A + area `CLAUDE.md` table vs the phase's model changes |
+| Cross-doc invariants verified | Diff Appendix A + area `{{AREA_MEMORY}}` table vs the phase's model changes |
 | Reachability audit clean per touched area | Dispatch `reachability-auditor` (one per touched area) |
 | Arch-drift audit clean over the phase's Spec anchors | Dispatch `arch-drift-auditor` with the phase's `Spec anchors:` list |
 | Spec coverage (tagged test or waiver per anchor) | `scripts/spec-lint.sh tests $ARGUMENTS` via Bash |

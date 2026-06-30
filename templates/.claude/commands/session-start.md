@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Implementer-only — initialize an implementer session; read the task tracker, summarize, confirm scope.
 allowed-tools: Read, Grep
 argument-hint: ""
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: session-start
+description: Implementer-only — initialize an implementer session; read the task tracker, summarize, confirm scope.
+argument-hint: ""
+---
+<!-- ▲ END HOST ▲ -->
 
 > **Role guard — IMPLEMENTER sessions only.** If you are the **orchestrator**, stop: run `/orchestrate-start`, not this. The `/session-start` + `/session-end` pair is the **implementer's**; `/orchestrate-start` + `/orchestrate-end` are the **orchestrator's**.
 
@@ -15,7 +24,7 @@ Procedure:
    - the last ~2 **Log** entries (tail)
    - **"Decisions tabled"**
 
-2. If working in a code area, also read its `CLAUDE.md` lookup table so you know where canonical answers live.
+2. If working in a code area, also read its `{{AREA_MEMORY}}` lookup table so you know where canonical answers live.
 
 3. Summarize back to the user in 4–8 lines:
    - What phase + tasks were in progress

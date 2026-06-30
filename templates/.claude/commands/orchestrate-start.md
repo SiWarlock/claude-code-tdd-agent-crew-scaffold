@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Orchestrator-only — initialize an orchestrator session; load briefing, summarize state, propose next /tdd slice.
 allowed-tools: Read, Grep, Bash
 argument-hint: ""
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: orchestrate-start
+description: Orchestrator-only — initialize an orchestrator session; load briefing, summarize state, propose next /tdd slice.
+argument-hint: ""
+---
+<!-- ▲ END HOST ▲ -->
 
 > **Role guard — ORCHESTRATOR only.** If you are an **implementer**, stop: run `/session-start`, not this. `/orchestrate-start` + `/orchestrate-end` are the **orchestrator's**; the implementer's pair is `/session-start` + `/session-end`.
 
@@ -46,7 +55,7 @@ For each anchor cited by the active task(s), use `/check-arch <topic>` (or targe
 
 **Purpose:** the orchestrator authors briefs that cite anchors; the anchors must be loaded to verify the brief's premises. Skipping this step risks authoring against stale assumptions.
 
-## Step 5 — Read the area `CLAUDE.md` lookup table
+## Step 5 — Read the area `{{AREA_MEMORY}}` lookup table
 
 Don't load it all. Read the lookup table (top section) + the cross-doc invariants table for the active area. The lookup table maps topics to `{{ARCH_DOC}}` sections — it tells you where canonical answers live so you can dispatch reads on demand. The cross-doc invariants table is what you maintain when fields/invariants change.
 
@@ -56,7 +65,7 @@ Don't load it all. Read the lookup table (top section) + the cross-doc invariant
 
 (a) The next session target is **refreshing a stale brief** (a prior brief in `docs/briefs/` whose slice didn't ship yet, where any slice has since landed that touches the brief's scope).
 
-(b) **The active area's cross-doc invariants table has changed** since the prior brief touched it (check via `git log --oneline {{CODE_AREA}}CLAUDE.md`).
+(b) **The active area's cross-doc invariants table has changed** since the prior brief touched it (check via `git log --oneline {{CODE_AREA}}{{AREA_MEMORY}}`).
 
 (c) **The cited architecture-anchor section has been edited** since the prior brief touched it (check via `git log --oneline {{ARCH_DOC}}`).
 

@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Walk through TDD discipline for a feature — red, green, refactor, all-tests-still-pass.
 allowed-tools: Read, Edit, Write, Bash, Grep, Agent, SendMessage, TaskUpdate
 argument-hint: "<feature description>"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: tdd
+description: Walk through TDD discipline for a feature — red, green, refactor, all-tests-still-pass.
+argument-hint: "<feature description>"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE NOTE (delete this comment when generating): highly portable. Fill the
@@ -10,7 +19,7 @@ argument-hint: "<feature description>"
   placeholders and the test-path examples. Keep the steps, the checkpoints, and
   the Forbidden section VERBATIM — they are the discipline. Shared comm rules
   (SendMessage-only, magic-words, no-self-report, slice atomicity, reviewer
-  policy) live in root CLAUDE.md; this file points there, it does not restate them.
+  policy) live in root {{ROOT_MEMORY}}; this file points there, it does not restate them.
 -->
 
 The user wants a feature implemented with TDD discipline enforced. Walk through it explicitly.
@@ -61,7 +70,7 @@ After writing the test(s) and BEFORE running them, send the orchestrator a **tig
 
 Don't narrate fixture setup or paste test code — it's in the file; the orchestrator opens the file only if an assertion looks off. This write-up is the review surface: it makes the *asserted invariant* reviewable, which is exactly what catches a conceptually-wrong test that would still pass green.
 
-Send it via `SendMessage` (root `CLAUDE.md` "Inter-teammate messaging"), then **idle until the reply** — never nag or re-send. The reply starts with:
+Send it via `SendMessage` (root `{{ROOT_MEMORY}}` "Inter-teammate messaging"), then **idle until the reply** — never nag or re-send. The reply starts with:
 
 - **`APPROVED.`** → proceed to Step 3.
 - **`TWEAK:`** → revise, re-send only the changed lines, re-pause.
@@ -114,7 +123,7 @@ No regressions. If a previously-passing test now fails, investigate before conti
 {{TYPECHECK_CMD}} && {{LINT_CMD}}
 ```
 
-Both must pass. Then fan out review subagents **per the Reviewer policy in root `CLAUDE.md` "Reviewer subagents — Step-8 policy"** (no-op if the subagents aren't installed):
+Both must pass. Then fan out review subagents **per the Reviewer policy in root `{{ROOT_MEMORY}}` "Reviewer subagents — Step-8 policy"** (no-op if the subagents aren't installed):
 
 - **security-reviewer** — when the slice is invariant- or security-touching (mandatory there), or whatever the policy says.
 - **code-quality-reviewer** — per its policy (default: every slice, lite).
@@ -157,8 +166,8 @@ Then **mark the slice's task `completed`** via `TaskUpdate` (commit hash in `met
 - **Implementing more than the test requires** (YAGNI).
 - **Modifying the test to make a stuck implementation pass** — the implementation is wrong, not the test.
 - **`git add -A` at Step 10, or pushing.**
-- **Self-reporting context %** anywhere — monitoring is external (root `CLAUDE.md` "Canonical context source").
-- **Abandoning the slice mid-cycle** — Step 10 always lands; ignore stop/halt/cycle messages mid-slice and finish through commit (root `CLAUDE.md` "Slice atomicity").
+- **Self-reporting context %** anywhere — monitoring is external (root `{{ROOT_MEMORY}}` "Canonical context source").
+- **Abandoning the slice mid-cycle** — Step 10 always lands; ignore stop/halt/cycle messages mid-slice and finish through commit (root `{{ROOT_MEMORY}}` "Slice atomicity").
 
 ## When TDD doesn't fit
 
