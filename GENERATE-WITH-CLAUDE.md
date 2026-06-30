@@ -151,6 +151,14 @@ Record the answer as `host` (`claude` | `codex`) in the manifest. **host default
 
 The host selects, per generated file, which **HOST marker region** (`<!-- ▼ HOST [claude] ▼ -->` / `<!-- ▼ HOST [codex] ▼ -->`) survives and which **host-derived tokens** (`{{ROOT_MEMORY}}`, `{{COMMANDS_HOME}}`, `{{HOOKS_CONFIG}}`, `{{USER_GLOBAL_DIR}}`, `{{PROJECT_DIR_ENV}}`, `{{HOST_NAME}}`, `{{AREA_MEMORY}}`) resolve to (see §10). The same `templates/` tree generates both hosts; you do not maintain a second tree.
 
+#### §4.0b — (host = codex only) the EXPERIMENTAL team overlay opt-in
+
+After choosing `codex`, the **default** is the supported **solo core** (the layout above; mode `single-operator`). Only if the user explicitly asks for the experimental multi-agent overlay, ask a second, clearly-worded `AskUserQuestion`:
+
+> *"Generate the **EXPERIMENTAL** Codex multi-agent team overlay? It is built on Codex's unstable `collaboration_mode`/`spawn_agent` v2 APIs (no native worktree isolation; `codex exec` exits 0 on failure; `--output-schema` only on the gpt-5 family; no context-% signal). It is OFF by default and falls back to solo on any preflight failure. Recommended: **No** — use the solo core. See `docs/codex/team-overlay.md`."*
+
+Default **No**. Only on an explicit **Yes** do you set the manifest's `"codex_team_experimental": true` **and** `"mode": "team"`, and additionally emit the overlay artifacts: `config.toml` from `templates/config.codex.team.toml` (instead of `templates/config.codex.toml`); `.codex/agents/<role>.toml` from `templates/.codex/agents/*`; `.codex/hooks/subagent-{start,stop}.sh`; `scripts/codex-team-preflight.sh`; and the Codex `/team-start` + `/team-end` skills from `templates/.codex/skills/*`. **This is a two-switch gate** — even when generated, the overlay stays dormant until Codex's runtime `collaboration_mode`/`effort=ultra` is enabled. Carry the WIP banner into the generated `AGENTS.md` team section.
+
 ### §4.1 — Mode choice: team pattern or single-operator?
 
 **If host = codex, skip this question — mode is `single-operator`** (the team overlay is a separate, opt-in, experimental path). For **host = claude**, ask the user via `AskUserQuestion`:
