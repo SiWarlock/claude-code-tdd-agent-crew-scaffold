@@ -323,6 +323,12 @@ cc-crew's agent-team engine is in **active use** in real projects; the planning 
 newer cross-model + provenance layers around it. The composed plugins (CE, gstack), Ultracode, and the MCP
 tools are optional and degrade gracefully when absent.
 
+The **Codex host axis** (generate for Claude Code **or** Codex CLI from one templates tree) is newer: the
+Codex **solo core** is verified end-to-end by a dedicated upgrade dry-run fixture (`tests/fixtures/upgrade-dryrun-codex/`).
+The **Codex multi-agent team overlay** is **EXPERIMENTAL / WIP** — built on Codex's unstable
+`collaboration_mode`/`spawn_agent` APIs, OFF by default, with a solo fallback; treat it as a preview and
+re-validate per Codex release (`docs/codex/team-overlay.md`).
+
 ---
 
 ## License

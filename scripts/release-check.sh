@@ -84,6 +84,24 @@ cmd_census() {
   else
     bad "opener/closer id mismatch: $(diff <(echo "$oids") <(echo "$cids") | grep '^[<>]' | tr '\n' ' ')"
   fi
+
+  # ---- HOST marker class (Codex host axis; template-only, stripped at build) --------------------
+  # Unlike EXAMPLE BLOCK ids, HOST regions repeat the host label ([claude]/[codex]) — balance, not id set.
+  local hopen hclose
+  hopen=$(grep -rh '▼ HOST \[' templates/ | wc -l | tr -d ' ')
+  hclose=$(grep -rh 'END HOST' templates/ | wc -l | tr -d ' ')
+  [ "$hopen" -eq "$hclose" ] \
+    && ok "HOST marker balance: $hopen openers / $hclose closers" \
+    || bad "HOST marker imbalance: $hopen openers vs $hclose closers"
+  local badlabels
+  badlabels=$(grep -rho '▼ HOST \[[^]]*\]' templates/ | sed 's/.*\[//; s/\].*//' | tr '|' '\n' | sort -u | grep -vE '^(claude|codex)$' || true)
+  [ -z "$badlabels" ] && ok "HOST region labels are claude|codex only" || bad "unknown HOST label(s): $(echo "$badlabels" | tr '\n' ' ')"
+  # the engine's host_token_map must define all 7 host-derived tokens (so no HOST token renders unresolved)
+  local SUS="skills/scaffold-upgrade/scripts/scaffold_upgrade.sh" tok miss=""
+  for tok in ROOT_MEMORY AREA_MEMORY HOOKS_CONFIG COMMANDS_HOME USER_GLOBAL_DIR PROJECT_DIR_ENV HOST_NAME; do
+    grep -q "printf '%s\\\\t%s\\\\n' $tok " "$SUS" || miss="$miss $tok"
+  done
+  [ -z "$miss" ] && ok "host_token_map defines all 7 host-derived tokens" || bad "host_token_map missing token(s):$miss"
 }
 
 # ---- migrations ----------------------------------------------------------------------------------
@@ -122,6 +140,14 @@ cmd_migrations() {
     local mid; mid=$(basename "$f" | grep -oE '^M-[0-9]{4}')
     echo "$ids" | grep -qx "$mid" && ok "$f registered" || bad "$f has no registry entry"
   done
+
+  # optional per-migration `hosts` filter (schema v3): values must be claude|codex
+  local badhosts
+  badhosts=$(jq -r '.migrations[] | select(.hosts) | .hosts[]' "$reg" 2>/dev/null | sort -u | grep -vE '^(claude|codex)$' || true)
+  [ -z "$badhosts" ] && ok "migration 'hosts' values are claude|codex only" || bad "invalid migration 'hosts' value(s): $(echo "$badhosts" | tr '\n' ' ')"
+  local badhostsarr
+  badhostsarr=$(jq -r '.migrations[] | select(has("hosts")) | select((.hosts|type)!="array") | .id' "$reg" 2>/dev/null || true)
+  [ -z "$badhostsarr" ] && ok "migration 'hosts' fields are arrays" || bad "migration 'hosts' not an array: $badhostsarr"
 }
 
 # ---- upgrade-dryrun (wired by W1-9) ----------------------------------------------------------------
