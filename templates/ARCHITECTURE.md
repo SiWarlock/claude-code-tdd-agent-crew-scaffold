@@ -4,13 +4,13 @@
   headings with 1-2 sentence stubs. Do NOT write the architecture; it accretes as
   decisions land. Fill the section list from the user's Batch-E answer. Keep
   Appendix A — it is the canonical home for the cross-doc invariant model
-  inventory that the area CLAUDE.md table points at. Delete this comment.
+  inventory that the area memory file (CLAUDE.md / AGENTS.md) table points at. Delete this comment.
 
   HOW THIS DOC IS USED (carry this discipline into the project):
-   - Loaded ON DEMAND, never whole. Sessions reach it via the area CLAUDE.md
+   - Loaded ON DEMAND, never whole. Sessions reach it via the area memory file's
      lookup table + `/check-arch <topic>`, which read only the cited section.
    - It is a CONTRACT. Typed models that mirror a section are listed in the area
-     CLAUDE.md cross-doc invariants table; a field change requires an edit to the
+     memory file's cross-doc invariants table; a field change requires an edit to the
      matching section in the same round of commits.
    - Orchestrator territory. The implementer never edits it directly — they flag
      a cross-doc change at /tdd Step 9; the orchestrator writes it hot.
@@ -90,7 +90,7 @@ new ones get added as they surface.>
 
 <!-- Orchestrator-owned, like Appendix A: maintained in the SAME round of commits as the §-section
      edits it indexes. SCALE-DOWN: if planning produced no REQ-* IDs, delete this section entirely.
-     NOTE: when a topic later earns an area CLAUDE.md lookup-table row, this index is what you copy
+     NOTE: when a topic later earns an area memory file (CLAUDE.md / AGENTS.md) lookup-table row, this index is what you copy
      FROM — do NOT seed that lookup table at generation (it stays near-empty by rule; pre-filling
      invents state). -->
 
@@ -104,7 +104,7 @@ line — tasks do not restate REQ IDs.
 
 ## Appendix A — Model / contract inventory
 
-The canonical home for every typed model that is a **cross-doc invariant** — mirrored in the area `CLAUDE.md` cross-doc invariants table. A field change on any model here requires an edit to this appendix (and the model's `§` section) in the same round of commits. **A model whose `§` is crossed by a §2.5 dependency edge is a *shared contract across tracks*** — freeze it before parallel build tracks fork (the cross-worktree coordination rule in `docs/team-protocol.md`).
+The canonical home for every typed model that is a **cross-doc invariant** — mirrored in the area memory file's (CLAUDE.md / AGENTS.md) cross-doc invariants table. A field change on any model here requires an edit to this appendix (and the model's `§` section) in the same round of commits. **A model whose `§` is crossed by a §2.5 dependency edge is a *shared contract across tracks*** — freeze it before parallel build tracks fork (the cross-worktree coordination rule in `docs/team-protocol.md`).
 
 | Model | Section | Fields (summary) |
 |---|---|---|

@@ -1,13 +1,22 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Pull a structured trace for a given id and format it for inspection. Usage: /trace <id>
 allowed-tools: Bash, Read, Grep
 argument-hint: "<id>"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: trace
+description: Pull a structured trace for a given id and format it for inspection. Usage: /trace <id>
+argument-hint: "<id>"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   OPTIONAL COMMAND. Generate this file ONLY if the project has structured traces
   worth a dedicated lookup command (observability-heavy projects). If not, DELETE
-  this file and remove its row from the area CLAUDE.md + briefing command lists.
+  this file and remove its row from the area memory file ({{AREA_MEMORY}}) + briefing command lists.
 
   This body is heavily project-shaped. The structure below — local lookup →
   fallback to the observability platform → format the lifecycle → surface failure

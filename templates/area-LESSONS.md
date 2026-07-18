@@ -7,7 +7,7 @@
 
 # LESSONS.md — {{PROJECT_NAME}} ({{CODE_AREA_NAME}})
 
-> Full prose for every lesson logged during work in `{{CODE_AREA}}`. The compact index lives in `{{CODE_AREA}}CLAUDE.md` "Lessons logged" table.
+> Full prose for every lesson logged during work in `{{CODE_AREA}}`. The compact index lives in `{{CODE_AREA}}{{AREA_MEMORY}}` "Lessons logged" table.
 >
 > **Lesson numbers are stable IDs.** New lessons get the next sequential number. Numbers may be referenced from code comments, commit messages, and cross-references between lessons. **Don't reorder; don't reuse a deleted number's slot.**
 >

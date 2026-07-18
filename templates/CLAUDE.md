@@ -8,6 +8,7 @@
 
 ## Project structure
 
+<!-- ▼ HOST [claude] ▼ -->
 ```
 {{REPO_DIRNAME}}/
 ├── .claude/
@@ -29,6 +30,29 @@
 ├── {{TASK_TRACKER}}                    # Task tracker (state + phase plan)
 └── {{ARCH_DOC}}                        # Architecture / design contract
 ```
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+```
+{{REPO_DIRNAME}}/
+├── .agents/
+│   └── skills/                         # Slash-command skills (one SKILL.md per command)
+├── .codex/
+│   └── config.toml                     # Codex config (MCP servers + PreToolUse guard hooks)
+├── {{CODE_AREA}}                       # {{CODE_AREA_NAME}} code
+│   ├── AGENTS.md                       # Code-area conventions
+│   └── LESSONS.md                      # Banked engineering lessons
+├── docs/
+│   ├── orchestrator-briefing.md        # Loaded by /orchestrate-start
+│   ├── tdd-brief-template.md           # /tdd brief format
+│   ├── scaffolding-reference.md        # Workflow reference (this project's map)
+│   ├── briefs/                         # Numbered /tdd briefs (NNN-<task-id>-<topic>.md)
+│   ├── sessions/                       # Numbered chronological session docs
+│   └── runbooks/                       # Operational procedures
+├── AGENTS.md                           # THIS FILE — global project conventions + shared comm rules
+├── {{TASK_TRACKER}}                    # Task tracker (state + phase plan)
+└── {{ARCH_DOC}}                        # Architecture / design contract
+```
+<!-- ▲ END HOST ▲ -->
 
 <!-- ▼ EXAMPLE BLOCK [id=project-structure]: project structure — extend the tree with the project's real layout (extra code areas, deliverable docs, eval suites, etc.). Add one row per additional code area; remove team-handoffs/ if generated in single-operator-fallback mode. ▼ -->
 
@@ -87,6 +111,9 @@ If this workspace has these tools, **prefer them** — they cut tool calls and c
 - **Library / API docs** (e.g. a Context7 MCP): when you need up-to-date library/framework docs, API references, setup/config steps, or version-correct examples, pull them from the docs MCP rather than relying on memory — **without being asked**.
 
 ## Team coordination — shared rules (all roles)
+<!-- ▼ HOST [codex] ▼ -->
+> ⚠️ **EXPERIMENTAL — Codex team overlay (WIP).** On Codex the supported path is the **solo core** (run `/tdd` directly in this session). The team-coordination rules below describe the Claude agent-team model; on Codex they apply only through the **opt-in, unstable** multi-agent overlay (root-session-as-lead → orchestrator → per-slice implementer), which is OFF by default and falls back to solo on any failure. Before relying on any team rule here, read **`docs/codex/team-overlay.md`** for how it re-expresses onto `spawn_agent`/`collaboration_mode` and its caveats.
+<!-- ▲ END HOST ▲ -->
 
 Runs as a Claude agent team — a thin **team lead** (human interface, escalation conduit only, persists across cycles), an **orchestrator** (plan/scope/docs/Step-2.5 review/Step-9 routing/commits), and **one implementer per code area** (TDD cycles). Orchestrator ↔ implementer communicate **directly**; lead is pulled in only for escalations + the close-out gate.
 
@@ -94,7 +121,7 @@ Runs as a Claude agent team — a thin **team lead** (human interface, escalatio
 |---|---|---|
 | Team lead | repo root (`{{REPO_DIRNAME}}/`) | this file + `docs/team-protocol.md` (lead playbook only) |
 | Orchestrator | repo root | this file + `docs/orchestrator-briefing.md` |
-| Implementer (per area) | `{{CODE_AREA}}` | this file + that area's `CLAUDE.md` |
+| Implementer (per area) | `{{CODE_AREA}}` | this file + that area's `{{AREA_MEMORY}}` |
 
 <!-- For multi-area projects, add one implementer row per additional area. -->
 
@@ -226,7 +253,7 @@ Policy values: `off` · `invariant` (only invariant- or security-touching slices
 
 <!-- ▲ END EXAMPLE BLOCK [id=key-safety-rules] ▲ -->
 
-## Slash commands (`.claude/commands/`)
+## Slash commands (`{{COMMANDS_HOME}}`)
 
 The harness injects each command's own description — no list is restated here. **Role pairing:** the LEAD runs `/team-start` / `/team-end` (+ `/context-check`); the ORCHESTRATOR runs `/orchestrate-start` / `/orchestrate-end` + `/phase-exit` (+ authors `/tdd` briefs); the IMPLEMENTER runs `/session-start` / `/session-end` + `/tdd` itself. `/preflight`, `/run-tests`, `/check-arch`, `/wired` (+ optional `/eval`, `/trace`) serve any role.
 
@@ -234,6 +261,6 @@ The harness injects each command's own description — no list is restated here.
 
 ## Lessons logged
 
-Lessons start at §1 for this project. The compact index lives in `{{CODE_AREA}}CLAUDE.md`; full prose in `{{CODE_AREA}}LESSONS.md`.
+Lessons start at §1 for this project. The compact index lives in `{{CODE_AREA}}{{AREA_MEMORY}}`; full prose in `{{CODE_AREA}}LESSONS.md`.
 
 Lesson numbers are stable IDs. Never reorder; never reuse a deleted slot.

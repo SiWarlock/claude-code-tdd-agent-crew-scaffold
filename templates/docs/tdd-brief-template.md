@@ -30,7 +30,7 @@ Every `/tdd` brief is authored as a **file** in `docs/briefs/`, not just pasted 
 
 **Naming:** `docs/briefs/NNN-<task-id>-<short-topic>.md` — e.g. `024-P3-2-payment-retry-logic.md`.
 
-- **`NNN`** — a stable, zero-padded, sequential id on its own counter (parallel to `docs/sessions/`). Compute it the way session docs do: `ls docs/briefs/`, find the highest `NNN` prefix, increment. Numbers are stable IDs — never reused, never reordered. **Multi-track mode (the orchestrator carries a `<track>-` name prefix): prefix the filename with the track** — `docs/briefs/<track>-NNN-<task-id>-<topic>.md` — and compute `NNN` within the track (`ls docs/briefs/<track>-*`), so parallel tracks' briefs don't collide on merge (root `CLAUDE.md` "Naming + cross-bleed prevention").
+- **`NNN`** — a stable, zero-padded, sequential id on its own counter (parallel to `docs/sessions/`). Compute it the way session docs do: `ls docs/briefs/`, find the highest `NNN` prefix, increment. Numbers are stable IDs — never reused, never reordered. **Multi-track mode (the orchestrator carries a `<track>-` name prefix): prefix the filename with the track** — `docs/briefs/<track>-NNN-<task-id>-<topic>.md` — and compute `NNN` within the track (`ls docs/briefs/<track>-*`), so parallel tracks' briefs don't collide on merge (root `{{ROOT_MEMORY}}` "Naming + cross-bleed prevention").
 - **`<task-id>`** — the `{{TASK_TRACKER}}` task this brief implements. Ties the brief to its phase.
 - **`<short-topic>`** — kebab-case feature topic.
 
@@ -88,13 +88,13 @@ Tests to write in `<test_path>`:
 
 ## Cross-doc invariant impact (implementer flags at Step 9; orchestrator writes the docs)
 - **Model field changes:** <none / list of contract models touched>
-- **Orchestrator doc rows to write hot (Step 9 routing):** <none / which `{{CODE_AREA}}CLAUDE.md` cross-doc rows + `{{ARCH_DOC}}` Appendix A rows the orchestrator authors atomic with the round>
+- **Orchestrator doc rows to write hot (Step 9 routing):** <none / which `{{CODE_AREA}}{{AREA_MEMORY}}` cross-doc rows + `{{ARCH_DOC}}` Appendix A rows the orchestrator authors atomic with the round>
 - **§2.5-seam (shared-contract) model touched?** If this slice's NEW/extended invariant touches an
   Appendix-A model whose `§` is crossed by a `§2.5` dependency edge, the RED outline MUST include the
   **schema-snapshot test** (model field-name set == checked-in snapshot, tagged `spec(§X)`) — the
   implementer authors it in this same `/tdd` cycle; Step 2.5 reviews it like any test.
 
-> **Orchestrator territory** (canonical list: the `{{CODE_AREA}}CLAUDE.md` "must NOT touch" list — hook-enforced in team mode): flag at Step 9 categorized; the orchestrator writes hot during the same session and commits at `/orchestrate-end`.
+> **Orchestrator territory** (canonical list: the `{{CODE_AREA}}{{AREA_MEMORY}}` "must NOT touch" list — hook-enforced in team mode): flag at Step 9 categorized; the orchestrator writes hot during the same session and commits at `/orchestrate-end`.
 
 ## Things to flag at Step 2.5
 Open design questions the implementer should surface before going GREEN. Pre-loaded with default votes — the implementer can take defaults or ping back with disagreement.
@@ -114,7 +114,7 @@ Open design questions the implementer should surface before going GREEN. Pre-loa
 - All features touch the same code area
 - Total size is manageable (rough heuristic: < 100 lines added, < 30 min of TDD work)
 - Features share context (similar setup, related concepts, overlapping test files)
-- None of the features touch a safety invariant (per root `CLAUDE.md` "Key safety rules")
+- None of the features touch a safety invariant (per root `{{ROOT_MEMORY}}` "Key safety rules")
 - Bisectability stays meaningful (the bundle is one logical unit)
 - A reviewer can grok the whole thing in one sitting
 

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 3,
+  "scaffoldingRepo": "local-fixture",
+  "generatedFromSha": "1d7744b41d7bea37b575c9810ffa2b53c2c05c61",
+  "generatedFromRef": "feat/codex-host-axis",
+  "generatorModel": "fixture-authoring (Codex host axis)",
+  "generatedAt": "2026-06-30T00:00:00Z",
+  "lastUpgradedFromSha": null,
+  "lastUpgradedAt": null,
+
+  "host": "codex",
+  "mode": "single-operator",
+  "track": null,
+  "posture": "MVP/prototype",
+  "optionalCommands": [],
+  "optionalSubagents": [],
+
+  "placeholders": {
+    "PROJECT_NAME": "CodexFixtureTracker",
+    "PROJECT_TAGLINE": "a tiny generated Codex project used to dry-run /scaffold-upgrade",
+    "REPO_DIRNAME": "codex-fixture-tracker",
+    "ARCH_DOC": "ARCHITECTURE.md",
+    "TASK_TRACKER": "IMPLEMENTATION_PLAN.md",
+    "AI_TRAILER": "Co-Authored-By: Codex <noreply@openai.com>",
+    "GIT_REMOTE": "origin",
+    "ARCHITECTURE_SENTENCE": "A FastAPI service with a typed core and thin IO edges.",
+    "PHASE_IDS": "P0, P1",
+    "RUNTIME": "Python 3.12",
+    "FRAMEWORK": "FastAPI",
+    "VALIDATION_LIB": "Pydantic v2",
+    "LINT": "ruff",
+    "TYPECHECKER": "mypy",
+    "TEST_RUNNER": "pytest",
+    "PKG_MANAGER": "uv",
+    "CODE_AREA": "app/",
+    "CODE_AREA_NAME": "backend",
+    "CODE_AREA_BASENAME": "app",
+    "INSTALL_CMD": "uv sync",
+    "TEST_CMD": "uv run pytest",
+    "TEST_CMD_SINGLE_FILE": "uv run pytest {file}",
+    "TYPECHECK_CMD": "uv run mypy app",
+    "LINT_CMD": "uv run ruff check app",
+    "FORMAT_CHECK_CMD": "uv run ruff format --check app",
+    "DEV_CMD": "uv run uvicorn app.main:app --reload"
+  },
+  "codeAreas": [
+    {
+      "CODE_AREA": "app/",
+      "CODE_AREA_NAME": "backend",
+      "CODE_AREA_BASENAME": "app",
+      "RUNTIME": "Python 3.12",
+      "PKG_MANAGER": "uv",
+      "INSTALL_CMD": "uv sync",
+      "TEST_CMD": "uv run pytest",
+      "TEST_CMD_SINGLE_FILE": "uv run pytest {file}",
+      "TYPECHECK_CMD": "uv run mypy app",
+      "LINT_CMD": "uv run ruff check app",
+      "FORMAT_CHECK_CMD": "uv run ruff format --check app",
+      "DEV_CMD": "uv run uvicorn app.main:app --reload",
+      "BUILD_CMD": null
+    }
+  ],
+
+  "generatedFiles": [
+    { "dest": "AGENTS.md", "template": "templates/CLAUDE.md", "kind": "mixed" },
+    { "dest": "app/AGENTS.md", "template": "templates/area-CLAUDE.md", "kind": "mixed", "area": "app/" },
+    { "dest": "app/LESSONS.md", "template": "templates/area-LESSONS.md", "kind": "accreted", "area": "app/" },
+    { "dest": "IMPLEMENTATION_PLAN.md", "template": "templates/IMPLEMENTATION_PLAN.md", "kind": "accreted" },
+    { "dest": ".agents/skills/tdd/SKILL.md", "template": "templates/.claude/commands/tdd.md", "kind": "placeholder-only", "area": "app/" },
+    { "dest": ".agents/skills/check-arch/SKILL.md", "template": "templates/.claude/commands/check-arch.md", "kind": "placeholder-only", "area": "app/" },
+    { "dest": ".codex/config.toml", "template": "templates/config.codex.toml", "kind": "verbatim" }
+  ],
+  "exampleBlocks": [
+    { "file": "AGENTS.md", "id": "project-structure", "status": "illustrative" },
+    { "file": "AGENTS.md", "id": "tech-stack", "status": "customized" },
+    { "file": "AGENTS.md", "id": "strict-typing-posture", "status": "illustrative" },
+    { "file": "AGENTS.md", "id": "tdd-scope", "status": "illustrative" },
+    { "file": "AGENTS.md", "id": "key-safety-rules", "status": "customized" },
+    { "file": "app/AGENTS.md", "id": "area-stack", "status": "customized" },
+    { "file": "app/AGENTS.md", "id": "forbidden-patterns", "status": "illustrative" },
+    { "file": "app/AGENTS.md", "id": "module-layout", "status": "illustrative" },
+    { "file": "app/AGENTS.md", "id": "area-subagent-candidates", "status": "illustrative" }
+  ]
+}

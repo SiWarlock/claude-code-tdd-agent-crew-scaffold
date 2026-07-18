@@ -1,8 +1,17 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Trace a feature's call path from a production entry point; report reachable or unreachable. Usage: /wired <feature>
 allowed-tools: Read, Grep, Bash, mcp__codegraph__codegraph_context, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_trace, mcp__codegraph__codegraph_impact, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_files, mcp__context7__resolve-library-id, mcp__context7__query-docs
 argument-hint: "<feature / symbol / file>"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: wired
+description: Trace a feature's call path from a production entry point; report reachable or unreachable. Usage: /wired <feature>
+argument-hint: "<feature / symbol / file>"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   TEMPLATE NOTE (delete when generating):

@@ -1,13 +1,22 @@
+<!-- ▼ HOST [claude] ▼ -->
 ---
 description: Run a named eval class. Usage: /eval [category]
 allowed-tools: Bash, Read
 argument-hint: "[category|all]"
 ---
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+---
+name: eval
+description: Run a named eval class. Usage: /eval [category]
+argument-hint: "[category|all]"
+---
+<!-- ▲ END HOST ▲ -->
 
 <!--
   OPTIONAL COMMAND. Generate this file ONLY if the project has an eval / test-suite
   class worth a dedicated runner command (eval-driven projects). If not, DELETE
-  this file and remove its row from the area CLAUDE.md + briefing command lists.
+  this file and remove its row from the area memory file ({{AREA_MEMORY}}) + briefing command lists.
 
   This body is heavily project-shaped. The structure below — argument list →
   mapping table → pre-flight checks → output format → forbidden — is the reusable
