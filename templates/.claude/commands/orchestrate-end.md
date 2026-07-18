@@ -95,7 +95,7 @@ This step runs BEFORE the round commit (Step 7) so triage outcomes land in the s
 
 Decision criterion: did substantial *orchestrator-side* work land this round? Substantial = scaffolding refactor, deploy ops, infrastructure changes, big planning shifts, or a session that ran orchestrator-only with no `/tdd` cycles.
 
-If YES → create `docs/sessions/<NNN>-<date>-<topic>.md` (next sequential NNN, shared sequence with implementer docs; **track-prefixed `<track>-<NNN>-…` in multi-track mode**, same track as your implementer's docs — root `{{ROOT_MEMORY}}` "Naming + cross-bleed prevention"). Update the predecessor session doc's Successor link.
+If YES → create `docs/sessions/<NNN>-<date>-<topic>.md` (next sequential NNN, shared sequence with implementer docs; **track-prefixed `<track>-<NNN>-…` in multi-track mode**, same track as your implementer's docs — root `{{ROOT_MEMORY}}` "Naming + numbered-doc collision prevention"). Update the predecessor session doc's Successor link.
 
 If NO → no orchestrator-side doc needed.
 

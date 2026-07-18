@@ -44,7 +44,7 @@ Procedure:
 
 3. **ALWAYS create a session doc** at `docs/sessions/<NNN>-<YYYY-MM-DD>-<topic>.md`. This is required, not optional. Compute `<NNN>` as the next sequential number — `ls docs/sessions/`, find the max NNN prefix, increment, zero-pad to 3 digits. Single-track / solo → plain `<NNN>-…`.
 <!-- ▼ MODE [team-multi-track] pointer: delete ▼ -->
-   **Multi-track mode (you carry a `<track>-` name prefix): prefix the filename with your track** — `docs/sessions/<track>-<NNN>-<date>-<topic>.md` — and compute `<NNN>` within your track (`ls docs/sessions/<track>-*`), so parallel tracks' session docs don't collide when the track branches merge (root `{{ROOT_MEMORY}}` "Naming + cross-bleed prevention").
+   **Multi-track mode (you carry a `<track>-` name prefix): prefix the filename with your track** — `docs/sessions/<track>-<NNN>-<date>-<topic>.md` — and compute `<NNN>` within your track (`ls docs/sessions/<track>-*`), so parallel tracks' session docs don't collide when the track branches merge (root `{{ROOT_MEMORY}}` "Naming + numbered-doc collision prevention").
 <!-- ▲ END MODE ▲ -->
 
    The doc must include these sections:

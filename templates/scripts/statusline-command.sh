@@ -17,14 +17,19 @@
 # DESIGN: agent-team scoping.
 #   - Team-mode sessions: each teammate's first action (via the /team-start
 #     spawn prompt) writes ~/.claude/team-registry/<session_id>.json with
-#     {session_id, name, team, cwd, ts}. The status line checks for this file's
-#     existence; if present, writes a heartbeat. If absent, skips entirely.
+#     {session_id, name, track_label, cwd, ts}. The status line checks for this
+#     file's existence; if present, writes a heartbeat. If absent, skips entirely.
 #   - Solo sessions: no registry file is ever written for them, so the status
 #     line never writes a heartbeat. Zero pollution of the monitoring system.
+#   - Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 (agent teams are
+#     experimental / disabled by default); without it, /team-start never spawns
+#     real teammates, no registry entry is ever written, and this heartbeat
+#     block never fires.
 #
 # The /context-check slash command reads heartbeats + registry to surface
-# per-team context state. Multiple teams in parallel are isolated by the
-# `team` field in each registry entry.
+# per-track context state. Multiple tracks in parallel are isolated by the
+# `track_label` field in each registry entry (OUR bookkeeping label, not
+# Claude's real — session-derived — team identity).
 
 input=$(cat)
 

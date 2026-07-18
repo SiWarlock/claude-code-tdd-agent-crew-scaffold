@@ -225,8 +225,10 @@ recorded as `host` in the provenance manifest, so `/scaffold-upgrade` stays host
    commit yourself.
 
 5. **Build:** `/team-start` — the team pattern is the default for all projects; a solo dev runs **team mode
-   (single track)** (`/orchestrate-start` + `/session-start` only in the no-agent-teams fallback) — then the
-   `/tdd` walker builds each slice against the contract + the task plan, and `/phase-exit` closes each phase.
+   (single track)** (`/orchestrate-start` + `/session-start` only in the no-agent-teams fallback — required
+   whenever `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` isn't set, since Claude Code's agent-teams feature is
+   itself experimental and off by default; `/team-start` checks this first) — then the `/tdd` walker builds
+   each slice against the contract + the task plan, and `/phase-exit` closes each phase.
 
 6. **Stay current:** as this repo evolves, run **`/scaffold-upgrade --check`** in your project to see drift,
    then `/scaffold-upgrade` to merge improvements without clobbering your customizations.
