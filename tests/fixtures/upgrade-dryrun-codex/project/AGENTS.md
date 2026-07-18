@@ -208,7 +208,7 @@ Policy values: `off` · `invariant` (only invariant- or security-touching slices
 
 <!-- ▲ END EXAMPLE BLOCK [id=key-safety-rules] ▲ -->
 
-## Slash commands (`skills/`)
+## Slash commands (`.agents/skills/`)
 
 The harness injects each command's own description — no list is restated here. **Role pairing:** the LEAD runs `/team-start` / `/team-end` (+ `/context-check`); the ORCHESTRATOR runs `/orchestrate-start` / `/orchestrate-end` + `/phase-exit` (+ authors `/tdd` briefs); the IMPLEMENTER runs `/session-start` / `/session-end` + `/tdd` itself. `/preflight`, `/run-tests`, `/check-arch`, `/wired` (+ optional `/eval`, `/trace`) serve any role.
 

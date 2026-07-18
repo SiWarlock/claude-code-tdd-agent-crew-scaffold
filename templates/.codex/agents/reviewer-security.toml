@@ -1,7 +1,9 @@
 # ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 # collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 # isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
-# --output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
+# --output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+# confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+# ledger regardless); OFF by default.
 # Full caveats + design: docs/codex/team-overlay.md.
 
 name = "reviewer-security"
@@ -20,7 +22,7 @@ developer_instructions = """
 This is the EXPERIMENTAL Codex team overlay (docs/codex/team-overlay.md). The implementer spawns you at
 **depth-3** via `spawn_agent(role=reviewer-security)` at the /tdd Step-7 → Step-8 boundary, in parallel with
 `reviewer-quality` (mandatory alongside it on `invariant-touching` slices). You are **read-only** — your
-sandbox grants no writable roots (see the [sandbox] note below); you run your own pass and **return the
+sandbox grants no writable roots (see the sandbox guidance below); you run your own pass and **return the
 findings list as `agent_result`**. There is no `SendMessage` here; the implementer reads your return and
 routes it. The escalation chain below is implementer → orchestrator → **lead → human**; on Codex the **root**
 session IS the lead, reached by the orchestrator returning/`send_message`-ing the human's live TUI (no
@@ -133,7 +135,12 @@ On Codex your **read-only sandbox** is your guard (a capability boundary, strong
 #   model_reasoning_effort = "high"       # Codex top tier; ports Claude effort: xhigh (Codex: minimal|low|medium|high)
 #
 # Sandbox: this reviewer is **read-only** — it never edits, and it writes nothing to disk; it returns its
-# findings (and flags criticals as Step-9 Findings) via `agent_result`. No writable roots.
-#   [sandbox]
+# findings (and flags criticals as Step-9 Findings) via `agent_result`. No writable roots. (There is no
+# [sandbox] table in Codex's real config schema — sandbox_mode is a bare top-level key, sibling to
+# [sandbox_workspace_write], not nested under one.)
 #   sandbox_mode = "read-only"            # no [sandbox_workspace_write]; the review produces no file writes
-#   # network_access only if you confirm library security semantics through a network docs MCP (Context7); else off.
+#   # network_access has no home under sandbox_mode="read-only" (network_access only nests inside
+#   # [sandbox_workspace_write], per Codex's real schema). If you need network access to confirm library
+#   # security semantics through a docs MCP (Context7), that requires switching to sandbox_mode="workspace-write"
+#   # with a [sandbox_workspace_write] table (network_access = true, writable_roots = [] or as narrow as
+#   # possible) — a real capability/security tradeoff, not a toggle you can add under read-only mode as-is.

@@ -77,13 +77,24 @@ manifest_path() { printf '%s/.scaffolding/manifest.json' "$1"; }
 # secrets-guard). Emitted at LOWEST precedence (see emit_map_for_area) so a real placeholder of the
 # same name would still win. host defaults to "claude", so a manifest without a host field renders
 # byte-identically to the historical Claude layout.
+normalize_host() {  # $1 = raw host value (possibly "", "null", garbage) -> stdout "claude" | "codex", never anything else
+  case "$1" in
+    codex) printf 'codex\n' ;;
+    *)     printf 'claude\n' ;;
+  esac
+}
+
+resolve_host_from_manifest() {  # $1 = manifest path -> stdout "claude" | "codex" (normalized; single source of truth)
+  normalize_host "$(jq -r '.host // "claude"' "$1" 2>/dev/null)"
+}
+
 host_token_map() {  # $1 = host -> stdout TSV (TOKEN<TAB>VALUE)
   case "$1" in
     codex)
       printf '%s\t%s\n' ROOT_MEMORY     "AGENTS.md"
       printf '%s\t%s\n' AREA_MEMORY     "AGENTS.md"
-      printf '%s\t%s\n' HOOKS_CONFIG    "config.toml"
-      printf '%s\t%s\n' COMMANDS_HOME   "skills/"
+      printf '%s\t%s\n' HOOKS_CONFIG    ".codex/config.toml"
+      printf '%s\t%s\n' COMMANDS_HOME   ".agents/skills/"
       printf '%s\t%s\n' USER_GLOBAL_DIR "~/.codex"
       printf '%s\t%s\n' PROJECT_DIR_ENV "CODEX_PROJECT_DIR"
       printf '%s\t%s\n' HOST_NAME       "Codex CLI"
@@ -112,7 +123,7 @@ emit_map_for_area() {  # $1 = manifest, $2 = area ("" for none) -> stdout TSV
       "$manifest"
   fi
   jq -r '.placeholders | to_entries[] | select(.value != null) | [.key, (.value|tostring)] | @tsv' "$manifest"
-  host_token_map "$(jq -r '.host // "claude"' "$manifest")"
+  host_token_map "$(resolve_host_from_manifest "$manifest")"
 }
 
 substitute_stream() {  # $1 = map TSV file; reads stdin, writes substituted content to stdout
@@ -199,7 +210,7 @@ build_tree() {  # $1 = manifest, $2 = scaffold dir, $3 = ref, $4 = outdir, $5 = 
   miss="$WORK/missing-$tag.txt"; : > "$miss"
   mkdir -p "$outdir"
   state=$(derive_mode_state "$manifest")
-  host=$(jq -r '.host // "claude"' "$manifest")
+  host=$(resolve_host_from_manifest "$manifest")
   rows=$(jq -c '.generatedFiles[]?' "$manifest")
   while IFS= read -r row; do
     [ -n "$row" ] || continue
@@ -279,7 +290,7 @@ cmd_resolve() {
     --argjson baseExists "$base_exists" --argjson already "$already" \
     --arg shallow "$shallow" --arg mode "$(jq -r '.mode // ""' "$manifest")" \
     --arg posture "$(jq -r '.posture // ""' "$manifest")" \
-    --arg host "$(jq -r '.host // "claude"' "$manifest")" \
+    --arg host "$(resolve_host_from_manifest "$manifest")" \
     --arg dirty "$dirty" '
     { legacy:false, projectDir:$project, scaffoldDir:$scaffold, manifestPath:$manifest,
       schemaVersion:$schema, base:$base, baseConfidence:$baseConf, baseExists:$baseExists,
@@ -434,7 +445,7 @@ EOF
 cmd_migrations() {
   [ -n "$WORK" ] || die "migrations needs --work"
   local scaffold base to host; scaffold=$(pc '.scaffoldDir'); base=$(pc '.base'); to=$(pc '.to')
-  host=$(pc '.host'); [ -n "$host" ] && [ "$host" != "null" ] || host="claude"
+  host=$(normalize_host "$(pc '.host')")   # precheck.json's host is already normalized (cmd_resolve); this is defense-in-depth
   local reg; reg=$(git -C "$scaffold" show "$to:migrations/registry.json" 2>/dev/null || echo '{"migrations":[]}')
   local ids; ids=$(printf '%s' "$reg" | jq -r '.migrations[]? | select(.introducedAtSha != null) | (.introducedAtSha + "\t" + .id)')
   local selected="[]" line isha mid

@@ -2,7 +2,9 @@
 # ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 # collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 # isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
-# --output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
+# --output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+# confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+# ledger regardless); OFF by default.
 # Full caveats + design: docs/codex/team-overlay.md.
 
 set -euo pipefail
@@ -23,14 +25,14 @@ set -euo pipefail
 # is scoped to implementer roles only (the orchestrator + read-only reviewers legitimately write no
 # ledger row), so it raises no false positives for non-coding children.
 #
-# EXPERIMENTAL CAVEAT — Codex's SubagentStop payload shape is on the unstable v2 surface and is NOT yet
-# pinned; the agent/task fields are read best-effort (stdin JSON, then env). Adapt to your Codex build.
+# Field names: `agent_id`/`agent_type` are the confirmed real SubagentStop payload fields (per Codex's
+# hooks docs, alongside `agent_transcript_path`/`stop_hook_active`/`last_assistant_message`). There is no
+# documented `task`/`task_path`-shaped field on this payload at all — those guesses are kept only as
+# best-effort fallbacks in case a future/pinned build adds one; do not rely on them.
+# CODEX_PROJECT_DIR does not exist under any Codex build — the payload's own `cwd` field (real, documented)
+# is used instead, with `git rev-parse --show-toplevel` as a subdirectory-safe fallback.
 
-PROJECT_DIR="${{{PROJECT_DIR_ENV}}:-$PWD}"   # {{PROJECT_DIR_ENV}} resolves to CODEX_PROJECT_DIR for codex
 TEAM_LABEL="${TEAM_LABEL:-team}"             # ledger/event-log dir key (single-track v1: no <track> prefix)
-TEAM_DIR="$PROJECT_DIR/.codex-team/$TEAM_LABEL"
-EVENTS="$TEAM_DIR/events.jsonl"
-LEDGER="$TEAM_DIR/tasks.jsonl"               # orchestrator-owned source of truth for coding roles
 
 # Read the hook payload off stdin if present (a real hook gets JSON, not a tty).
 payload=""
@@ -45,8 +47,16 @@ get() {
   printf '%s' "$payload" | jq -r "$1 // empty" 2>/dev/null || return 0
 }
 
-# Field names are best-effort guesses against the experimental v2 payload; env vars are the fallback.
-agent=$(get '.agent // .role // .subagent_type // .agent_role')
+PROJECT_DIR=$(get '.cwd')
+[ -n "$PROJECT_DIR" ] || PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || true
+PROJECT_DIR="${PROJECT_DIR:-$PWD}"
+TEAM_DIR="$PROJECT_DIR/.codex-team/$TEAM_LABEL"
+EVENTS="$TEAM_DIR/events.jsonl"
+LEDGER="$TEAM_DIR/tasks.jsonl"               # orchestrator-owned source of truth for coding roles
+
+# agent_id/agent_type are the real, documented fields; the rest are legacy best-effort guesses kept as a
+# fallback chain in case an older/different pinned build shapes this payload differently.
+agent=$(get '.agent_type // .agent_id // .agent // .role // .subagent_type // .agent_role')
 [ -n "$agent" ] || agent="${CODEX_AGENT_ROLE:-${CODEX_SUBAGENT:-unknown}}"
 task=$(get '.task // .task_path // .task_id // .thread')
 [ -n "$task" ] || task="${CODEX_TASK_PATH:-${CODEX_TASK_ID:-}}"

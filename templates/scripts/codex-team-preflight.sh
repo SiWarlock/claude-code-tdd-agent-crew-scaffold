@@ -2,8 +2,9 @@
 # ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 # collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 # isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
-# --output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
-# Full caveats + design: docs/codex/team-overlay.md.
+# --output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+# confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+# ledger regardless); OFF by default. Full caveats + design: docs/codex/team-overlay.md.
 
 set -euo pipefail
 
@@ -20,40 +21,32 @@ set -euo pipefail
 # On ANY failure it prints the documented solo-fallback line and exits non-zero; /team-start then stops
 # and the session runs the supported solo core (/tdd directly).
 #
-# DURABLE vs BEST-EFFORT — the durable parts are the STRUCTURE, the solo fallback, and the circuit-breaker
-# bookkeeping (the consecutive_failures counter file). The actual `codex` collab invocations are
-# EXPERIMENTAL best-effort and CANNOT be runtime-tested here; they are clearly commented so you can adapt
-# them to your pinned Codex build. By design the probe fails SAFE: with no real collab layer wired (or a
-# broken one), probe.json is never written, the sentinel assertion fails, and the overlay falls back to
-# solo — exactly the right default for an unstable, opt-in accelerant.
+# DURABLE vs BEST-EFFORT — the durable parts are the STRUCTURE and the solo fallback. The actual `codex`
+# collab invocations are EXPERIMENTAL best-effort and CANNOT be runtime-tested here; they are clearly
+# commented so you can adapt them to your pinned Codex build. By design the probe fails SAFE: with no real
+# collab layer wired (or a broken one), probe.json is never written, the sentinel assertion fails, and the
+# overlay falls back to solo — exactly the right default for an unstable, opt-in accelerant.
+#
+# CIRCUIT BREAKER — this script keeps NO circuit-breaker state of its own. The orchestrator's ledger
+# (.codex-team/<label>/tasks.jsonl `circuit_open` row) is the sole source of truth (see
+# .codex/agents/orchestrator.toml's "3-failure circuit breaker" section) — there is no separate counter
+# file here for the orchestrator (an LLM agent operating via tool calls, not a bash-function caller) to
+# call into. A fresh /team-start attempt implicitly means a human has already intervened past any prior
+# `circuit_open` row; this preflight does not gate on ledger history from a previous run.
 
 # label: positional arg from /team-start, else env TEAM_LABEL, else "team".
 TEAM_LABEL="${1:-${TEAM_LABEL:-team}}"
-PROJECT_DIR="${{{PROJECT_DIR_ENV}}:-$PWD}"   # {{PROJECT_DIR_ENV}} resolves to CODEX_PROJECT_DIR for codex
+# CODEX_PROJECT_DIR does not exist under any Codex build; resolve the repo root via git instead.
+# The `|| true` matters: without it, a failing git rev-parse (e.g. cwd isn't inside a git worktree) would
+# trip `set -e` on this bare command-substitution assignment and kill the script with a raw git error,
+# before ever reaching the documented solo_fallback() path below.
+PROJECT_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || true
+PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 TEAM_DIR="$PROJECT_DIR/.codex-team/$TEAM_LABEL"
 PROBE="$TEAM_DIR/probe.json"
-CB_FILE="$TEAM_DIR/consecutive_failures"     # circuit-breaker counter (3 consecutive failures => open)
-CB_THRESHOLD="${CODEX_TEAM_CB_THRESHOLD:-3}"
 PROBE_TIMEOUT_MS="${CODEX_TEAM_PROBE_TIMEOUT_MS:-20000}"
 
 mkdir -p "$TEAM_DIR" 2>/dev/null || true
-
-# ── Circuit-breaker bookkeeping (durable) ─────────────────────────────────────────────────────────
-# The counter lives in a file so it survives across the orchestrator's per-slice spawns. This preflight
-# RESETS it to 0 on success (arming the breaker for the run). At run time the orchestrator cb_tick()s on
-# each slice failure (spawn error, missing/null ledger row, or verification mismatch) and cb_reset()s on
-# a verified `completed` row; at CB_THRESHOLD consecutive failures it writes `circuit_open` and flips solo.
-cb_count() {
-  local n; n=$(cat "$CB_FILE" 2>/dev/null || echo 0)
-  case "$n" in (*[!0-9]*|'') n=0 ;; esac
-  printf '%s' "$n"
-}
-cb_reset() { printf '0\n' > "$CB_FILE" 2>/dev/null || true; }
-cb_tick()  {
-  local n; n=$(cb_count); n=$((n + 1))
-  printf '%s\n' "$n" > "$CB_FILE" 2>/dev/null || true
-  printf '%s' "$n"
-}
 
 # ── Solo fallback (durable) ───────────────────────────────────────────────────────────────────────
 # Printed verbatim on ANY preflight failure. The generated AGENTS.md carries the complete solo path, so
@@ -125,7 +118,6 @@ fi
 
 # ── Pass ──────────────────────────────────────────────────────────────────────────────────────────
 rm -f "$PROBE" 2>/dev/null || true
-cb_reset   # arm the circuit breaker for this run: consecutive_failures = 0
 echo "preflight OK: codex present, config smoke passed, spawn_agent round-trip verified (sentinel in probe.json)."
-echo "             circuit breaker armed at $CB_FILE (threshold ${CB_THRESHOLD} consecutive failures)."
+echo "             the orchestrator's ledger (.codex-team/$TEAM_LABEL/tasks.jsonl) is the circuit breaker's source of truth."
 exit 0

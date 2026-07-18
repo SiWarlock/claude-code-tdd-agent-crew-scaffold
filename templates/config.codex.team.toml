@@ -3,10 +3,12 @@
 # ║                                                                                                  ║
 # ║ Built on Codex's UNSTABLE collaboration_mode / spawn_agent v2 APIs (expect churn; pin a          ║
 # ║ known-good Codex version). No native git-worktree isolation; `codex exec` exits 0 even on        ║
-# ║ failure (verify via git log + test re-run, never the exit code); --output-schema only on the     ║
-# ║ gpt-5 family (coding roles report via a filesystem ledger). This overlay is OFF by default and    ║
-# ║ activates only when Codex's collaboration_mode / effort=ultra is enabled; with it off you get     ║
-# ║ the solo core (run /tdd directly). Full design + caveats: docs/codex/team-overlay.md.            ║
+# ║ failure (verify via git log + test re-run, never the exit code); --output-schema was gpt-5-family ║
+# ║ only on some past Codex builds (openai/codex#4181, fixed by #4195) — CONFIRM on your pinned       ║
+# ║ version rather than assuming either way (coding roles report via a filesystem ledger regardless). ║
+# ║ This overlay is OFF by default and activates only when Codex's collaboration_mode / effort=ultra  ║
+# ║ is enabled; with it off you get the solo core (run /tdd directly). Full design + caveats:         ║
+# ║ docs/codex/team-overlay.md.                                                                       ║
 # ║                                                                                                  ║
 # ║ This file is generated INSTEAD of the solo config.codex.toml when you opt into the experimental   ║
 # ║ team overlay. Single-track v1: multi-track (per-track worktree teams) is deferred.               ║
@@ -29,29 +31,51 @@ url = "https://mcp.context7.com/mcp"
 matcher = "Bash"
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = "\"$CODEX_PROJECT_DIR\"/scripts/guards/git-guard.sh"
+command = "\"$(git rev-parse --show-toplevel)\"/scripts/guards/git-guard.sh"
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = "\"$CODEX_PROJECT_DIR\"/scripts/guards/secrets-guard.sh"
+command = "\"$(git rev-parse --show-toplevel)\"/scripts/guards/secrets-guard.sh"
 
 # ---- Subagent lifecycle hooks (replace the Claude TeammateIdle/TaskCompleted team-event-log) ---------
+# NOTE: Codex sets no CODEX_PROJECT_DIR env var under any build — `git rev-parse --show-toplevel` is the
+# real, documented-recommended way to resolve the repo root for hook command paths (see config.codex.toml).
 [[hooks.SubagentStart]]
 [[hooks.SubagentStart.hooks]]
 type = "command"
-command = "\"$CODEX_PROJECT_DIR\"/.codex/hooks/subagent-start.sh"
+command = "\"$(git rev-parse --show-toplevel)\"/.codex/hooks/subagent-start.sh"
 
 [[hooks.SubagentStop]]
 [[hooks.SubagentStop.hooks]]
 type = "command"
-command = "\"$CODEX_PROJECT_DIR\"/.codex/hooks/subagent-stop.sh"
+command = "\"$(git rev-parse --show-toplevel)\"/.codex/hooks/subagent-stop.sh"
 
 # ---- Multi-agent limits (docs/codex/team-overlay.md §2) ---------------------------------------------
 [agents]
 # Topology: root=lead(0) → orchestrator(1) → implementer-per-slice(2) → Step-8 reviewers(3).
-max_threads = 5                 # orchestrator(1) + 1 implementer + 2 Step-8 reviewers + headroom. TUNE per machine.
-max_depth   = 3                 # MUST be >= 3 — the Step-8 reviewer fan-out lives at depth 3.
+# `max_threads` only governs Codex's legacy V1 multi-agent path — it is a DEAD FIELD under the V2
+# collaboration_mode / spawn_agent runtime this overlay actually targets (confirmed: effective_agent_max_threads()
+# dispatches on multi_agent_version and never reads agent_max_threads under V2). Kept here as a V1/legacy
+# fallback value only; DO NOT rely on it to size V2 concurrency — see [features.multi_agent_v2] below, which
+# is the field that actually governs it.
+max_threads = 5                 # legacy/V1 fallback only — see the note above and [features.multi_agent_v2].
+max_depth   = 3                 # MUST be >= 3 — the Step-8 reviewer fan-out lives at depth 3. (max_depth's V1-vs-V2 enforcement parity is unconfirmed — verify empirically on your pinned build via codex-team-preflight.sh.)
 job_max_runtime_seconds = 1800  # the only built-in runtime bound (no codex-exec timeout); also the coarse orchestrator-cycle trigger.
-interrupt_message = "Finish the current /tdd cycle through the Step-10 commit, then stop. Never abandon a slice mid-flight."
+# interrupt_message does NOT take custom text — it is a boolean in real Codex ("whether to record a
+# model-visible message when an agent turn is interrupted", default true). The "finish the current /tdd
+# cycle, never abandon a slice mid-flight" instruction lives in prose instead: see .codex/agents/orchestrator.toml
+# and .codex/agents/implementer.toml's "Slice atomicity" guidance.
+# interrupt_message = false     # Codex's own default is already true (record a message on interrupt) — only
+                                 # uncomment this if you want to DISABLE that message; `= true` here would be a no-op.
+
+# ---- V2 multi-agent concurrency (the field that actually governs this overlay's runtime) -------------
+# [agents].max_threads above is a V1-only field; under V2 (collaboration_mode / spawn_agent, what this
+# overlay targets) concurrency is governed here instead. Codex's real V2 default is
+# max_concurrent_threads_per_session=4, and 1 slot is reserved for the root — an effective default of 3
+# concurrent subagent threads, LESS than the 4 this overlay's own Step-8 fan-out (orchestrator + implementer
+# + reviewer-quality + reviewer-security) and phase-exit fan-out need. Size this explicitly; do not leave it
+# at Codex's default for this topology.
+[features.multi_agent_v2]
+max_concurrent_threads_per_session = 6   # -> effective 5 concurrent subagent threads after the root's reserved slot. TUNE per machine.
 
 # ---- Roles (config_file layers a model + sandbox onto each role; bodies in .codex/agents/<role>.toml) -
 [agents.orchestrator]
@@ -64,7 +88,7 @@ nickname_candidates = ["orchestrator", "orch"]
 description = "Runs /tdd in one code area; returns the Step-2.5 write-up + Step-9 flags; commits at Step-10."
 config_file = ".codex/agents/implementer.toml"
 nickname_candidates = ["implementer", "impl"]
-# model = "gpt-5-codex"       # coding quality; NO --output-schema there → reports via the filesystem ledger.
+# model = "gpt-5-codex"       # coding quality; reports via the filesystem ledger regardless of --output-schema availability.
 
 [agents.reviewer-quality]
 description = "Slice code-quality review at the /tdd Step-7 → Step-8 boundary (read-only)."

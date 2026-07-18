@@ -10,14 +10,15 @@
 # MCP servers are OPTIONAL. If codegraph / context7 aren't installed, Codex ignores these
 # blocks and the harness falls back to grep + Read — nothing breaks. Keep this posture.
 #
-# ⚠ HOST DETAIL TO CONFIRM PER CODEX VERSION (open decision D3): the guard hooks reference
-# "$CODEX_PROJECT_DIR" as the repo root and parse a PreToolUse payload shape compatible with
-# `.tool_input.command`. Codex's PreToolUse hooks honor the Claude-format payload + a
-# config.toml [hooks] section (confirmed against codex-rs HookEventsToml), but the exact
-# project-dir env var name can differ by build. The guards FAIL SAFE (exit 0 when the field
-# is empty), so a mismatch silently disables enforcement rather than breaking the harness —
-# but confirm the env var on your Codex version to keep enforcement live. Codex also accepts a
-# Claude-format hooks.json with the identical shape if you prefer that file layout.
+# HOST DETAIL (confirmed against real Codex source + docs): Codex sets NO env var analogous to Claude's
+# CLAUDE_PROJECT_DIR, under any build — there is no CODEX_PROJECT_DIR. Codex instead passes the session's
+# cwd via the hook payload's own `cwd` JSON field, and hook `command` strings run with that same cwd as
+# their working directory. Since Codex may be started from a subdirectory, this config resolves the repo
+# root for both (a) locating the guard scripts below and (b) each script's own internal project-root need
+# via `$(git rev-parse --show-toplevel)` — Codex's own documented recommendation for repo-local hook path
+# stability — rather than a nonexistent project-dir env var. The `.tool_input.command` PreToolUse payload
+# shape below is confirmed correct against codex-rs source (`hook_runtime.rs`) and the official hooks docs.
+# Codex also accepts a Claude-format hooks.json with the identical shape if you prefer that file layout.
 
 # ---- MCP servers (optional; same servers the Claude scaffolding prefers) --------------------
 [mcp_servers.codegraph]
@@ -36,8 +37,8 @@ matcher = "Bash"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = "\"$CODEX_PROJECT_DIR\"/scripts/guards/git-guard.sh"
+command = "\"$(git rev-parse --show-toplevel)\"/scripts/guards/git-guard.sh"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = "\"$CODEX_PROJECT_DIR\"/scripts/guards/secrets-guard.sh"
+command = "\"$(git rev-parse --show-toplevel)\"/scripts/guards/secrets-guard.sh"

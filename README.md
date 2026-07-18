@@ -188,16 +188,17 @@ recorded as `host` in the provenance manifest, so `/scaffold-upgrade` stays host
 
 - **Claude Code (default)** — the `.claude/` layout: root + area `CLAUDE.md`, `.claude/commands/*.md`,
   `.claude/agents/*.md`, `.claude/settings.json`. Full team pattern + single-operator.
-- **Codex CLI** — the Codex layout: root + nested `AGENTS.md`, slash commands as `skills/<name>/SKILL.md`,
-  `config.toml` (`[mcp_servers]` + `[[hooks.PreToolUse]]` guards). The **solo core** (one Codex session
-  running `/tdd` directly) is the **supported** Codex path — Codex has no peer-teammate / shared-task-list
-  primitive, so the agent-team coordination layer can't port 1:1.
+- **Codex CLI** — the Codex layout: root + nested `AGENTS.md`, slash commands as `.agents/skills/<name>/SKILL.md`
+  (Codex's real skill loader never scans a bare-root `skills/`), `.codex/config.toml` (`[mcp_servers]` +
+  `[[hooks.PreToolUse]]` guards — the confirmed canonical project-config location). The **solo core** (one
+  Codex session running `/tdd` directly) is the **supported** Codex path — Codex has no peer-teammate /
+  shared-task-list primitive, so the agent-team coordination layer can't port 1:1.
 
 > ⚠️ **EXPERIMENTAL — Codex multi-agent team overlay (WIP).** An opt-in overlay maps the team layer onto
 > Codex's **experimental, unstable** `collaboration_mode` / `spawn_agent` v2 APIs (root-session-as-lead →
 > orchestrator → per-slice implementer → reviewers). It has real caveats — **no native git-worktree
-> isolation, `codex exec` exits 0 even on failure, `--output-schema` only on the gpt-5 family, no
-> context-% signal** — and is **OFF by default** (two switches: opt in at generation AND enable Codex's
+> isolation, `codex exec` exits 0 even on failure, `--output-schema` support by model family is
+> version-dependent (confirm on yours), no context-% signal** — and is **OFF by default** (two switches: opt in at generation AND enable Codex's
 > collab mode at runtime; on any preflight failure it falls back to solo). **Do not depend on it**; pin a
 > known-good Codex version and re-validate per release. Full design + the complete caveat list:
 > **`docs/codex/team-overlay.md`**.

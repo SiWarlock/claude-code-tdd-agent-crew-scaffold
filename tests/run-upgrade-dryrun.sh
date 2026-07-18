@@ -10,7 +10,7 @@
 # the check-markers block, stamping, and second-run idempotency.
 # What the Codex pass proves (the host layer): resolve reports host=codex/schema-v3/single-operator;
 # `substitute` reproduces the frozen Codex project byte-for-byte (HOST-region pruning emits the Codex
-# `name:` frontmatter + host-derived tokens resolve to AGENTS.md/skills/config.toml/~/.codex); no `▼ HOST [`
+# `name:` frontmatter + host-derived tokens resolve to AGENTS.md/.agents/skills//.codex/config.toml/~/.codex); no `▼ HOST [`
 # marker leaks; accreted files leave-alone; a customized placeholder-only file is never auto-overwritten;
 # the migration window is host/SHA-isolated (empty for a fresh Codex project). The auto-apply / conflict /
 # whole-file-propose policies are HOST-AGNOSTIC (the merge runs on already-built trees) and are proven by
@@ -192,22 +192,22 @@ codex_fixture() {
   # ---- 2. substitute @ base — the KEY host-axis proof (HOST pruning + token resolution) ----------
   "$SCRIPT" substitute "$BASE" "$TMP/sub-base" --work "$WORK" 2>/dev/null
   # untouched files must byte-match a fresh substitute — proves the [codex] frontmatter region + tokens
-  cmp -s "$TMP/sub-base/skills/check-arch/SKILL.md" "$FIX/skills/check-arch/SKILL.md" \
+  cmp -s "$TMP/sub-base/.agents/skills/check-arch/SKILL.md" "$FIX/.agents/skills/check-arch/SKILL.md" \
     && ok "fixture-drift guard: untouched check-arch SKILL.md byte-matches substitute($BASE)" \
     || bad "fixture-drift guard: check-arch SKILL.md drifted from templates-at-base (host pruning/token change?)"
   cmp -s "$TMP/sub-base/AGENTS.md" "$FIX/AGENTS.md" \
     && ok "fixture-drift guard: AGENTS.md (HOST-split tree + tokens) byte-matches substitute($BASE)" \
     || bad "fixture-drift guard: AGENTS.md drifted from templates-at-base"
-  local DIVERGED; DIVERGED=$(diff "$TMP/sub-base/skills/tdd/SKILL.md" "$FIX/skills/tdd/SKILL.md" | grep -c '^>' || true)
+  local DIVERGED; DIVERGED=$(diff "$TMP/sub-base/.agents/skills/tdd/SKILL.md" "$FIX/.agents/skills/tdd/SKILL.md" | grep -c '^>' || true)
   [ "$DIVERGED" -ge 1 ] && ok "fixture-drift guard: tdd SKILL.md diverges by the seeded customization" \
                         || bad "fixture-drift guard: tdd SKILL.md shows no seed (expected >=1 added line)"
   # the substitute output must be Codex-shaped, not Claude-shaped
-  head -6 "$TMP/sub-base/skills/tdd/SKILL.md" | grep -q '^name: tdd$' \
+  head -6 "$TMP/sub-base/.agents/skills/tdd/SKILL.md" | grep -q '^name: tdd$' \
     && ok "substitute: tdd SKILL.md carries Codex frontmatter (name: tdd)" || bad "substitute: tdd SKILL.md missing 'name:' frontmatter"
-  head -6 "$TMP/sub-base/skills/tdd/SKILL.md" | grep -q 'allowed-tools' \
+  head -6 "$TMP/sub-base/.agents/skills/tdd/SKILL.md" | grep -q 'allowed-tools' \
     && bad "substitute: Claude 'allowed-tools' leaked into the Codex SKILL.md" || ok "substitute: no Claude 'allowed-tools' in the Codex SKILL.md"
-  grep -q 'AGENTS.md' "$TMP/sub-base/AGENTS.md" && grep -q 'config.toml' "$TMP/sub-base/AGENTS.md" \
-    && ok "substitute: AGENTS.md resolves the Codex layout (AGENTS.md + config.toml)" || bad "substitute: AGENTS.md did not resolve the Codex layout"
+  grep -q 'AGENTS.md' "$TMP/sub-base/AGENTS.md" && grep -q '.agents/skills/' "$TMP/sub-base/AGENTS.md" \
+    && ok "substitute: AGENTS.md resolves the Codex layout (AGENTS.md + .agents/skills/)" || bad "substitute: AGENTS.md did not resolve the Codex layout"
 
   # ---- 3. diff → host-specific policies ----------------------------------------------------------
   "$SCRIPT" diff --work "$WORK" > /dev/null
@@ -220,21 +220,37 @@ codex_fixture() {
     ok "host pruning replayed: no HOST markers in the rebuilt ours tree"
   fi
   # the rebuilt SKILL.md must be Codex-shaped
-  grep -q '^name: tdd$' "$WORK/ours/skills/tdd/SKILL.md" \
+  grep -q '^name: tdd$' "$WORK/ours/.agents/skills/tdd/SKILL.md" \
     && ok "diff: rebuilt ours tdd SKILL.md carries Codex frontmatter" || bad "diff: rebuilt ours tdd SKILL.md not Codex-shaped"
   # untouched placeholder-only file is provably untouched
-  [ "$(e 'skills/check-arch/SKILL.md' '.baseEqualsTheirs')" = "true" ] \
-    && ok "diff: check-arch SKILL.md provably untouched" || bad "diff: check-arch SKILL.md baseEqualsTheirs=$(e 'skills/check-arch/SKILL.md' '.baseEqualsTheirs')"
-  # a CUSTOMIZED placeholder-only file is NEVER auto-applied (the core safety invariant)
-  case "$(e 'skills/tdd/SKILL.md' '.policy')" in
-    auto-apply) bad "diff: customized tdd SKILL.md would be auto-overwritten (policy auto-apply)" ;;
-    *)          ok "diff: customized tdd SKILL.md not auto-applied (policy $(e 'skills/tdd/SKILL.md' '.policy'))" ;;
-  esac
+  [ "$(e '.agents/skills/check-arch/SKILL.md' '.baseEqualsTheirs')" = "true" ] \
+    && ok "diff: check-arch SKILL.md provably untouched" || bad "diff: check-arch SKILL.md baseEqualsTheirs=$(e '.agents/skills/check-arch/SKILL.md' '.baseEqualsTheirs')"
+  # a CUSTOMIZED placeholder-only file is NEVER auto-applied (the core safety invariant) — pin the exact
+  # expected policy (mirroring the Claude fixture's tdd.md check) rather than accepting any non-auto-apply
+  # value, so a future misclassification (e.g. into propose-clean when skip is correct) is actually caught.
+  TDD_POLICY="$(e '.agents/skills/tdd/SKILL.md' '.policy')"
+  [ "$TDD_POLICY" = "skip" ] \
+    && ok "diff: customized tdd SKILL.md not auto-applied (policy skip)" \
+    || bad "diff: customized tdd SKILL.md policy '$TDD_POLICY' (expected skip)"
   # accreted living content is left alone
   [ "$(e 'IMPLEMENTATION_PLAN.md' '.policy')" = "leave-alone" ] \
     && ok "diff: accreted IMPLEMENTATION_PLAN.md → leave-alone" || bad "diff: IMPLEMENTATION_PLAN.md policy $(e 'IMPLEMENTATION_PLAN.md' '.policy')"
   [ "$(e 'app/LESSONS.md' '.policy')" = "leave-alone" ] \
     && ok "diff: accreted app/LESSONS.md → leave-alone" || bad "diff: app/LESSONS.md policy $(e 'app/LESSONS.md' '.policy')"
+  # AGENTS.md: the upstream Codex-template-change scenario — pinned exact values (was previously
+  # unasserted even though live between this base and a real target: upstreamChanged=true here is a
+  # genuine upstream template change, not a seed artifact).
+  [ "$(e 'AGENTS.md' '.kind')" = "mixed" ] && [ "$(e 'AGENTS.md' '.upstreamChanged')" = "true" ] && [ "$(e 'AGENTS.md' '.baseEqualsTheirs')" = "true" ] && [ "$(e 'AGENTS.md' '.policy')" = "mixed-regions" ] \
+    && ok "diff: AGENTS.md upstream Codex-template change → mixed-regions (untouched-by-user, upstream moved)" \
+    || bad "diff: AGENTS.md kind/upstreamChanged/baseEqualsTheirs/policy = $(e 'AGENTS.md' '.kind')/$(e 'AGENTS.md' '.upstreamChanged')/$(e 'AGENTS.md' '.baseEqualsTheirs')/$(e 'AGENTS.md' '.policy')"
+  # app/AGENTS.md: pin the CURRENT actual values. NOTE: this fixture's seeded damaged module-layout marker
+  # (see README) does not currently trigger whole-file-propose degradation under this base pin, because
+  # that code path only evaluates when upstreamChanged=true for this dest, and templates/area-CLAUDE.md has
+  # not itself changed between this fixture's base and the target — see the fixture README's known-limitation
+  # note. This assertion at least pins current behavior so a regression is still caught.
+  [ "$(e 'app/AGENTS.md' '.upstreamChanged')" = "false" ] && [ "$(e 'app/AGENTS.md' '.policy')" = "skip" ] \
+    && ok "diff: app/AGENTS.md upstreamChanged=false → skip (current pinned behavior; see README known-limitation)" \
+    || bad "diff: app/AGENTS.md upstreamChanged/policy = $(e 'app/AGENTS.md' '.upstreamChanged')/$(e 'app/AGENTS.md' '.policy')"
 
   # ---- 4. migrations — host/SHA isolation (fresh Codex inherits no legacy migration) -------------
   "$SCRIPT" migrations --work "$WORK" > /dev/null
@@ -245,7 +261,26 @@ codex_fixture() {
   jq -e '[.migrations[].id] | index("M-0013") | not' "$MIG" >/dev/null \
     && ok "migrations: M-0013 (host-field backfill) not selected — base post-dates it" || bad "migrations: M-0013 unexpectedly selected"
 
-  # ---- 5. stamp + idempotency --------------------------------------------------------------------
+  # ---- 5. apply + check-markers --------------------------------------------------------------------
+  # Derive the writes list DYNAMICALLY from policy=="auto-apply" entries (mirroring claude_fixture() above)
+  # rather than hardcoding an empty list — which file(s), if any, are auto-apply-eligible depends on what
+  # actually changed upstream between this fixture's frozen base and the live target ref, and that set can
+  # shift over time (e.g. a fix to templates/config.codex.toml itself can make .codex/config.toml newly
+  # eligible). A hardcoded-empty plan would silently stop exercising the real write path the moment that
+  # happened. Whatever the current set is, this exercises the real cmd_apply code path for Codex-shaped dest
+  # paths (.agents/skills/*, .codex/config.toml). check-markers is the more load-bearing half regardless of
+  # the writes count: it scans every generatedFiles[].dest ON DISK — including the Codex-specific `▼ HOST [`
+  # leak guard (scaffold_upgrade.sh's cmd_check_markers host_hits check) — which previously had ZERO coverage.
+  local AUTO_APPLY_COUNT; AUTO_APPLY_COUNT=$(jq '[.files[] | select(.policy=="auto-apply")] | length' "$PLAN")
+  jq '{writes: [.files[] | select(.policy=="auto-apply") | {dest, source:"ours"}]}' "$PLAN" > "$TMP/apply-plan.json"
+  "$SCRIPT" apply "$TMP/apply-plan.json" --work "$WORK" 2>/dev/null \
+    && ok "apply: Codex apply-plan ($AUTO_APPLY_COUNT auto-apply file(s)) runs cleanly" \
+    || bad "apply: apply-plan errored"
+  "$SCRIPT" check-markers --work "$WORK" >/dev/null 2>&1 \
+    && ok "check-markers: clean — no conflict/MODE/HOST markers leaked into any Codex dest file" \
+    || bad "check-markers: unexpectedly failed on the clean fixture (conflict, MODE, or HOST marker leak)"
+
+  # ---- 6. stamp + idempotency --------------------------------------------------------------------
   "$SCRIPT" stamp "$TO" --work "$WORK" >/dev/null 2>&1
   [ "$(jq -r '.lastUpgradedFromSha' "$PROJ/.scaffolding/manifest.json")" = "$TO" ] \
     && ok "stamp: lastUpgradedFromSha = $TO" || bad "stamp: manifest not stamped"

@@ -11,8 +11,10 @@
 >    stash-protected.
 > 2. **`codex exec` returns exit 0 even on failure** — results are verified independently (`git log` +
 >    test re-run), never by exit code.
-> 3. **`--output-schema` works only on the gpt-5 family, not `gpt-5-codex` / `codex-*`** — coding roles
->    report through a filesystem ledger, not structured output.
+> 3. **`--output-schema` support by model family is version-dependent** — it was gpt-5-family-only on some
+>    past Codex builds (openai/codex#4181, fixed by #4195); confirm on your pinned version rather than
+>    assuming either way. Coding roles (`gpt-5-codex`) report through a filesystem ledger regardless,
+>    since planning/review quality matters more than structured output for the orchestrator's own role.
 > 4. **`--full-auto` blocks network** — installs/tests that need network use `--yolo` (a trust escalation).
 > 5. **No built-in `codex exec` timeout** — runaway children are bounded only by `job_max_runtime_seconds`.
 > 6. **Codex is hierarchical parent→child, not peer teammates with a shared task list** — there is no
@@ -27,8 +29,8 @@
 > re-validate per Codex release.
 
 This document is the design + operating contract for porting the Claude agent-team coordination layer onto
-Codex's experimental multi-agent primitives. The **solo core** (see the project's `AGENTS.md`, `skills/`,
-`config.toml`) is the supported path; this overlay is an opt-in accelerant for when Codex's collab layer is
+Codex's experimental multi-agent primitives. The **solo core** (see the project's `AGENTS.md`, `.agents/skills/`,
+`.codex/config.toml`) is the supported path; this overlay is an opt-in accelerant for when Codex's collab layer is
 available and you want orchestrator/implementer parallelism within one repo.
 
 ## 1. Why this can't be a 1:1 port
@@ -124,7 +126,8 @@ writes its full report to `docs/audits/<phase>-<agent>.md` and returns a ≤10-l
   onto the role. Bodies are the direct port of the Claude `.claude/agents/*.md` review checklists.
 - **`.codex/hooks/subagent-start.sh` / `subagent-stop.sh`** — event-log append (replaces
   `team-event-log.sh`) + the worktree-provision point (guarded off for single-track v1).
-- **`scripts/codex-team-preflight.sh`** — the spawn round-trip probe + circuit-breaker bookkeeping (§6).
+- **`scripts/codex-team-preflight.sh`** — the spawn round-trip probe (§6); it keeps no circuit-breaker state
+  of its own — the orchestrator's ledger `circuit_open` row is the sole source of truth.
 - **Codex `/team-start` + `/team-end` skills** — the lead's stand-up / close-out, re-expressed for the spawn
   tree (no `TeamCreate`; `spawn_agent` topology + the preflight gate + the solo fallback).
 
@@ -143,9 +146,9 @@ writes its full report to `docs/audits/<phase>-<agent>.md` and returns a ≤10-l
 - That `collaboration_mode` / `effort = ultra` behaves consistently across Codex versions.
 - Round-trip timing/reliability of the Step-2.5/Step-9 `agent_result` ↔ `followup_task` hops under load.
 - Context-%-based auto-cycle — fundamentally unverifiable (no signal); this is why it's dropped, not untested.
-- Structured `agent_result` on coding models — the `--output-schema` gap means **the ledger row is the
-  source of truth**, and a child that crashes (exit 0!) writes *no* row → **treat a missing ledger row as
-  FAIL, never as "still pending."**
+- Structured `agent_result` on coding models — regardless of whether `--output-schema` is available on your
+  pinned version for `gpt-5-codex`, **the ledger row is the source of truth** for coding roles, and a child
+  that crashes (exit 0!) writes *no* row → **treat a missing ledger row as FAIL, never as "still pending."**
 
 **Degradation to solo:** `codex-team-preflight.sh` runs the trivial round-trip at `/team-start`. On any
 failure (collab layer absent, spawn error, probe timeout) the overlay **disables itself** and prints:
@@ -161,8 +164,9 @@ to solo for the remainder. This converts Codex's most dangerous failure mode —
 
 ## 7. Open decisions (carry real risk — confirm per project)
 
-- **Model-per-role split:** gpt-5 orchestrator (gets `--output-schema`) vs gpt-5-codex implementer (better
-  coding, no schema → ledger). Recommended, but a real tradeoff.
+- **Model-per-role split:** gpt-5 orchestrator (may get `--output-schema` — confirm on your pinned version)
+  vs gpt-5-codex implementer (better coding; reports via the ledger regardless). Recommended, but a real
+  tradeoff, and not one that hinges on an unverified `--output-schema` restriction.
 - **Orchestrator cycle cadence** — the heuristic that replaces the mechanical tier table.
 - **`max_depth` / `max_threads` sizing** — `max_depth ≥ 3` is mandatory for Step-8 fan-out; easy to under-set.
 - **Multi-track: DEFERRED for v1** — the hook point exists, guarded off.
@@ -170,3 +174,8 @@ to solo for the remainder. This converts Codex's most dangerous failure mode —
 - **`--yolo` network escalations** for dep-install / integration-test steps — each is a trust decision.
 - **Project-dir env var + PreToolUse payload shape (D3)** — confirm against your Codex version; the guards
   fail safe (exit 0 on empty), so a mismatch silently disables enforcement rather than breaking.
+- **`git-guard.sh`'s Codex-host implementer-push-ban role signal is unconfirmed.** It falls back to reading
+  `CODEX_AGENT_ROLE`/`CODEX_SUBAGENT` env vars when no Claude team-registry file exists, but nothing in real
+  Codex source/docs establishes that Codex ever sets either var — treat this branch as speculative/likely-dead
+  until a real Codex-set per-agent role signal is identified and substituted in. It fails open (rule 2 becomes
+  a no-op), never closed, so this is a missing-enforcement risk, not a false-block risk.

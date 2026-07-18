@@ -82,7 +82,7 @@ flowchart TD
 
 > **Critical path:** <Phase 0 → Phase 1 → Phase 2> (the serial floor on build time — staff it first). **Forced-serial bottleneck:** <Phase 0 (shared contract) — every track waits on it>.
 
-**Track map** — the `<track>-<area>-<role>` names reuse the convention in root `CLAUDE.md` "Naming + cross-bleed prevention":
+**Track map** — the `<track>-<area>-<role>` names reuse the convention in root `{{ROOT_MEMORY}}` "Naming + cross-bleed prevention":
 
 | Track | Phases | Code area(s) | Worktree (branch) | Agent-team names |
 |---|---|---|---|---|

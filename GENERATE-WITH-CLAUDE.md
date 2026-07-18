@@ -42,7 +42,7 @@ When a clarification question has discrete options (e.g. "is this a single-opera
 
 ## §1 — What you will produce
 
-This layout is the **Claude Code** host (the default). For the **Codex CLI** host (chosen in §4.0) the same templates produce the Codex layout instead — `AGENTS.md` (root + nested) for the memory files, `skills/<name>/SKILL.md` for the slash commands, `config.toml` for hooks + MCP, and no user-global install. The HOST-MAPPING table in §7 lists the per-file dest deltas; the Codex multi-agent team overlay is a separate, opt-in, EXPERIMENTAL path (`docs/codex/team-overlay.md`).
+This layout is the **Claude Code** host (the default). For the **Codex CLI** host (chosen in §4.0) the same templates produce the Codex layout instead — `AGENTS.md` (root + nested) for the memory files, `.agents/skills/<name>/SKILL.md` for the slash commands, `.codex/config.toml` for hooks + MCP, and no user-global install. The HOST-MAPPING table in §7 lists the per-file dest deltas; the Codex multi-agent team overlay is a separate, opt-in, EXPERIMENTAL path (`docs/codex/team-overlay.md`).
 
 When you're done (host = claude), the user's repo will have:
 
@@ -145,7 +145,7 @@ Two foundational choices precede the substantive interview. Ask the **host** fir
 Ask the user via `AskUserQuestion`: **which agent host will run this project's scaffolding?**
 
 - **Claude Code (default)** — generates the `.claude/` layout: root + area `CLAUDE.md`, `.claude/commands/*.md` slash commands, `.claude/agents/*.md` subagents, `.claude/settings.json` hooks. Supports BOTH team pattern and single-operator. Everything below behaves exactly as it always has.
-- **Codex CLI** — generates the Codex layout: root + nested `AGENTS.md` (Codex reads nested `AGENTS.md` by cwd, deeper-wins — 1:1 with area-`CLAUDE.md`), slash commands as `skills/<name>/SKILL.md`, `config.toml` (`[mcp_servers]` + `[[hooks.PreToolUse]]` guards). **Codex forces `single-operator` mode for the solo core** — the agent-team coordination layer cannot port 1:1 (Codex has no peer-teammate / shared-task-list / context-% primitives). An **EXPERIMENTAL** Codex multi-agent team overlay exists (see `docs/codex/team-overlay.md`) but is opt-in and WIP; the solo core is the supported Codex path.
+- **Codex CLI** — generates the Codex layout: root + nested `AGENTS.md` (Codex reads nested `AGENTS.md` by cwd, deeper-wins — 1:1 with area-`CLAUDE.md`), slash commands as `.agents/skills/<name>/SKILL.md` (the exact path Codex's own `.claude/commands`→Codex migration tool writes to, and the documented repo-skill scan path — a bare-root `skills/` is never discovered), `.codex/config.toml` (`[mcp_servers]` + `[[hooks.PreToolUse]]` guards — the confirmed canonical, ancestor-walking project-config location; a bare-root `config.toml` only loads under a weaker, trust-gated, cwd-exact-match layer). **Codex forces `single-operator` mode for the solo core** — the agent-team coordination layer cannot port 1:1 (Codex has no peer-teammate / shared-task-list / context-% primitives). An **EXPERIMENTAL** Codex multi-agent team overlay exists (see `docs/codex/team-overlay.md`) but is opt-in and WIP; the solo core is the supported Codex path.
 
 Record the answer as `host` (`claude` | `codex`) in the manifest. **host defaults to `claude`** everywhere, so an omitted host is the historical Claude behavior.
 
@@ -155,7 +155,7 @@ The host selects, per generated file, which **HOST marker region** (`<!-- ▼ HO
 
 After choosing `codex`, the **default** is the supported **solo core** (the layout above; mode `single-operator`). Only if the user explicitly asks for the experimental multi-agent overlay, ask a second, clearly-worded `AskUserQuestion`:
 
-> *"Generate the **EXPERIMENTAL** Codex multi-agent team overlay? It is built on Codex's unstable `collaboration_mode`/`spawn_agent` v2 APIs (no native worktree isolation; `codex exec` exits 0 on failure; `--output-schema` only on the gpt-5 family; no context-% signal). It is OFF by default and falls back to solo on any preflight failure. Recommended: **No** — use the solo core. See `docs/codex/team-overlay.md`."*
+> *"Generate the **EXPERIMENTAL** Codex multi-agent team overlay? It is built on Codex's unstable `collaboration_mode`/`spawn_agent` v2 APIs (no native worktree isolation; `codex exec` exits 0 on failure; `--output-schema` support by model family is version-dependent — confirm on yours; no context-% signal). It is OFF by default and falls back to solo on any preflight failure. Recommended: **No** — use the solo core. See `docs/codex/team-overlay.md`."*
 
 Default **No**. Only on an explicit **Yes** do you set the manifest's `"codex_team_experimental": true` **and** `"mode": "team"`, and additionally emit the overlay artifacts: `config.toml` from `templates/config.codex.team.toml` (instead of `templates/config.codex.toml`); `.codex/agents/<role>.toml` from `templates/.codex/agents/*`; `.codex/hooks/subagent-{start,stop}.sh`; `scripts/codex-team-preflight.sh`; and the Codex `/team-start` + `/team-end` skills from `templates/.codex/skills/*`. **This is a two-switch gate** — even when generated, the overlay stays dormant until Codex's runtime `collaboration_mode`/`effort=ultra` is enabled. Carry the WIP banner into the generated `AGENTS.md` team section.
 
@@ -290,13 +290,14 @@ Write the files in **dependency order** — later files reference earlier ones.
 > | Step 1 root `CLAUDE.md` | `AGENTS.md` | same template |
 > | Step 2 `<area>/CLAUDE.md` | `<area>/AGENTS.md` | Codex reads nested `AGENTS.md` by cwd (deeper wins) |
 > | Step 6 `docs/team-protocol.md` | — | team-only; not emitted in the Codex solo core |
-> | Step 10 `.claude/commands/<c>.md` | `skills/<c>/SKILL.md` | the `[codex]` frontmatter block supplies `name:` (= the command); skip `team-start`/`team-end`/`context-check` |
-> | Step 11 `.claude/agents/<a>.md` | `skills/<a>/SKILL.md` | the 5 reviewers become solo review-prompt skills; `[agents.<role>]` roles are the EXPERIMENTAL overlay (Phase F), not the solo core |
-> | Step 11.5 `.claude/settings.json` | `config.toml` | from `templates/config.codex.toml`; emit `scripts/spec-lint.sh` + `scripts/guards/{git,secrets}-guard.sh`; **drop** `territory-guard.sh` + `scripts/hooks/team-event-log.sh` (team-only) |
-> | Step 13 user-global install | — | skipped (Codex solo carries no statusline/team-monitoring; `config.toml` is repo-local). If you instead want hooks/MCP user-global, MERGE them into `~/.codex/config.toml` (never replace), mirroring the Step-13 settings-merge discipline. |
+> | Step 10 `.claude/commands/<c>.md` | `.agents/skills/<c>/SKILL.md` | the `[codex]` frontmatter block supplies `name:` (= the command); skip `team-start`/`team-end`/`context-check` |
+> | Step 11 `.claude/agents/<a>.md` | `.agents/skills/<a>/SKILL.md` | the 5 reviewers become solo review-prompt skills; `[agents.<role>]` roles are the EXPERIMENTAL overlay (Phase F), not the solo core |
+> | Step 11.5 `.claude/settings.json` | `.codex/config.toml` | from `templates/config.codex.toml`; emit `scripts/spec-lint.sh` + `scripts/guards/{git,secrets}-guard.sh`; **drop** `territory-guard.sh` + `scripts/hooks/team-event-log.sh` (team-only) |
+> | Step 13 user-global install | — | skipped (Codex solo carries no statusline/team-monitoring; `.codex/config.toml` is repo-local). If you instead want hooks/MCP user-global, MERGE them into `~/.codex/config.toml` (never replace), mirroring the Step-13 settings-merge discipline. |
+> **Dest paths are `.agents/skills/` and `.codex/config.toml`, NOT bare `skills/`/`config.toml` at the project root** — Codex's real skill loader only scans `.codex/skills/` or `.agents/skills/` (never a bare-root `skills/`), and its real project-config loader's robust, ancestor-walking layer is `.codex/config.toml` (a bare-root `config.toml` only loads under a weaker, trust-gated, cwd-exact-match fallback). `.agents/skills/` is the exact destination Codex's own `.claude/commands`→Codex migration tool uses.
 > Do NOT use `@file` imports in `AGENTS.md` (unconfirmed in Codex) — inline what a Claude `CLAUDE.md` would `@import`.
 >
-> This table is the host = codex **solo core** mapping. If the EXPERIMENTAL team overlay was opted into (§4.0b), it **adds** to it: `config.toml` comes from `templates/config.codex.team.toml` (not `config.codex.toml`), and you additionally emit `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, and the Codex `/team-start` + `/team-end` skills.
+> This table is the host = codex **solo core** mapping. If the EXPERIMENTAL team overlay was opted into (§4.0b), it **adds** to it: `.codex/config.toml` comes from `templates/config.codex.team.toml` (not `config.codex.toml`), and you additionally emit `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, and the Codex `/team-start` + `/team-end` skills.
 
 ### Step 1 — Root `CLAUDE.md`
 
@@ -429,7 +430,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
     { "dest": "app/LESSONS.md", "template": "templates/area-LESSONS.md", "kind": "accreted", "area": "app/" },
     { "dest": ".claude/commands/tdd.md", "template": "templates/.claude/commands/tdd.md", "kind": "placeholder-only" }
   ],
-  "//generatedFiles-codex": "When host=codex the `template` paths are the SAME, but the `dest` paths follow the Codex layout — e.g. { dest: \"AGENTS.md\", template: \"templates/CLAUDE.md\" }, { dest: \"app/AGENTS.md\", template: \"templates/area-CLAUDE.md\", area: \"app/\" }, { dest: \"skills/tdd/SKILL.md\", template: \"templates/.claude/commands/tdd.md\" }, { dest: \"config.toml\", template: \"templates/config.codex.toml\", kind: \"verbatim\" }. exampleBlocks[].file likewise references the Codex dest filenames (AGENTS.md, not CLAUDE.md).",
+  "//generatedFiles-codex": "When host=codex the `template` paths are the SAME, but the `dest` paths follow the Codex layout — e.g. { dest: \"AGENTS.md\", template: \"templates/CLAUDE.md\" }, { dest: \"app/AGENTS.md\", template: \"templates/area-CLAUDE.md\", area: \"app/\" }, { dest: \".agents/skills/tdd/SKILL.md\", template: \"templates/.claude/commands/tdd.md\" }, { dest: \".codex/config.toml\", template: \"templates/config.codex.toml\", kind: \"verbatim\" }. Dests are `.agents/skills/` and `.codex/config.toml` — NOT bare `skills/`/`config.toml` at the project root, which Codex's real loaders do not discover. exampleBlocks[].file likewise references the Codex dest filenames (AGENTS.md, not CLAUDE.md).",
   "exampleBlocks": [
     { "file": "CLAUDE.md", "id": "tech-stack", "status": "customized" },
     { "file": "CLAUDE.md", "id": "key-safety-rules", "status": "customized" },
@@ -440,7 +441,7 @@ Assemble it from the ledger you built in §7 plus the foundational choices:
 
 Rules:
 - **`host`** (schema v3) is the generation target — `"claude"` or `"codex"` (§4.0). It drives, per generated file, which `<!-- ▼ HOST [...] ▼ -->` region survives and how the host-derived tokens (§10) resolve. **Absent ⇒ `"claude"`** (every pre-v3 manifest is a Claude project). `/scaffold-upgrade` reads it (`precheck.host`) and merges from the same `templates/` tree against the host-correct dests. Do not mix hosts in one manifest.
-- **`codex_team_experimental`** (schema v3; `host = codex` only) records the EXPERIMENTAL team-overlay opt-in (§4.0b). **Default `false`.** When `true` (which also forces `"mode": "team"`), the overlay artifacts are emitted (`config.toml` from `templates/config.codex.team.toml`, `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, the Codex team skills). For `host = claude` it is omitted (or `false`).
+- **`codex_team_experimental`** (schema v3; `host = codex` only) records the EXPERIMENTAL team-overlay opt-in (§4.0b). **Default `false`.** When `true` (which also forces `"mode": "team"`), the overlay artifacts are emitted (`.codex/config.toml` from `templates/config.codex.team.toml`, `.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, the Codex team skills). For `host = claude` it is omitted (or `false`).
 - **`generatedFromSha`** is the full 40-char HEAD of the **scaffolding checkout** you generate from (not the target project): `git -C <scaffolding-checkout> rev-parse HEAD`. If the templates were handed over outside a git checkout and no SHA is resolvable, record `"generatedFromSha": null` plus `"shaUnknown": true` and a short `"note"` — `/scaffold-upgrade` falls back to a verbatim-machinery fingerprint.
 - **`posture`** (schema v2) is the **Build posture** the project was generated under — copied from the `Build posture:` line of `{{ARCH_DOC}}`'s executive summary, as confirmed during the interview (never fabricated; if no such line exists, it was asked in §5). `/scaffold-upgrade` uses it to filter **posture-gated** upgrade content (e.g. production-grade phase-exit checklist rows) mechanically; a v1 manifest has no `posture`, so posture-gated content degrades to human-gated there.
 - **`placeholders` / `codeAreas` are exactly the values you substituted** — every resolved token, verbatim. `codeAreas` is an array (one entry per area; a 2nd+ area maps to the `{{CODE_AREA_2}}`… suffix set); `BUILD_CMD` may be `null`.
@@ -592,10 +593,10 @@ These are **not** asked in the interview — they are resolved from the manifest
 |---|---|---|
 | `{{ROOT_MEMORY}}` | `CLAUDE.md` | `AGENTS.md` |
 | `{{AREA_MEMORY}}` | `CLAUDE.md` | `AGENTS.md` |
-| `{{COMMANDS_HOME}}` | `.claude/commands/` | `skills/` |
-| `{{HOOKS_CONFIG}}` | `.claude/settings.json` | `config.toml` |
+| `{{COMMANDS_HOME}}` | `.claude/commands/` | `.agents/skills/` |
+| `{{HOOKS_CONFIG}}` | `.claude/settings.json` | `.codex/config.toml` |
 | `{{USER_GLOBAL_DIR}}` | `~/.claude` | `~/.codex` |
-| `{{PROJECT_DIR_ENV}}` | `CLAUDE_PROJECT_DIR` | `CODEX_PROJECT_DIR` |
+| `{{PROJECT_DIR_ENV}}` | `CLAUDE_PROJECT_DIR` | `CODEX_PROJECT_DIR` — Codex sets no such variable under any build; hook scripts must read `cwd` from the hook's own JSON payload instead (see the guard/hook scripts). |
 | `{{HOST_NAME}}` | `Claude Code` | `Codex CLI` |
 
 ### Identity & repo

@@ -7,7 +7,9 @@ argument-hint: "<short topic>"
 <!-- ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
---output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
+--output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+ledger regardless); OFF by default.
 Full caveats + design: docs/codex/team-overlay.md. -->
 
 <!--

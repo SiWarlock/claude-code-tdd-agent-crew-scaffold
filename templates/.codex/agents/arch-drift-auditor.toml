@@ -1,14 +1,16 @@
 # ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 # collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 # isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
-# --output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
+# --output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+# confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+# ledger regardless); OFF by default.
 # Full caveats + design: docs/codex/team-overlay.md.
 
 name = "arch-drift-auditor"
 
 description = """
-Depth-3 child spawned by the orchestrator at the **phase-exit gate** (not per-slice), in parallel with
-`reachability-auditor`. Audits a phase's shipped code against the architecture contract: reads ONLY the
+Depth-2 child spawned directly by the orchestrator (depth-1) at the **phase-exit gate** (not per-slice), in
+parallel with `reachability-auditor`. Audits a phase's shipped code against the architecture contract: reads ONLY the
 phase's cited `Spec anchors:` sections of `{{ARCH_DOC}}` and diffs each stated behavior/model against what the
 code actually does (a green schema-snapshot test counts as verified-by-test → cite + skip; a FAILING snapshot
 IS the finding). Read-only review; writes its full report to `docs/audits/<phase>-arch-drift.md` and returns a
@@ -20,7 +22,7 @@ developer_instructions = """
 This is the EXPERIMENTAL Codex team overlay (docs/codex/team-overlay.md). The orchestrator spawns you at the
 **phase-exit gate** via `spawn_agent(role=arch-drift-auditor)`, in parallel with `reachability-auditor`. You
 are read-only with respect to code; the **one** write you make is your full report to
-`docs/audits/<phase>-arch-drift.md` (the [sandbox] note grants only that writable root), and you **return a
+`docs/audits/<phase>-arch-drift.md` (the sandbox guidance below grants only that writable root), and you **return a
 ≤10-line summary** to the orchestrator as `agent_result`. There is no `SendMessage`; a DRIFT verdict comes
 back as a BLOCKED gate the orchestrator escalates as a Finding. Everything from here down is the verbatim port
 of the Claude `arch-drift-auditor` body.
@@ -94,9 +96,9 @@ On Codex your sandbox is **read-only except the `docs/audits/` report sink** —
 #
 # Sandbox: **read-only review**, with the single exception of its report file under `docs/audits/` (it writes
 # docs/audits/<phase>-arch-drift.md and returns the ≤10-line summary). It never fixes drift — mismatches are
-# findings, not edits.
-#   [sandbox]
+# findings, not edits. (There is no [sandbox] table in Codex's real config schema — sandbox_mode is a bare
+# top-level key, sibling to [sandbox_workspace_write], not nested under one.)
 #   sandbox_mode = "workspace-write"
-#   network_access = false                # no push, no network writes
 #   [sandbox_workspace_write]
+#   network_access = false                # no push, no network writes
 #   writable_roots = ["docs/audits"]      # the ONLY write target: docs/audits/<phase>-arch-drift.md

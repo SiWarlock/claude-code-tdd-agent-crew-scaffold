@@ -102,6 +102,28 @@ cmd_census() {
     grep -q "printf '%s\\\\t%s\\\\n' $tok " "$SUS" || miss="$miss $tok"
   done
   [ -z "$miss" ] && ok "host_token_map defines all 7 host-derived tokens" || bad "host_token_map missing token(s):$miss"
+
+  # value-correctness guard (not just definedness): the codex-column COMMANDS_HOME/HOOKS_CONFIG must resolve
+  # under a dot-directory — Codex's real skill/config loaders never scan a bare project-root path. This is
+  # the exact regression class that shipped once already; catch it here so it can't ship silently again.
+  # Isolate host_token_map()'s own function body FIRST (awk, brace-scoped) before extracting its codex
+  # case arm — normalize_host() also has a `codex)` arm, and a bare `/^    codex)/,/;;/` sed range across
+  # the whole file can silently union the two disjoint case blocks (GNU sed range semantics don't test the
+  # end pattern against the line that opened the range, so a same-line `codex) ... ;;` in normalize_host
+  # doesn't close there — it re-opens at the next `;;`, then a second range opens at host_token_map's own
+  # `codex)` line). Scoping to the function body first makes the codex-arm extraction unambiguous.
+  local host_token_map_body codex_commands_home codex_hooks_config
+  host_token_map_body=$(awk '/^host_token_map\(\) \{/{f=1} f{print} f && /^}/{exit}' "$SUS")
+  codex_commands_home=$(printf '%s\n' "$host_token_map_body" | sed -n '/^    codex)/,/^      ;;/p' | grep "COMMANDS_HOME" | sed -E 's/.*COMMANDS_HOME[[:space:]]+"([^"]*)".*/\1/')
+  codex_hooks_config=$(printf '%s\n' "$host_token_map_body" | sed -n '/^    codex)/,/^      ;;/p' | grep "HOOKS_CONFIG" | sed -E 's/.*HOOKS_CONFIG[[:space:]]+"([^"]*)".*/\1/')
+  case "$codex_commands_home" in
+    .codex/*|.agents/*) ok "codex COMMANDS_HOME is dot-directory-scoped ($codex_commands_home)" ;;
+    *) bad "codex COMMANDS_HOME is bare-root ($codex_commands_home) — Codex's real skill loader never scans a bare project-root directory" ;;
+  esac
+  case "$codex_hooks_config" in
+    .codex/*) ok "codex HOOKS_CONFIG is under .codex/ ($codex_hooks_config)" ;;
+    *) bad "codex HOOKS_CONFIG is not under .codex/ ($codex_hooks_config) — a bare-root config.toml only loads under a weak, trust-gated fallback" ;;
+  esac
 }
 
 # ---- migrations ----------------------------------------------------------------------------------
@@ -142,8 +164,12 @@ cmd_migrations() {
   done
 
   # optional per-migration `hosts` filter (schema v3): values must be claude|codex
+  # Guard with `select((.hosts|type)=="array")` before `.hosts[]` — jq halts the WHOLE pipeline on the
+  # first runtime type error (e.g. a non-array `hosts` field on an earlier entry), which would silently
+  # skip label-validation for every entry after it. The type guard means a malformed entry is skipped here
+  # (never fatal to this check) while badhostsarr below independently reports the type problem itself.
   local badhosts
-  badhosts=$(jq -r '.migrations[] | select(.hosts) | .hosts[]' "$reg" 2>/dev/null | sort -u | grep -vE '^(claude|codex)$' || true)
+  badhosts=$(jq -r '.migrations[] | select(.hosts) | select((.hosts|type)=="array") | .hosts[]' "$reg" 2>/dev/null | sort -u | grep -vE '^(claude|codex)$' || true)
   [ -z "$badhosts" ] && ok "migration 'hosts' values are claude|codex only" || bad "invalid migration 'hosts' value(s): $(echo "$badhosts" | tr '\n' ' ')"
   local badhostsarr
   badhostsarr=$(jq -r '.migrations[] | select(has("hosts")) | select((.hosts|type)!="array") | .id' "$reg" 2>/dev/null || true)

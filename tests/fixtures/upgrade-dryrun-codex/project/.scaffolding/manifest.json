@@ -66,9 +66,9 @@
     { "dest": "app/AGENTS.md", "template": "templates/area-CLAUDE.md", "kind": "mixed", "area": "app/" },
     { "dest": "app/LESSONS.md", "template": "templates/area-LESSONS.md", "kind": "accreted", "area": "app/" },
     { "dest": "IMPLEMENTATION_PLAN.md", "template": "templates/IMPLEMENTATION_PLAN.md", "kind": "accreted" },
-    { "dest": "skills/tdd/SKILL.md", "template": "templates/.claude/commands/tdd.md", "kind": "placeholder-only", "area": "app/" },
-    { "dest": "skills/check-arch/SKILL.md", "template": "templates/.claude/commands/check-arch.md", "kind": "placeholder-only", "area": "app/" },
-    { "dest": "config.toml", "template": "templates/config.codex.toml", "kind": "verbatim" }
+    { "dest": ".agents/skills/tdd/SKILL.md", "template": "templates/.claude/commands/tdd.md", "kind": "placeholder-only", "area": "app/" },
+    { "dest": ".agents/skills/check-arch/SKILL.md", "template": "templates/.claude/commands/check-arch.md", "kind": "placeholder-only", "area": "app/" },
+    { "dest": ".codex/config.toml", "template": "templates/config.codex.toml", "kind": "verbatim" }
   ],
   "exampleBlocks": [
     { "file": "AGENTS.md", "id": "project-structure", "status": "illustrative" },

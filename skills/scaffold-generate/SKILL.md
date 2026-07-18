@@ -59,8 +59,9 @@ answer (and **never fabricate** a placeholder; a wrong value propagates across m
 Execute `GENERATE-WITH-CLAUDE.md`'s stages, with these notes:
 
 - **Host choice (§4.0)** — Claude Code vs Codex CLI (via `AskUserQuestion`), asked **first**. `codex`
-  forces `single-operator` for the solo core and selects the Codex dests (`AGENTS.md`, `skills/<name>/SKILL.md`,
-  `config.toml`) + host-derived tokens; see the HOST-MAPPING table in `GENERATE-WITH-CLAUDE.md` §7. The Codex
+  forces `single-operator` for the solo core and selects the Codex dests (`AGENTS.md`, `.agents/skills/<name>/SKILL.md`,
+  `.codex/config.toml` — NOT bare `skills/`/`config.toml`, which Codex's real loaders never discover) +
+  host-derived tokens; see the HOST-MAPPING table in `GENERATE-WITH-CLAUDE.md` §7. The Codex
   multi-agent team overlay is opt-in + EXPERIMENTAL (`docs/codex/team-overlay.md`), not the solo core.
 - **Mode choice (§4.1)** — team pattern vs single-operator (via `AskUserQuestion`); **skipped when host=codex**
   (forced single-operator). This fans out which commands + docs get written.
@@ -85,7 +86,7 @@ instead of hand-diffs. The full schema + assembly rules are in **`GENERATE-WITH-
 
 - `schemaVersion` (**3** — adds `host`); `scaffoldingRepo` + **`generatedFromSha`** (`git -C <scaffolding-checkout> rev-parse HEAD`)
   + `generatedFromRef` + `generatedAt`; `lastUpgradedFromSha: null`.
-- **`host`** (`claude` | `codex`, §4.0; absent ⇒ `claude`) + `mode` + `track` + `optionalCommands` + `optionalSubagents` (the foundational choices). When `host=codex` the `generatedFiles[].dest` values follow the Codex layout (`AGENTS.md`, `skills/<name>/SKILL.md`, `config.toml`) while `template` paths stay shared.
+- **`host`** (`claude` | `codex`, §4.0; absent ⇒ `claude`) + `mode` + `track` + `optionalCommands` + `optionalSubagents` (the foundational choices). When `host=codex` the `generatedFiles[].dest` values follow the Codex layout (`AGENTS.md`, `.agents/skills/<name>/SKILL.md`, `.codex/config.toml`) while `template` paths stay shared.
 - `placeholders{}` + per-area `codeAreas[]` — every resolved value, exactly as substituted.
 - `generatedFiles[]` — one row per written file: `{dest, template, kind, area?}` where `kind` ∈
   `verbatim | placeholder-only | mixed | accreted | user-canonical`. Build this list **as you write each file**.

@@ -1,7 +1,9 @@
 # ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 # collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 # isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
-# --output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
+# --output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+# confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+# ledger regardless); OFF by default.
 # Full caveats + design: docs/codex/team-overlay.md.
 
 name = "implementer"
@@ -117,20 +119,23 @@ surface as **categorized Step-9 flags**; the orchestrator writes them hot.
 """
 
 # ---- model + sandbox guidance (EXPERIMENTAL — confirm keys against your Codex version) -------------------
-# Model: a **gpt-5-codex** (coding-tuned) model for implementation quality. It does NOT support
-# `--output-schema`, so this role reports through the filesystem ledger (its `completed`+hash row), not a
-# structured `agent_result`. (The orchestrator runs a gpt-5-family model precisely because it DOES get the
-# schema for its routing.)
-#   model = "gpt-5-codex"      # coding quality; no --output-schema → ledger is the source of truth
+# Model: a **gpt-5-codex** (coding-tuned) model for implementation quality. `--output-schema` support by
+# model family is version-dependent (it was gpt-5-family-only on some past Codex builds — openai/codex#4181,
+# fixed by #4195 — confirm on yours rather than assume). Regardless, this role reports through the filesystem
+# ledger (its `completed`+hash row), since planning/routing quality matters more than structured output for
+# a coding role.
+#   model = "gpt-5-codex"      # coding quality; reports via the ledger, not a structured agent_result
 #
 # Sandbox: writable-roots scoped to the slice's code area — THIS is how territory is enforced (a capability,
 # stronger and coarser than a PreToolUse check). Everything outside is read-only, including all orchestrator
 # territory. The push-ban is free: `--full-auto` blocks network so the implementer cannot push even if it
 # tried. (`--yolo` would re-enable network for a dep-install/integration step — a trust escalation; default
-# OFF.) The narrow ledger path is the one out-of-area write it needs (to append its completed row).
+# OFF.) The narrow ledger path is the one out-of-area write it needs (to append its completed row). (There is
+# no [sandbox] table in Codex's real config schema — sandbox_mode is a bare top-level key, sibling to
+# [sandbox_workspace_write], not nested under one; network_access nests INSIDE [sandbox_workspace_write].)
 #   sandbox_mode = "workspace-write"
-#   network_access = false                 # push-ban, for free (installs/tests needing net → --yolo, opt-in)
 #   [sandbox_workspace_write]
+#   network_access = false                 # push-ban, for free (installs/tests needing net → --yolo, opt-in)
 #   writable_roots = ["{{CODE_AREA}}", ".codex-team/<label>/"]   # code area + the ledger append target only
 #   # NOT writable (orchestrator territory, by design): {{TASK_TRACKER}}, {{ARCH_DOC}}, docs/briefs/,
 #   # {{CODE_AREA}}LESSONS.md, the {{CODE_AREA}}{{AREA_MEMORY}} lessons index.

@@ -34,7 +34,10 @@
 <!-- ▼ HOST [codex] ▼ -->
 ```
 {{REPO_DIRNAME}}/
-├── skills/                             # Slash-command skills (one SKILL.md per command)
+├── .agents/
+│   └── skills/                         # Slash-command skills (one SKILL.md per command)
+├── .codex/
+│   └── config.toml                     # Codex config (MCP servers + PreToolUse guard hooks)
 ├── {{CODE_AREA}}                       # {{CODE_AREA_NAME}} code
 │   ├── AGENTS.md                       # Code-area conventions
 │   └── LESSONS.md                      # Banked engineering lessons
@@ -46,7 +49,6 @@
 │   ├── sessions/                       # Numbered chronological session docs
 │   └── runbooks/                       # Operational procedures
 ├── AGENTS.md                           # THIS FILE — global project conventions + shared comm rules
-├── config.toml                         # Codex config (MCP servers + PreToolUse guard hooks)
 ├── {{TASK_TRACKER}}                    # Task tracker (state + phase plan)
 └── {{ARCH_DOC}}                        # Architecture / design contract
 ```

@@ -1,7 +1,9 @@
 # ⚠ EXPERIMENTAL — Codex multi-agent team overlay (WIP). Built on Codex's unstable
 # collaboration_mode / spawn_agent v2 APIs (expect churn; pin a known-good version). No native git-worktree
 # isolation; `codex exec` exits 0 even on failure (verify via git log + test re-run, never the exit code);
-# --output-schema only on the gpt-5 family (coding roles report via a filesystem ledger); OFF by default.
+# --output-schema was gpt-5-family only on some past Codex builds (openai/codex#4181, fixed by #4195) —
+# confirm on your pinned version rather than assuming either way (coding roles report via a filesystem
+# ledger regardless); OFF by default.
 # Full caveats + design: docs/codex/team-overlay.md.
 
 name = "orchestrator"
@@ -53,7 +55,11 @@ commit the planning/doc edits; the implementer commits code+tests.
 
 ## The ledger is the source of truth — `.codex-team/<label>/tasks.jsonl`
 There is no shared TaskList and no `addBlockedBy`. You own an append-only JSONL ledger keyed by the team
-`<label>`. One row per state transition, e.g.:
+`<label>`. **Your FIRST action on spawn, before anything else, is writing an init row** — this is what
+`/team-start` Step 5 checks for to confirm you actually came up (a crashed spawn writes nothing, per the
+exit-0 caveat below):
+- `{"state":"init","label":"<TEAM_LABEL>","ts":...}`
+One row per state transition thereafter, e.g.:
 - `{"slice":"P3.2","state":"spawned","thread":"/root/slice-P3.2","ts":...}`
 - `{"slice":"P3.2","state":"step25","verdict":"APPROVED","ts":...}`
 - `{"slice":"P3.2","state":"step9","ship":"go","ts":...}`
@@ -152,15 +158,18 @@ sandbox.
 """
 
 # ---- model + sandbox guidance (EXPERIMENTAL — confirm keys against your Codex version) -------------------
-# Model: a **gpt-5-family** model (NOT gpt-5-codex) so your structured `agent_result` can use
-# `--output-schema` — the gpt-5 family is the only one that honors it; the implementer can't, which is why it
-# falls back to the ledger. Planning/review/routing quality matters more than raw coding here.
-#   model = "gpt-5"            # or your pinned gpt-5.x; avoid "gpt-5-codex"/"codex-*" (no --output-schema)
+# Model: a **gpt-5-family** model (NOT gpt-5-codex) so your structured `agent_result` can use `--output-schema`
+# if it's available on your pinned version (this was gpt-5-family-only on some past Codex builds — openai/codex#4181,
+# fixed by #4195 — confirm rather than assume). The implementer reports via the ledger regardless of this.
+# Planning/review/routing quality matters more than raw coding here.
+#   model = "gpt-5"            # or your pinned gpt-5.x; avoid "gpt-5-codex"/"codex-*" for this role
 #
 # Sandbox: the orchestrator is the broad coordination role — it authors planning + docs + the ledger across
 # the repo, so its writable roots are wide (repo root). The HARD territory boundary is enforced on the
 # *implementer* side (its narrow writable root), not here. The orchestrator does not write feature code by
-# convention, not by capability.
+# convention, not by capability. (There is no [sandbox] table in Codex's real config schema — sandbox_mode is
+# a bare top-level key, sibling to [sandbox_workspace_write], not nested under one.)
+#   sandbox_mode = "workspace-write"
 #   [sandbox_workspace_write]
 #   writable_roots = ["."]     # repo root: {{TASK_TRACKER}}, {{ARCH_DOC}}, docs/, {{CODE_AREA}}{{AREA_MEMORY}},
 #                              # {{CODE_AREA}}LESSONS.md, and .codex-team/<label>/ (the ledger)

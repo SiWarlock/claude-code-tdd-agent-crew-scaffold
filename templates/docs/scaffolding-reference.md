@@ -24,6 +24,7 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
 
 ## File inventory
 
+<!-- ▼ HOST [claude] ▼ -->
 ```
 {{REPO_DIRNAME}}/
 ├── .claude/
@@ -57,6 +58,33 @@ _(Single-operator fallback: drop the team-lead row + `/team-start`/`/team-end`; 
 └── team-history/                       # Per-slice trajectory data
     └── <team>/<name>.jsonl             # Per-slice ctx snapshot (/context-check --snapshot) for 3-slice rolling growth
 ```
+<!-- ▲ END HOST ▲ -->
+<!-- ▼ HOST [codex] ▼ -->
+```
+{{REPO_DIRNAME}}/
+├── .agents/
+│   └── skills/                         # Slash-command skills (one SKILL.md per command)
+├── .codex/
+│   └── config.toml                     # {{HOOKS_CONFIG}} — MCP servers + PreToolUse guard hooks
+├── {{CODE_AREA}}
+│   ├── AGENTS.md                       # Code-area conventions
+│   └── LESSONS.md                      # Lessons logged (§1+)
+├── docs/
+│   ├── orchestrator-briefing.md        # Loaded by /orchestrate-start
+│   ├── tdd-brief-template.md           # /tdd brief format
+│   ├── scaffolding-reference.md        # THIS FILE
+│   ├── briefs/                         # Numbered /tdd briefs (NNN-<task-id>-<topic>.md)
+│   ├── sessions/                       # Numbered chronological session docs
+│   └── runbooks/                       # Operational procedures
+├── AGENTS.md                           # Root — project conventions + shared comm rules
+├── {{TASK_TRACKER}}                    # Task tracker
+└── {{ARCH_DOC}}                        # Architecture / design contract
+```
+The solo core carries **no user-global install** — `.codex/config.toml` is repo-local and Codex has no
+statusline/team-monitoring layer to seed at `~/.codex`. (The EXPERIMENTAL team overlay additionally emits
+`.codex/agents/*`, `.codex/hooks/*`, `scripts/codex-team-preflight.sh`, and the Codex `/team-start` +
+`/team-end` skills — see `docs/codex/team-overlay.md`.)
+<!-- ▲ END HOST ▲ -->
 
 <!-- ▼ EXAMPLE BLOCK [id=inventory-extension]: extend the inventory with the project's real layout — extra code areas, deliverable docs, eval suites. ▼ -->
 <!-- ▲ END EXAMPLE BLOCK [id=inventory-extension] ▲ -->
