@@ -512,8 +512,8 @@ If the user asks "you handle it" — use `Read` + `Edit` to do scenario B1 surgi
 
 After install, ask the user to confirm:
 1. Start a new Claude Code session (or check this one's status line) — the status bar should still render normally.
-2. Run `~/.claude/scripts/check-team-context.sh` from a terminal. With no team active, output should be: `No team registry entries found. Are any team sessions active?`
-3. If the user runs `/team-start` from this scaffolding, the spawn prompts will write team-registry entries for each teammate; then `/context-check <team>` should show live ctx_pct.
+2. Run `~/.claude/scripts/check-team-context.sh` from a terminal. With no team active, output should be: `No team registry entries found. Are any team sessions active? (Agent teams are experimental/off by default — confirm CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 is set.)`
+3. If the user runs `/team-start` from this scaffolding, the spawn prompts will write team-registry entries for each teammate; then `/context-check <track>` should show live ctx_pct.
 
 **Settings.json — what to change and what NOT to change:**
 

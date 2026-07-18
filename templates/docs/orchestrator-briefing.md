@@ -18,7 +18,7 @@
 >
 > **Companion files:** `docs/tdd-brief-template.md` (brief format you author for implementers); `docs/team-protocol.md` (lead playbook — team pattern only; you don't need its detail). **Shared comm rules** (track-prefix, escalation taxonomy, messaging budget, phantom-defense, close-out gating) live in **root `{{ROOT_MEMORY}}`** — you've already loaded them.
 
-You're picking up the **orchestrator role** — one teammate on a Claude agent team. Your job is to drive {{PROJECT_NAME}} forward. The active phase plan, deadlines, and currently-in-progress state live in `{{TASK_TRACKER}}` — this briefing stays **state-free** so it doesn't drift.
+You're picking up the **orchestrator role** — one teammate on a Claude agent team (this requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` to have been set when the team was started; see `/team-start`'s prerequisite check — without it, this project runs the single-operator fallback below instead). Your job is to drive {{PROJECT_NAME}} forward. The active phase plan, deadlines, and currently-in-progress state live in `{{TASK_TRACKER}}` — this briefing stays **state-free** so it doesn't drift.
 
 > **Architecture sentence to preserve as the project's posture:** *{{ARCHITECTURE_SENTENCE}}*
 >
@@ -80,7 +80,7 @@ After reading: **report back with a summary** of (a) where the project is, (b) w
 4. **Manage cross-doc invariants** — area `{{AREA_MEMORY}}` tables mirror `{{ARCH_DOC}}`; field/invariant changes need atomic doc edits in the same round; invariant ones pinned by tests.
 5. **Step-2.5 review** — the implementer sends a tight write-up (one `Asserts: <invariant> (§anchor)` line per test, plus the **coverage map**: each brief acceptance bullet → its covering test or a `not-tested-because:` note). Review the *asserted invariant* against the spec — that's what catches a conceptually-wrong test; open the test file only if an assertion looks off. **`APPROVED.` asserts per-acceptance-bullet coverage was confirmed** — an unmapped bullet means `ADD:` or an accepted not-tested-because, never a silent pass. Reply with a magic-words header (`APPROVED.` / `TWEAK: <what>` / `ADD: <test>` — see root `{{ROOT_MEMORY}}`), questions in the body. Frequently catches missing boundary tests. **Load-bearing.** Escalate a critical/safety design Q before signing off.
 6. **Step-9 hot routing** (matrix below). Reactive — implementer sends categorized summary; you route each item hot.
-7. **Per-slice context check** (team mode only) — after Step-10 + hot-routing, run `/context-check <team>` locally, and **ping the lead only when a tier ≥ WARN is crossed**. OK slices → no ping (the lead sees progress via the task list + idle-notifications). See "Per-slice context check" below.
+7. **Per-slice context check** (team mode only) — after Step-10 + hot-routing, run `/context-check <track>` locally, and **ping the lead only when a tier ≥ WARN is crossed**. OK slices → no ping (the lead sees progress via the task list + idle-notifications). See "Per-slice context check" below.
 8. **Commit + push** — Conventional Commits + AI trailer (HEREDOC). Push only at `/orchestrate-end` if a remote is configured.
 9. **Run `/orchestrate-end` after each implementer `/session-end`** (on user-explicit go OR auto-cycle trigger) — verify hot routing, reconcile checkboxes, Log entry, **triage Carry-forward**, set "Currently in progress." **Phase boundaries:** dispatch **`/phase-exit <phase>`** at the START of the round that should close a phase — it executes the tracker's checklist rows (auditor fan-outs, spec coverage, verify-only push row) and a phase checkbox is ticked only on its CLEAR verdict (or human-waived rows).
 10. **Scope cuts escalate** — deferments + load-bearing architectural Option A/B/C calls go to the human via the lead; never decide agent-only.
@@ -117,7 +117,7 @@ Messages auto-deliver and wake the recipient, so a "still waiting?" almost alway
 
 **When:** after the Step-10 commit + hot-routing, once the slice task is marked `completed`.
 
-1. **Snapshot + check, locally:** run `/context-check <team> --snapshot <commit-hash>`. It appends the per-slice history (for trajectory) and returns the one-line `--brief` aggregate. Local read — **no message**.
+1. **Snapshot + check, locally:** run `/context-check <track> --snapshot <commit-hash>`. It appends the per-slice history (for trajectory) and returns the one-line `--brief` aggregate. Local read — **no message**.
 2. **Ping the lead ONLY if the aggregate is `WARN` / `ACTION` / `HARD-STOP`.** Send the verbatim `--brief` line via `SendMessage` (no paraphrase, no self-assessment — root `{{ROOT_MEMORY}}` "Canonical context source"). On `OK`, send **nothing** — the lead's free idle-notification + the task list already show the slice landed.
 3. **Dispatch the next slice — don't wait for the lead.** The `/team-start` approval authorized the whole queue. If cycle instructions arrive (only on a crossing), treat them as an interrupt: pause, run the cycle, resume.
 

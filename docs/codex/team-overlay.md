@@ -33,6 +33,13 @@ Codex's experimental multi-agent primitives. The **solo core** (see the project'
 `.codex/config.toml`) is the supported path; this overlay is an opt-in accelerant for when Codex's collab layer is
 available and you want orchestrator/implementer parallelism within one repo.
 
+> The Claude-side layer being ported here is *itself* experimental and OFF by default — it requires
+> `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (mirroring the rigor this document applies to Codex's own
+> `collaboration_mode`/`effort=ultra` gate above). This document otherwise describes current (v2.1.178+)
+> Claude Code reality: `TeamCreate`/`TeamDelete` no longer exist (removed, not merely "avoided" by this
+> overlay), a session has exactly one auto-formed, session-named team, and the `Agent` tool's `team_name`
+> parameter is accepted but ignored.
+
 ## 1. Why this can't be a 1:1 port
 
 The Claude layer is a **durable peer mesh over shared state**: orchestrator and implementer are co-equal
@@ -73,8 +80,8 @@ worktree-provision hook point exists but is guarded off.
 
 | Claude mechanism | Codex equivalent | Where the analogy breaks |
 |---|---|---|
-| `TeamCreate` + `team_name` | **dropped** — the team is implicit in the spawn tree; the label is a ledger/event-log dir key | no team object to "join"; every `spawn_agent` is a real child thread |
-| `Agent(team_name,name,subagent_type)` | **`spawn_agent`** with `role=` + a canonical task path; `name`→nickname | fork-join, not "join a persistent team" — a child is expected to return |
+| ~~`TeamCreate`~~ (already removed from Claude Code itself — see banner above) | **no analog needed** — the team is implicit in the spawn tree; the label is a ledger/event-log dir key | Claude's own team is implicit too now, but keyed by an auto-derived session name, not a chosen label — neither side lets you name/create a team |
+| `Agent(name,subagent_type)` — `team_name` accepted but ignored/deprecated on current Claude | **`spawn_agent`** with `role=` + a canonical task path; `name`→nickname | fork-join, not "join a persistent team" — a child is expected to return |
 | durable lead persisting across cycles | **root (depth-0) session = lead**; re-derives state from files | root is bound to the human's live session — if it ends, the tree dies (no fresh lead from a handoff doc without a new `codex` run) |
 | orchestrator (peer) | **`[agents.orchestrator]`**, depth-1 child; long-lived via `followup_task` | becomes a child of the lead, not a peer beside it |
 | implementer-per-area (peer) | **`[agents.implementer]`**, depth-2, spawned per slice, closed at Step-10 | per-slice fork-join ⇒ implementer never accumulates cross-slice context → cycling is **free** (just `close_agent`) |
@@ -129,7 +136,8 @@ writes its full report to `docs/audits/<phase>-<agent>.md` and returns a ≤10-l
 - **`scripts/codex-team-preflight.sh`** — the spawn round-trip probe (§6); it keeps no circuit-breaker state
   of its own — the orchestrator's ledger `circuit_open` row is the sole source of truth.
 - **Codex `/team-start` + `/team-end` skills** — the lead's stand-up / close-out, re-expressed for the spawn
-  tree (no `TeamCreate`; `spawn_agent` topology + the preflight gate + the solo fallback).
+  tree (no team-creation step needed, matching current Claude Code — team forms implicitly on first spawn;
+  `spawn_agent` topology + the preflight gate + the solo fallback).
 
 ## 6. Verification + risk
 

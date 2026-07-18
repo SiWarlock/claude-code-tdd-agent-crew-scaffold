@@ -57,7 +57,7 @@ Discipline is enforced by **slash commands** (`/team-start`, `/tdd`, `/orchestra
 5. **Context-budget pressure.** One session doing planning + coding + commits + scope decisions burns context fast. Splitting across roles with shared file state lets each hold a smaller mental model. The team lead specifically **persists across many orchestrator/implementer cycles** so coordination state survives even when teammates hit context.
 6. **Un-bisectable history.** When a regression bisect happens months later, you want each slice to be one commit with a message explaining *why* it landed. Without a cadence convention, slices get bundled and messages go terse.
 7. **Onboarding cost.** A fresh session at week 5 shouldn't re-read every prior session doc to orient. Compact lookup tables + a briefing doc cut session-start context cost sharply.
-8. **Channel-bleed in multi-team work.** When parallel team-lead sessions coordinate different tracks in the same repo, cross-team message bleed becomes a real failure mode. The team pattern's `<track>-<area>-<role>` naming makes cross-bleed structurally detectable.
+8. **Numbered-doc + naming collisions across parallel tracks.** When parallel team-lead sessions coordinate different tracks in the same repo, per-directory `NNN` counters (briefs, session docs, handoffs) would collide on merge. (Real cross-session `SendMessage` bleed isn't a risk — each track is its own session-scoped Claude team.) The team pattern's `<track>-<area>-<role>` naming keeps numbered docs collision-free and transcripts legible.
 
 ### What it deliberately does NOT try to solve
 
@@ -121,9 +121,9 @@ The orchestrator and implementer communicate **directly** via teammate messages.
 
 The lead is pulled in for exactly four categories of escalation (§8). Everything else, the orchestrator and implementer settle between themselves.
 
-### Naming + cross-bleed prevention
+### Naming + numbered-doc collision prevention
 
-When parallel team-lead sessions run in the same repo (e.g. a frontend track and a backend track simultaneously), teammates use **`<track>-<area>-<role>`** naming — `frontend-team-orchestrator`, `backend-team-implementer`, etc. The lead announces its track on `/team-start`. **Any peer DM from an agent whose name doesn't carry your track prefix is channel-bleed — ignore it and continue.** When only one team-lead session runs, the simpler `<area>-<role>` form is fine.
+When parallel team-lead sessions run in the same repo (e.g. a frontend track and a backend track simultaneously), teammates use **`<track>-<area>-<role>`** naming — `frontend-team-orchestrator`, `backend-team-implementer`, etc. The lead announces its track on `/team-start`. Each parallel track is its own separate, session-scoped Claude team — `SendMessage` only resolves within your own team, so a DM from another track's session structurally cannot reach you. The prefix exists for numbered-doc filename collision prevention (briefs/session docs/handoffs would collide on merge otherwise) and transcript legibility — still confirm a recipient's exact name before any peer send, since a typo addresses the wrong (real) teammate in your own team, not "another track." When only one team-lead session runs, the simpler `<area>-<role>` form is fine.
 
 ### Why three roles, not two?
 
@@ -134,7 +134,7 @@ When parallel team-lead sessions run in the same repo (e.g. a frontend track and
 
 ### Single-operator fallback
 
-Reserved for **environments where the agent-teams feature is unavailable** — it is NOT the solo-developer default (a solo dev runs **team mode (single track)**: the full 3-role team, one worktree). In the fallback you drop the team lead and run the original two-session model: you sit in for the lead, paste between an orchestrator session and an implementer session, and the escalation taxonomy collapses (everything is in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. Its two concrete losses: (1) the human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode. The generator (§13) asks at bootstrap which mode you want.
+Reserved for **environments where the agent-teams feature is unavailable** — most concretely, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` isn't set to `1` (Claude Code's agent-teams feature is itself experimental and OFF by default; `/team-start` checks this before spawning anything and falls back here on failure). It is NOT the solo-developer default (a solo dev with the flag enabled runs **team mode (single track)**: the full 3-role team, one worktree). In the fallback you drop the team lead and run the original two-session model: you sit in for the lead, paste between an orchestrator session and an implementer session, and the escalation taxonomy collapses (everything is in front of you). The file-state discipline, the `/tdd` steps, the routing matrix, and the commit cadence are identical. Its two concrete losses: (1) the human relays every Step-2.5/Step-9 exchange by hand; (2) no context monitoring or auto-cycle exists in solo mode. The generator (§13) asks at bootstrap which mode you want.
 
 ### Codex host + the experimental team overlay
 
@@ -251,7 +251,7 @@ Each `.claude/commands/<name>.md` is a prompt invoked as `/<name>` (with optiona
 | **`/check-arch <topic>`** | Either | **Context-efficiency primitive.** Looks the topic up in the area `CLAUDE.md` lookup table and reads *only* that section of `{{ARCH_DOC}}`. Falls back to grep; recommends adding a lookup row if the topic recurs. Never loads a whole architecture doc. |
 | **`/phase-exit <phase>`** | Orchestrator | **Executes** the tracker's phase-exit checklist as a row→executor mapper (hardcodes no rows): auditor fan-outs (`reachability-auditor`, `arch-drift-auditor`, policy-resolved security review) in one parallel message, `spec-lint tests` + posture-gated rows via Bash, per-row ticks recorded as they pass, full reports → `docs/audits/`, CLEAR/BLOCKED verdict to the Log. Dispatch at the START of a round. |
 | **`/wired <feature>`** | Either | Reachability tracer. Trace a feature's call chain from a production entry point; report REACHABLE / UNREACHABLE with the gap. The standalone form of `/tdd` Step 7.5. |
-| **`/context-check [team]`** *(team mode)* | Any role | Reports per-teammate context usage by joining `~/.claude/team-registry/` + `~/.claude/heartbeats/`. Used by orch's per-slice auto-flow + manual invocation. See §8 "Context monitoring + auto-cycle." |
+| **`/context-check [track]`** *(team mode)* | Any role | Reports per-teammate context usage by joining `~/.claude/team-registry/` + `~/.claude/heartbeats/`. Used by orch's per-slice auto-flow + manual invocation. See §8 "Context monitoring + auto-cycle." |
 | **`/eval [category]`** *(optional)* | Either | Runs a named eval class (eval-driven projects). |
 | **`/trace <id>`** *(optional)* | Either | Pulls a structured trace by id (observability-heavy projects). |
 
@@ -355,7 +355,7 @@ The implementer's outbound traffic to the orchestrator is **strictly bounded** b
 ### Phantom-message defense
 
 Cross-channel injection failure modes exist in real LLM-agent sessions. Defensive posture:
-- **Track-prefix mismatch** on any peer DM → channel-bleed; ignore.
+- **Track-prefix mismatch** on any peer DM → a spawn-naming inconsistency within your own team (not cross-track bleed, which can't happen — `SendMessage` only resolves within your own session-scoped team) — verify the sender rather than reflexively ignoring it.
 - **User-frame plain-text with uncertain/exploratory tone** vs the user's direct voice → confirm before high-stakes directives.
 - **An agent pushing back on a correction with verifiable evidence** → defer to the evidence (the original input may have been phantom).
 - Hash verification is per-issue, not standard — only verify when a problem actually surfaces.
@@ -438,11 +438,11 @@ Teammates have finite context windows. Without a reliable monitor, sessions eith
 
 **How it works:**
 
-1. **Status line writes heartbeats** — the user's `~/.claude/statusline-command.sh` script (template provided in `templates/scripts/`) reads the harness's per-turn JSON, which includes `context_window.used_percentage`. On every refresh, the status line writes a heartbeat to `~/.claude/heartbeats/<session_id>.json` — but ONLY if a `~/.claude/team-registry/<session_id>.json` entry exists for that session. Solo (non-team) sessions never write registry entries, so the heartbeat system is silent for them.
+1. **Status line writes heartbeats** — the user's `~/.claude/statusline-command.sh` script (template provided in `templates/scripts/`) reads the harness's per-turn JSON, which includes `context_window.used_percentage`. On every refresh, the status line writes a heartbeat to `~/.claude/heartbeats/<session_id>.json` — but ONLY if a `~/.claude/team-registry/<session_id>.json` entry exists for that session. Solo (non-team) sessions never write registry entries, so the heartbeat system is silent for them. This whole mechanism is moot unless `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set — Claude Code's agent-teams feature is itself experimental and off by default, and `/team-start` checks this before spawning anything.
 
-2. **Each teammate writes a registry entry at startup** — the `/team-start` spawn prompt templates include a first-action `jq` command that writes `~/.claude/team-registry/<session_id>.json` with `{session_id, name, team, role, cwd, ts}`. This is what "opts in" the teammate to monitoring. The `team` field is the **`$TEAM_LABEL`** the lead chose — the SAME string it passes to `TeamCreate` and to each `Agent` spawn's `team_name`, so our monitoring layer groups 1:1 with the real Claude Code team. (Spawning a teammate **requires** that `team_name` — established by `TeamCreate` on current builds, or auto-formed on first spawn on newer builds where `TeamCreate` was removed; either way a spawn that carries no team context is a background subagent, not a teammate session. `/team-start` Step 2.7 + the Step-3 `team_name` args handle this.) The monitoring layer reads only `~/.claude/team-registry/` + `~/.claude/heartbeats/`, never the official `~/.claude/teams/{team}/` config, so it's robust to how the harness names or tears the team down.
+2. **Each teammate writes a registry entry at startup** — the `/team-start` spawn prompt templates include a first-action `jq` command that writes `~/.claude/team-registry/<session_id>.json` with `{session_id, name, track_label, role, cwd, ts}`. This is what "opts in" the teammate to monitoring. The `track_label` field is **our own scaffolding-internal bookkeeping key** (the `$TRACK_LABEL` the lead chose) — it is NOT and cannot become Claude Code's actual team identity: `TeamCreate`/`TeamDelete` no longer exist, the `Agent` tool's `team_name` parameter is accepted but ignored, and a session's real team is auto-formed on the lead's first named spawn and named `session-<first 8 chars of the session ID>`, outside our control. What actually makes a spawn a teammate (not a background subagent) is simply the lead issuing an `Agent` call with a `name` — no team-creation step exists or is needed. The monitoring layer reads only `~/.claude/team-registry/` + `~/.claude/heartbeats/`, never the official `~/.claude/teams/{team}/` config, so it's unaffected by how the real team is auto-named or torn down.
 
-3. **Orchestrator runs `/context-check <team>` per slice** — after every Step-10 commit + hot-routing, the orchestrator invokes the helper script (`~/.claude/scripts/check-team-context.sh`), which joins registry + heartbeats by session_id and outputs a per-team context snapshot. The orch sends this as a structured ping to the lead.
+3. **Orchestrator runs `/context-check <track>` per slice** — after every Step-10 commit + hot-routing, the orchestrator invokes the helper script (`~/.claude/scripts/check-team-context.sh`), which joins registry + heartbeats by session_id and outputs a per-track context snapshot. The orch sends this as a structured ping to the lead.
 
 4. **Lead evaluates the tier ladder** — OK / WARN / ACTION / HARD-STOP. The NUMBERS live in one place: the `check-team-context.sh` env defaults (`CLAUDE_TEAM_CTX_WARN/ACTION/HARD` — 70/75/80 at time of writing), cited canonically in the generated `docs/team-protocol.md` tier table; prose elsewhere uses tier names only. The actions: **WARN** — one-line surface with trajectory estimate (~N slices to ACTION, 3-slice rolling growth); **ACTION** — auto-trigger the close-out cycle at this clean slice break, cycling **both** orch + impl together (clean handoff, symmetric freshness); **HARD-STOP** — halt new brief dispatch + cycle immediately.
 
@@ -450,16 +450,16 @@ Teammates have finite context windows. Without a reliable monitor, sessions eith
 
 **Why this preserves the user-on-demand close-out spirit:** the original rule was *"close-out only on explicit user go — never at natural boundaries."* Auto-cycle is not "close-out at a natural boundary" — it's "close-out when context capacity demands it." Capacity is a hard mechanical constraint (the harness limits tokens), not a workflow preference. The trigger is purely the status-line ctx_pct, not a heuristic. User control is preserved by configurable thresholds, the always-available `/context-check` for ad-hoc visibility, the WARN tier surfacing well before action, and the only "no discretion" tier being HARD-STOP.
 
-**Parallel teams isolation:** when multiple team-lead sessions run in parallel (e.g., a frontend track + a backend track on the same monorepo), each team's registry entries carry a distinct `team` field. `/context-check <team>` filters by team, so team-A's lead only sees team-A's members. Heartbeats use session_id as key, fully isolated. No cross-team bleed.
+**Parallel tracks isolation:** when multiple team-lead sessions run in parallel (e.g., a frontend track + a backend track on the same monorepo), each is also a genuinely separate, session-scoped Claude team (real cross-session `SendMessage` bleed is structurally impossible), and each track's registry entries additionally carry a distinct `track_label` field for our own bookkeeping. `/context-check <track>` filters by that label, so track-A's lead only sees track-A's members. Heartbeats use session_id as key, fully isolated.
 
 **Files involved:**
 
 ```
-~/.claude/statusline-command.sh           # Status bar render + heartbeat writer (one install per user)
-~/.claude/scripts/check-team-context.sh   # The join + threshold-tier helper (one install per user)
-~/.claude/team-registry/<sid>.json        # Per-teammate identity, written at startup via spawn prompt
-~/.claude/heartbeats/<sid>.json           # Per-teammate ctx_pct, written every status line refresh
-~/.claude/team-history/<team>/<name>.jsonl # Per-slice ctx snapshots for trajectory tracking
+~/.claude/statusline-command.sh             # Status bar render + heartbeat writer (one install per user)
+~/.claude/scripts/check-team-context.sh     # The join + threshold-tier helper (one install per user)
+~/.claude/team-registry/<sid>.json          # Per-teammate identity, written at startup via spawn prompt
+~/.claude/heartbeats/<sid>.json             # Per-teammate ctx_pct, written every status line refresh
+~/.claude/track-history/<track>/<name>.jsonl # Per-slice ctx snapshots for trajectory tracking
 ```
 
 The template scaffolding ships reference implementations of `statusline-command.sh` and `check-team-context.sh` in `templates/scripts/`. `GENERATE-WITH-CLAUDE.md` includes install instructions (the user installs both scripts once; the registry + heartbeat files are populated automatically by team sessions).
@@ -579,7 +579,7 @@ Everything above is about *authoring* a change. To pull scaffolding improvements
 
 Honest acknowledgments:
 
-1. **Cross-team channel-bleed is a real failure mode.** The track-prefix naming rule + ignore-mismatched-prefix posture mitigate it but don't fully eliminate it — operator vigilance still matters.
+1. **Track-prefix naming is a legibility/collision-prevention convention, not a delivery-channel defense.** Genuine cross-team `SendMessage` bleed can't occur (each parallel track runs its own session-scoped Claude team), so the real risk it guards against is a spawn-naming mistake within one's own team, not "another track's" message arriving.
 2. **Lesson↔code drift is now warn-grepped, not fully closed.** Lessons with a `pattern:` enforcement line are checked mechanically (`/preflight` warn-greps the staged diff against the forbidden-patterns block); lessons marked `accepted: not mechanically enforceable` remain audit-only — the enforcement line makes that residue explicit instead of silent.
 3. **Layer-rule tests catch backward imports, not design-time drift** — a feature placed in the wrong layer on purpose still type-checks.
 4. **All roles load `CLAUDE.md`** — the orchestrator carries some code-conventions context it never uses directly. Deliberate (consistency), but a minor context cost.
@@ -614,7 +614,7 @@ The package has three parts:
 
 ### The handoff
 
-1. **Read this guide** (§1–§12) so you understand what you're about to generate. The **team pattern is the default for all projects — a solo dev runs team mode (single track)**; pick the single-operator fallback only where the agent-teams feature is unavailable.
+1. **Read this guide** (§1–§12) so you understand what you're about to generate. The **team pattern is the default for all projects — a solo dev runs team mode (single track)**; pick the single-operator fallback where the agent-teams feature is unavailable — most concretely, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` isn't set (Claude Code's agent-teams feature is itself experimental and off by default).
 2. **Open a fresh Claude Code session** at your new project's repo root.
 3. **Give it the package** — `GENERATE-WITH-CLAUDE.md` + the `templates/` tree — and the prompt below.
 4. **Be ready for interview-style back-and-forth.** The generator will read your architecture doc, then ask clarification questions on anything ambiguous. **It does not fabricate values.** If you can't answer a question, that's a real gap to resolve before scaffolding lands.
