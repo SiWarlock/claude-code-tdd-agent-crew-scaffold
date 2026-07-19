@@ -113,7 +113,7 @@ claude_fixture() {
   SELECTED=$(jq -r '.migrations[].id' "$MIG" | sort)
   REGISTRY=$(git -C "$REPO" show "$TO:migrations/registry.json" | jq -r '.migrations[].id' | sort)
   local id
-  for id in M-0001 M-0002 M-0003 M-0004; do
+  for id in M-0001 M-0002 M-0003 M-0004 M-0014 M-0015; do
     echo "$SELECTED" | grep -qx "$id" && ok "migrations: $id selected (in (base,to] window)" || bad "migrations: $id NOT selected"
   done
   [ "$SELECTED" = "$REGISTRY" ] \
@@ -252,14 +252,22 @@ codex_fixture() {
     && ok "diff: app/AGENTS.md upstreamChanged=false → skip (current pinned behavior; see README known-limitation)" \
     || bad "diff: app/AGENTS.md upstreamChanged/policy = $(e 'app/AGENTS.md' '.upstreamChanged')/$(e 'app/AGENTS.md' '.policy')"
 
-  # ---- 4. migrations — host/SHA isolation (fresh Codex inherits no legacy migration) -------------
+  # ---- 4. migrations — host/SHA isolation --------------------------------------------------------
+  # This window was EMPTY when the fixture was pinned: the codex base post-dated every then-existing
+  # migration, and the only later one (M-0013) is claude-host-filtered. M-0014 (install plan-lint.sh)
+  # and M-0015 (plan-doc compaction) were then introduced at 98e2094 — AFTER this fixture's base, and
+  # with NO `hosts` filter, so they are host-agnostic (both hosts carry IMPLEMENTATION_PLAN.md) and DO
+  # land for a fresh Codex project. Pin the exact set: SHA-windowing still holds (nothing before the
+  # base leaks in) and M-0013 stays excluded. If a future migration lands after this base without a
+  # `hosts` filter it belongs in this list — or, if it is Claude-only, it needs hosts:["claude"].
   "$SCRIPT" migrations --work "$WORK" > /dev/null
-  local MIG="$WORK/migrations.json"
-  [ "$(jq -r '.migrations | length' "$MIG")" = "0" ] \
-    && ok "migrations: window empty — a fresh Codex project inherits no legacy/Claude-era migration" \
-    || bad "migrations: expected empty window, got $(jq -r '[.migrations[].id]|join(",")' "$MIG")"
+  local MIG="$WORK/migrations.json" CODEX_WINDOW
+  CODEX_WINDOW=$(jq -r '.migrations[].id' "$MIG" | sort | paste -sd, -)
+  [ "$CODEX_WINDOW" = "M-0014,M-0015" ] \
+    && ok "migrations: window = M-0014,M-0015 (host-agnostic post-base plan-format pair lands for Codex)" \
+    || bad "migrations: expected window M-0014,M-0015, got '${CODEX_WINDOW:-<empty>}'"
   jq -e '[.migrations[].id] | index("M-0013") | not' "$MIG" >/dev/null \
-    && ok "migrations: M-0013 (host-field backfill) not selected — base post-dates it" || bad "migrations: M-0013 unexpectedly selected"
+    && ok "migrations: M-0013 (host-field backfill) not selected — claude-filtered + base post-dates it" || bad "migrations: M-0013 unexpectedly selected"
 
   # ---- 5. apply + check-markers --------------------------------------------------------------------
   # Derive the writes list DYNAMICALLY from policy=="auto-apply" entries (mirroring claude_fixture() above)

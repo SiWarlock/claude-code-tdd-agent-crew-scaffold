@@ -186,6 +186,15 @@ cmd_upgrade_dryrun() {
   fi
 }
 
+cmd_plan_lint() {
+  printf 'plan-lint:\n'
+  if [ -x tests/run-plan-lint.sh ]; then
+    if tests/run-plan-lint.sh; then ok "plan-lint fixtures clean"; else bad "plan-lint test failed"; fi
+  else
+    skip "tests/run-plan-lint.sh not present/executable"
+  fi
+}
+
 # ---- playbook (wired by W3-2) ----------------------------------------------------------------------
 cmd_playbook() {
   printf 'playbook:\n'
@@ -217,8 +226,9 @@ main() {
     census)         cmd_census ;;
     migrations)     cmd_migrations ;;
     upgrade-dryrun) cmd_upgrade_dryrun ;;
+    plan-lint)      cmd_plan_lint ;;
     playbook)       cmd_playbook ;;
-    all)            cmd_pairs; cmd_census; cmd_migrations; cmd_upgrade_dryrun; cmd_playbook ;;
+    all)            cmd_pairs; cmd_census; cmd_migrations; cmd_upgrade_dryrun; cmd_plan_lint; cmd_playbook ;;
     *)              usage ;;
   esac
   if [ "$FAIL" -ne 0 ]; then

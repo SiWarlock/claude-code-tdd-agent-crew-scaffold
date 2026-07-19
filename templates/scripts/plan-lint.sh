@@ -23,7 +23,8 @@
 # Exit:  0 clean · 1 violations found · 2 usage/parse error
 set -euo pipefail
 
-PLAN="${1:-{{TASK_TRACKER}}}"
+DEFAULT_PLAN="{{TASK_TRACKER}}"
+PLAN="${1:-$DEFAULT_PLAN}"
 [[ -f "$PLAN" ]] || { echo "plan-lint: file not found: $PLAN" >&2; exit 2; }
 
 awk '
@@ -85,7 +86,7 @@ section == "log" && NR > log_start {
   log_lines++
   if ($0 ~ /docs\/archive\/IMPLEMENTATION_LOG\.md/) log_has_ptr = 1
   if (log_lines == 7) fail(NR, "Log section exceeds 6 lines (must be a pointer, not inline history)")
-  if ($0 ~ /^### 20[0-9][0-9]-/ || $0 ~ /^- \*\*20[0-9][0-9]-/) fail(NR, "inline history entry in the Log section")
+  if ($0 ~ /^### 20[0-9][0-9]-/ || $0 ~ /^- \*\*20[0-9][0-9]-/ || $0 ~ /^- 20[0-9][0-9]-/) fail(NR, "inline history entry in the Log section")
 }
 
 # ---------- phase task blocks ----------
