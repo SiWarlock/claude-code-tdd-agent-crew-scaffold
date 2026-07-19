@@ -76,7 +76,7 @@ The lead must know the active arc well enough to cycle sessions when teammates h
    - **The next 1-2 phases in this track** — IDs + topics only (skim, don't deep-read)
    - **The Track map's integration/merge order** (multi-track only) — so you know which upstream tracks must merge before this one integrates
    - **"Carry-forward to upcoming briefs"** — what's pending
-   - **Last 5 entries in the Log** — chronological context
+   - **Last 5 round entries** — tail `docs/archive/IMPLEMENTATION_LOG.md` (the plan's `## Log` is only a pointer stub); chronological context
 2. **The most recent `docs/sessions/<NNN>-*.md`** — what just landed (skim summary + open follow-ups).
 3. **`git log --oneline -5`** — last 5 commits to anchor your state pointer.
 4. **If this team is resuming from a paused state:** read the most recent `docs/team-handoffs/<NNN>-*.md` — it carries the team composition, active arc, and ready-to-use spawn prompts.

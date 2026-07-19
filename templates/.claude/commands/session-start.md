@@ -21,7 +21,7 @@ Procedure:
 
 1. Read `{{TASK_TRACKER}}` (repo root) **by section, not whole** — `grep -n "^##" {{TASK_TRACKER}}` for offsets, then `Read` offset/limit just:
    - **"Currently in progress"** (top)
-   - the last ~2 **Log** entries (tail)
+   - the last ~2 round entries — tail `docs/archive/IMPLEMENTATION_LOG.md` (the plan's `## Log` is only a pointer stub)
    - **"Decisions tabled"**
 
 2. If working in a code area, also read its `{{AREA_MEMORY}}` lookup table so you know where canonical answers live.

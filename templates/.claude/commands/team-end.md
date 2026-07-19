@@ -47,7 +47,7 @@ Do NOT proceed to Step 2 until both gates pass. **Never tear down mid-work.**
 
 Read for the handoff doc:
 1. `git log --oneline -5` — last 5 commits, includes the round-seal hash.
-2. `{{TASK_TRACKER}}` "Currently in progress" + "Next session target" + "Carry-forward to upcoming briefs" + last Log entry.
+2. `{{TASK_TRACKER}}` "Currently in progress" + "Next session target" + "Carry-forward to upcoming briefs"; plus the last round entry in `docs/archive/IMPLEMENTATION_LOG.md` (the plan's `## Log` is only a pointer stub).
 3. The most recent `docs/sessions/<NNN>-*.md` — what just landed.
 You already hold the rest of the coordination state (team composition, active arc, open decisions) from the task list, tier-crossing pings, and escalations during the team's life; re-read `{{TASK_TRACKER}}` if unsure.
 
@@ -111,7 +111,7 @@ Next team session: lead runs `/team-start <track>`, reads this handoff doc + `{{
 
 ## Step 5 — Update {{TASK_TRACKER}}
 
-Add one line under `Currently in progress` (or refresh it):
+**REPLACE** (don't append to) the `Currently in progress` snapshot with the pause marker, keeping it within the ≤3-item / ≤15-line cap:
 
 ```markdown
 - **Team paused at <YYYY-MM-DD>** — handoff doc: `docs/team-handoffs/<NNN>-<date>-<topic>.md` · last round-seal: `<commit hash>` · next-slice target: <task ID or "TBD per handoff">

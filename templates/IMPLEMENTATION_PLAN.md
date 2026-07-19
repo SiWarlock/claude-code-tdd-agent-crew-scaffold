@@ -3,33 +3,56 @@
   This is the single source of truth for current state + the phase plan.
   Fill the phase note, deadlines, deliverable map, and phase sections with the
   project's real plan. Everything else (Currently in progress, Carry-forward,
-  Decisions tabled, Log, Trims) starts EMPTY — it accretes through real work.
-  Task entries are dense checkbox bullets, NOT pre-written briefs. Delete this comment.
+  Decisions tabled, Trims) starts EMPTY — it accretes through real work.
+  Task entries carry ONE state-checkbox line + fielded metadata + a dense prose sketch, NOT pre-written briefs. Delete this comment.
 -->
 
 # {{TASK_TRACKER}} — {{PROJECT_NAME}}
 
 > **Phase note.** <One paragraph: the doc's scope, any locked decisions. Refreshed when a major phase boundary is crossed.>
 >
-> **Reading discipline.** Read this file **by section, not whole** — `/orchestrate-start` and `/session-start` grep the section header and read only "Currently in progress" + the active phase. The living sections below (Currently-in-progress, Carry-forward, Log, Trims, Decisions) are **bounded** — pruned/archived at `/orchestrate-end`, never left to grow — so a sectioned read stays cheap even late in the project.
+> **Reading discipline.** Read this file **by section, not whole** — `/orchestrate-start` and `/session-start` grep the section header and read only "Currently in progress" + the active phase. Round history lives in `docs/archive/IMPLEMENTATION_LOG.md`, never here.
+
+> **Format contract (lint-enforced by `scripts/plan-lint.sh` at every `/orchestrate-end`).**
+> - **Task state** lives on ONE checkbox line — the first content line under each `### N.M` heading: `- [x] DONE · `hash` · YYYY-MM-DD` / `- [~] PARTIAL · remaining: …` / `- [ ] OPEN` / `- [ ] DEFERRED · …` / `- [ ] OWNER-GATED · §ARM-… / §DEC-…`. Headings carry **no** state tokens; completion never lives in prose.
+> - **Currently in progress** — `≤3` items / `≤15` lines, **REPLACED** each round (a snapshot of NOW, not a history).
+> - **Carry-forward** — `≤7` items; resolved items **deleted** (never annotated); overflow → the owning phase's `#### Residuals`.
+> - **Round history** — only in `docs/archive/IMPLEMENTATION_LOG.md`; this file has **no** inline Log.
+> - **Owner gates & arming ledgers** — a dedicated section; every `OWNER-GATED` task references a `§ARM-*/§DEC-*` id defined there.
+> - **Every task** carries a `**Spec:**` `{{ARCH_DOC}} §` anchor or an explicit `arch_gap` flag.
+> - **Phase-exit checklists** live in `docs/archive/`; the phase body keeps a one-line `**Gate:**` pointer.
 
 > **Session protocol:**
 > - **At session start** — orchestrator runs `/orchestrate-start`; implementer runs `/session-start`. Confirm with the user what's targeted this session.
 > - **At session end** (only when the user says we're done):
 >   - **Implementer** runs `/session-end` — TDD audit + cross-doc audit + Step-9 list + create session doc + `/preflight`. Does NOT touch this doc.
->   - **Orchestrator** runs `/orchestrate-end` — verify hot routing landed, reconcile checkbox state, append Log entry, update Decisions / Carry-forward / Currently in progress, **triage Carry-forward**, round commit + push.
+>   - **Orchestrator** runs `/orchestrate-end` — verify hot routing landed, reconcile checkbox state, append the round's Log entry to `docs/archive/IMPLEMENTATION_LOG.md`, update Decisions / Carry-forward / Currently in progress, **triage Carry-forward**, round commit + push.
 
 > **Reference deadlines:**
 > - <milestone 1 — date>
 > - <milestone 2 — date>
 
-> **Spec-anchor convention (architecture-as-contract).** Each phase header below carries a `**Spec anchors:**` block listing the `{{ARCH_DOC}}` sections the phase implements. Orchestrator + implementer re-read the listed anchors at session start. If a slice surfaces a behavior the anchors don't cover, that's a cross-doc invariant flag at Step 9 — either the anchor is missing or the implementation has drifted. Architecture is contract; drift surfaces structurally, not silently. In team mode, each phase header also carries a `**Track:**` tag + a `**Depends on (phases):**` edge — the source the `## Parallelization plan` (Track map) renders from. **New tasks added mid-build** (Step-9 routing, Carry-forward INLINE-TARGET) carry `(implements §X; origin: <slice>)` — or `(ops — no contract anchor)` — on the `### <phase-id>.N` heading, with §X covered by the phase's anchors; heading-level only, the `- [ ]` field lines beneath are never individually marked.
+> **Spec-anchor convention (architecture-as-contract).** Each phase header below carries a `**Spec anchors:**` block listing the `{{ARCH_DOC}}` sections the phase implements. Orchestrator + implementer re-read the listed anchors at session start. If a slice surfaces a behavior the anchors don't cover, that's a cross-doc invariant flag at Step 9 — either the anchor is missing or the implementation has drifted. Architecture is contract; drift surfaces structurally, not silently. In team mode, each phase header also carries a `**Track:**` tag + a `**Depends on (phases):**` edge — the source the `## Parallelization plan` (Track map) renders from. **New tasks added mid-build** (Step-9 routing, Carry-forward INLINE-TARGET) carry `(implements §X; origin: <slice>)` — or `(ops — no contract anchor)` — on the `### <phase-id>.N` heading, with §X covered by the phase's anchors; heading-level only — the task's single State-checkbox line (the first content line under the heading) carries completion, and the `**Kind:** / **Spec:** / **Depends:** / **Blocks:** / **Files:**` metadata lines beneath it are plain fields, never checkboxes.
+
+---
+
+## Phase status (at a glance)
+
+<!-- Dashboard of phase-level state — one row per phase, REPLACED at every /orchestrate-end (a projection
+     of NOW, not a history). Plain machinery (no EXAMPLE-BLOCK marker). `Open` = tasks not yet DONE-class
+     (open + partial + deferred + owner-gated). States: ✅ done · 🔶 active · ⬜ open · ⛔ owner-gated.
+     Delete this section for a small plan whose phase headings already read at a glance. -->
+
+| Ph | Title | Track | State | Gate | Open | Anchor |
+|----|-------|-------|-------|------|------|--------|
+| 0 | <phase 0 title> | — | ⬜ open | — | <n> | §X |
+| 1 | <phase 1 title> | <track> | ⬜ open | — | <n> | §Y |
 
 ---
 
 ## Currently in progress
 
-<!-- REPLACE this section at every /orchestrate-end — do NOT append. It is a snapshot of NOW (≤ ~8 lines): last commit hash, suite count, next session target, active blockers. Stale lines are deleted, not stacked. -->
+<!-- REPLACE this section at every /orchestrate-end — do NOT append. It is a snapshot of NOW (≤3 items / ≤15 lines): last commit hash, suite count, next session target, active blockers. Stale lines are deleted, not stacked. -->
 
 **Bootstrap session.** Scaffolding landed; first `/tdd` slice not yet started.
 
@@ -39,9 +62,35 @@
 
 ## Carry-forward to upcoming briefs
 
-Items the orchestrator MUST fold into the next 1–2 briefs. **Triaged at every `/orchestrate-end` (mandatory) — NOT append-only.** Each entry carries an origin marker `(origin: YYYY-MM-DD <slice-id>)`. **Bound: keep under ~7 items.** Anything over the cap, or older than ~3 slices with no consumer, is force-triaged — DELETE (done) / INLINE-TARGET (make it a real task in its phase) / DEFER (escalate). If an imminent brief doesn't need it, it doesn't live here.
+Items the orchestrator MUST fold into the next 1–2 briefs. **Triaged at every `/orchestrate-end` (mandatory) — NOT append-only.** Each entry carries an origin marker `(origin: YYYY-MM-DD <slice-id>)`. **Bound: keep under ~7 items.** Anything over the cap, or older than ~3 slices with no consumer, is force-triaged — DELETE (done) / INLINE-TARGET (make it a real task in its phase) / DEFER (escalate). If an imminent brief doesn't need it, it doesn't live here. Resolved items are DELETED with an archive pointer (never annotated in place); overflow past ~7 goes to the owning phase's `#### Residuals`, not here.
 
 _(Empty at project start; populated as Step-9 routing surfaces operational items.)_
+
+---
+
+## Owner gates & arming ledgers
+
+<!-- Delete this whole section if the project has no owner-gated crossings (no `OWNER-GATED` tasks).
+     Ship as PLAIN machinery (no EXAMPLE-BLOCK marker) so the §10 census is unchanged. Every task whose
+     State line reads `- [ ] OWNER-GATED · §ARM-…/§DEC-…` MUST reference an id defined here, and every id
+     defined here should be referenced by a task — `scripts/plan-lint.sh` pairs the two (an unreferenced
+     ledger id or a dangling task reference is a lint failure). One `### §ARM-<slug>` per armable crossing
+     (dormant machinery may be built + reviewed freely; NOTHING arms without explicit owner sign-off
+     recorded in its ledger); one `### §DEC-<slug>` per tabled owner decision. -->
+
+> ⛔ **Every entry here is an owner-gated HARD LINE — escalate-before-crossing with EXPLICIT owner confirm PER crossing.** <List the project's standing hard lines: the irreversible / real-egress / real-external-write / paid-key crossings this build gates. Delete this section if there are none.>
+
+### §ARM-<slug> — <what this crossing arms>
+
+- **Gate:** <PENDING | ARMED | FIRED> · **Owner sign-off:** <ref, or `none yet`>.
+- **Arms:** <the task IDs / behavior this ledger releases>.
+- **Preconditions:** <what must be green/true before arming>.
+- **Evidence:** <commit / report / receipt paths, once fired>.
+
+### §DEC-<slug> — <the tabled owner decision>
+
+- **Status:** <OPEN | DECIDED> · **Decision:** <the ruling once made, or `awaiting owner`>.
+- **Blocks:** <the task IDs waiting on this decision>.
 
 ---
 
@@ -102,9 +151,11 @@ flowchart TD
 ## Phase exit checklist (template — applies to every phase)
 
 Before ticking a phase complete (**executed row-by-row by `/phase-exit <phase>`** — the orchestrator
-dispatches it at the START of a round; each row is ticked in place as it passes):
+dispatches it at the START of a round). Per-phase copies of this checklist materialize in
+`docs/archive/phase-exit-<phase>.md` (not inline in the plan); each row is ticked in place there as it
+passes, and the phase body keeps only a one-line `**Gate:** <PENDING|CLEAR|BLOCKED> — see docs/archive/phase-exit-<phase>.md` pointer.
 
-- [ ] **All phase task checkboxes ticked.** Conservative — partial work stays unchecked with a Log entry note.
+- [ ] **All phase task State lines are DONE-class.** Conservative — partial work stays a `- [~] PARTIAL` State line with an archive-log note.
 - [ ] **Acceptance criterion met.** `/preflight` clean + manual smoke if there's runtime behavior to validate.
 - [ ] **`/preflight` clean.** Includes any architecture-invariant tests.
 - [ ] **Cross-doc invariants verified.** No model field changes without a `{{ARCH_DOC}}` edit in the same round.
@@ -144,11 +195,16 @@ The project is "done" when:
 
 <!-- ▼ EXAMPLE BLOCK [id=task-entry-format]: task entry format — dense checkbox bullets, NOT a pre-written brief. The orchestrator authors the /tdd brief from this entry + carry-forward + recent context. ▼ -->
 
-- [ ] <acceptance behavior 1>
-- [ ] <acceptance behavior 2>
-- [ ] Files: <concrete paths — NEW vs. extended>
-- [ ] Cross-doc invariant: <NEW / extended / none>
-- [ ] Depends on: <task IDs whose tests/impl this requires, or `none`>
+- [ ] OPEN
+**Kind:** <deterministic /tdd | eval | ops> · **Spec:** {{ARCH_DOC}} §X (or `arch_gap`) · **Depends:** <task IDs whose tests/impl this requires, or `none`> · **Blocks:** <task IDs this unblocks, or `none`>
+**Files:** <concrete paths — NEW vs. extended>
+
+<One dense acceptance paragraph: the behaviors this task must exhibit, the edge/error cases it pins, and the cross-doc invariant it touches (NEW / extended / none) — enough for the orchestrator to author the /tdd brief, not a brief itself.>
+
+<!-- State vocabulary — the FIRST content line under each `### N.M` heading is exactly one State checkbox:
+     `- [x] DONE · `hash` · YYYY-MM-DD` · `- [~] PARTIAL · remaining: … → target` · `- [ ] OPEN` ·
+     `- [ ] DEFERRED · <target> · owner-approved ref` · `- [ ] OWNER-GATED · §ARM-… / §DEC-…`.
+     Headings carry no state tokens; the metadata lines above are plain fields, never checkboxes. -->
 
 <!-- OPTIONAL `Implements: REQ-x[, REQ-y]` line — add ONLY when one § maps to multiple REQs and this
      task covers a strict subset of them. Otherwise REQ→task coverage is DERIVED, never restated: the
@@ -159,11 +215,12 @@ The project is "done" when:
 
 ### <phase-id>.2 — <task name>
 
-- [ ] ...
+- [ ] OPEN
+… (fielded metadata + dense acceptance sketch, as in `.1`)
 
 ### Acceptance criteria (<phase-id>)
 
-- [ ] All <phase-id>.X task checkboxes ticked.
+- [ ] All <phase-id>.X task State lines DONE-class.
 - [ ] <phase-specific criteria>
 
 ---
@@ -184,15 +241,14 @@ The project is "done" when:
 
 ### D.1 — <demo slice>
 
-- [ ] <demo acceptance behavior — the happy path that runs end-to-end>
-- [ ] Files: <demo entrypoint / seed data / script — NEW vs. extended>
-- [ ] Cross-doc invariant: none (a demo must not introduce new contract surface)
-- [ ] Depends on: <the spine task(s) the demo exercises>
+- [ ] OPEN
+**Kind:** demo · **Spec:** `{{ARCH_DOC}} §X` (the flows the demo exercises) · **Depends:** <the spine task(s) the demo exercises> · **Blocks:** —
+**Files:** <demo entrypoint / seed data / script — NEW vs. extended; cross-doc invariant: none — a demo must not introduce new contract surface>
+<demo acceptance behavior — the happy path that runs end-to-end>
 
 ### Acceptance criteria (D)
 
-- [ ] The in-scope demo path runs end-to-end against the real system (no mocks on the load-bearing path).
-- [ ] No invariant / test / hardening task was cut to make the demo work.
+- [ ] OPEN — the in-scope demo path runs end-to-end against the real system (no mocks on the load-bearing path); no invariant / test / hardening task was cut to make the demo work.
 
 <!-- ▲ END EXAMPLE BLOCK [id=optional-demo-phase] ▲ -->
 
@@ -200,7 +256,7 @@ The project is "done" when:
 
 ## Trims / Nice-to-Haves Catalog
 
-Deferred items with come-back guidance: why deferred, where it belongs, files to modify, tests to add, cross-doc invariant impact. **Prune at `/orchestrate-end`:** a Trim that ships moves to its phase as `[x]`; an obsoleted Trim is deleted with a one-line Log note.
+Deferred items with come-back guidance: why deferred, where it belongs, files to modify, tests to add, cross-doc invariant impact. **Prune at `/orchestrate-end`:** a Trim that ships moves to its phase as `[x]`; an obsoleted Trim is deleted with a one-line note in `docs/archive/IMPLEMENTATION_LOG.md`.
 
 _(Empty at project start; populated as scope cuts surface.)_
 
@@ -208,7 +264,7 @@ _(Empty at project start; populated as scope cuts surface.)_
 
 ## Decisions tabled
 
-Open scope/design questions awaiting resolution, with rationale. **Resolved entries move into the Log (with the resolution) and out of here** — this holds only *open* questions.
+Open scope/design questions awaiting resolution, with rationale. **Resolved entries move into `docs/archive/IMPLEMENTATION_LOG.md` (with the resolution) and out of here** — this holds only *open* questions.
 
 _(Empty at project start.)_
 
@@ -216,6 +272,4 @@ _(Empty at project start.)_
 
 ## Log
 
-The orchestrator's framing of each round, date-stamped. **Bounded, not unbounded-append:** keep the most recent ~10 rounds inline; roll older entries into `docs/sessions/` (the technical narrative) or `docs/archive/TASKS-LOG.md`, leaving a one-line pointer here. Readers only ever load the recent entries, so the inline Log stays small. (Archive — never delete — the round history is an audit trail.)
-
-_(Empty at project start; populated at every `/orchestrate-end`.)_
+Round history is **not** kept in this file. See docs/archive/IMPLEMENTATION_LOG.md (append-only, orchestrator-written at every /orchestrate-end).

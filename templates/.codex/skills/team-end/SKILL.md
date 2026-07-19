@@ -58,7 +58,7 @@ tail -n 10 ".codex-team/<TEAM_LABEL>/tasks.jsonl"     # round-seal hash + final 
 tail -n 10 ".codex-team/<TEAM_LABEL>/events.jsonl"    # SubagentStart/Stop trail
 ```
 
-Plus `{{TASK_TRACKER}}` ("Currently in progress" + "Next session target" + "Carry-forward to upcoming briefs" + last Log entry) and the most recent `docs/sessions/<NNN>-*.md`. You already hold the team composition + active arc from the orchestrator's `agent_result`s — re-read `{{TASK_TRACKER}}` only if unsure. **Do not deep-load `{{ARCH_DOC}}`** — the handoff records pointers, not architecture.
+Plus `{{TASK_TRACKER}}` ("Currently in progress" + "Next session target" + "Carry-forward to upcoming briefs"), the last round entry in `docs/archive/IMPLEMENTATION_LOG.md` (the plan's `## Log` is only a pointer stub), and the most recent `docs/sessions/<NNN>-*.md`. You already hold the team composition + active arc from the orchestrator's `agent_result`s — re-read `{{TASK_TRACKER}}` only if unsure. **Do not deep-load `{{ARCH_DOC}}`** — the handoff records pointers, not architecture.
 
 ## Step 3 — Compute the handoff number
 

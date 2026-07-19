@@ -49,8 +49,16 @@ Generate `IMPLEMENTATION_PLAN.md` per the template. Rules:
 
 - **Phases.** Each `## Phase` block carries a `**Spec anchors:**` line listing the `ARCHITECTURE.md §`
   sections it implements, a one-line Goal, and per-phase Acceptance criteria.
-- **Tasks.** Dense checkbox bullets (not pre-written briefs — the orchestrator authors the `/tdd` brief).
-  Each task carries:
+- **Tasks.** Each task is a `### N.M` heading — **no state token in the heading**; task state lives on ONE
+  checkbox line, the **first content line** under the heading, born `- [ ] OPEN` at generation. A task is a dense
+  entry, **not** a pre-written brief (the orchestrator authors the `/tdd` brief). The metadata beneath the State
+  line are **plain fielded lines, never checkboxes**, so the generated plan is born lint-clean under
+  `scripts/plan-lint.sh`. Each task carries:
+  - a **State checkbox** — the first content line, born `- [ ] OPEN` at generation; the lint vocabulary as work
+    lands is `DONE` (+ hash + ISO date) / `PARTIAL` (+ `remaining:`) / `OPEN` / `DEFERRED` / `OWNER-GATED` (+ a
+    `§ARM-*`/`§DEC-*` id);
+  - a **`Spec:`** line — the `ARCHITECTURE.md §` anchor(s) the task implements, or an explicit `arch_gap` flag
+    (`plan-lint` requires one per task);
   - a **`Files:`** line — which files are NEW vs extended;
   - a **`Cross-doc invariant:`** line — `NEW` / `extended` / `none` (a typed model that must mirror
     `ARCHITECTURE.md` Appendix A + the area `CLAUDE.md` invariants table). **§2.5-seam models:** when the
@@ -149,8 +157,10 @@ silent default. A single-track plan stays Path A.
 - **No application code; don't modify `ARCHITECTURE.md`.**
 - **Never invent architecture** to satisfy a task — flag it (§3).
 - **Every task anchors to the contract.** No orphan tasks; no phase without `Spec anchors:`.
-- **`IMPLEMENTATION_PLAN.md` living-state sections start empty** (Currently-in-progress, Carry-forward, Log,
-  Decisions-tabled) — they accrete through real `/tdd` work, not at generation. **The `Parallelization plan`
+- **`IMPLEMENTATION_PLAN.md` living-state sections start empty** (Currently-in-progress, Carry-forward,
+  Decisions-tabled) — they accrete through real `/tdd` work, not at generation. (The `Log` section is a fixed
+  pointer stub to `docs/archive/IMPLEMENTATION_LOG.md`, not an empty living section; the `Owner gates & arming
+  ledgers` section is authored plan structure.) **The `Parallelization plan`
   (Track map) is the exception among new sections: it IS authored at generation** (it's plan structure, like
   the Deliverable map + phase blocks), not accreted living state.
 

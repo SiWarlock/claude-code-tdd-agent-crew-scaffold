@@ -141,7 +141,7 @@ files + bounded direct messages:
   7.5 reachability → 8 type+lint → 9 hot-route → 10 atomic commit`.
 
 **Mechanical guardrails:** PreToolUse hooks block `git add -A`, implementer pushes, orchestrator-territory
-writes, and staged secrets (gitleaks); `scripts/spec-lint.sh` gates every brief pre-dispatch; **`/phase-exit`**
+writes, and staged secrets (gitleaks); `scripts/spec-lint.sh` gates every brief pre-dispatch, `scripts/plan-lint.sh` gates the task tracker's format at every `/orchestrate-end` (blocking); **`/phase-exit`**
 executes the phase-exit checklist (auditor fan-outs + spec coverage + the posture-gated audit/security/perf
 trio) and a phase closes only on its CLEAR verdict.
 
@@ -259,7 +259,7 @@ cc-crew/
     ├── ARCHITECTURE.md        ← design-contract skeleton (used only if the user has none)
     ├── .scaffolding/          ← generator-owned provenance (manifest.json + README) — enables clean upgrades
     ├── docs/                  ← team-protocol · orchestrator-briefing · tdd-brief-template · scaffolding-reference
-    ├── scripts/               ← user-global helpers (statusline + context-check) + project-local spec-lint.sh + guards/
+    ├── scripts/               ← user-global helpers (statusline + context-check) + project-local spec-lint.sh + plan-lint.sh + guards/
     └── .claude/
         ├── settings.json      ← PreToolUse guard-hook wiring (generated project-local)
         ├── commands/          ← slash commands (13 team / 10 single-operator + 2 optional; incl. /phase-exit)

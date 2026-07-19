@@ -138,7 +138,7 @@ Canonical in `docs/orchestrator-briefing.md` "Step-9 routing matrix." (Implement
 
 ### Carry-forward triage at `/orchestrate-end`
 
-Five outcomes: DELETE / KEEP / **INLINE-TARGET (→ real task checkbox, not an annotation)** / DEFER (escalate) / SPREAD.
+Five outcomes: DELETE / KEEP / **INLINE-TARGET (→ real task checkbox, not an annotation)** / DEFER (escalate) / SPREAD. DELETE + INLINE-TARGET run **mechanically** (no user prompt); only **DEFER** escalates. Resolved items are **deleted with an archive/commit pointer, never annotated in place**; live overflow past the ~7 cap moves to the owning phase's `#### Residuals`.
 
 ### Reachability (tested ≠ shipped)
 

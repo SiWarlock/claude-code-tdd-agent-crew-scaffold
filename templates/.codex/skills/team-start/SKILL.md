@@ -78,7 +78,7 @@ echo "TASKS_LINES_BEFORE_SPAWN=${TASKS_LINES_BEFORE_SPAWN}"   # capture this val
 
 Read just enough to brief the orchestrator's WHY — never enough to accumulate plan/code context (that belongs to the orchestrator + implementer, deliberately kept out of the lead):
 
-1. **`{{TASK_TRACKER}}`** — "Currently in progress" + "Next session target" + the active phase's task IDs/topics + the last ~5 Log entries.
+1. **`{{TASK_TRACKER}}`** — "Currently in progress" + "Next session target" + the active phase's task IDs/topics; plus the last ~5 round entries in `docs/archive/IMPLEMENTATION_LOG.md` (the plan's `## Log` is only a pointer stub).
 2. The most recent `docs/sessions/<NNN>-*.md` — what just landed (skim).
 3. `git log --oneline -5` — anchor the state pointer.
 4. **If resuming a paused team:** the most recent `docs/team-handoffs/<NNN>-*.md` — it carries the active arc + a ready-to-use orchestrator re-spawn prompt.
