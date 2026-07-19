@@ -132,6 +132,26 @@
       "hosts": ["claude"],
       "idempotencyKey": "manifest:host-field+schema-v3",
       "touches": [".scaffolding/manifest.json"]
+    },
+    {
+      "id": "M-0014",
+      "title": "Install scripts/plan-lint.sh — the /orchestrate-end Step-6.5 blocking plan-format gate",
+      "introducedAtSha": "98e2094597499085a037e33605103f7c8d1f4456",
+      "kind": "added-template",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "added:plan-lint.sh@v1",
+      "touches": ["scripts/plan-lint.sh", "manifest.generatedFiles"]
+    },
+    {
+      "id": "M-0015",
+      "title": "Plan-doc compaction: inline Log -> docs/archive/IMPLEMENTATION_LOG.md, checklists -> Gate: pointers, tasks -> one State line, Carry-forward drained, format-contract header + Owner-gates section",
+      "introducedAtSha": "98e2094597499085a037e33605103f7c8d1f4456",
+      "kind": "accreted-format",
+      "appliesWhen": "base < introducedAtSha <= to",
+      "gate": "human",
+      "idempotencyKey": "accreted:plan-format-2026-07@v1",
+      "touches": ["IMPLEMENTATION_PLAN.md", "docs/archive/IMPLEMENTATION_LOG.md", "docs/archive/phase-exit-*.md"]
     }
   ]
 }
